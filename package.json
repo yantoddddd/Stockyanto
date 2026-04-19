@@ -1,0 +1,16 @@
+{
+  "name": "autoorder-qris",
+  "version": "1.0.0",
+  "description": "Auto order digital products with QRIS payment",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "keywords": ["qris", "payment", "auto-order"],
+  "author": "yantoddddd",
+  "license": "MIT"
+}
