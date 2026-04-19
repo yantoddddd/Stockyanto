@@ -5,14 +5,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ========== KONFIGURASI ==========
-const QRISPY_API_TOKEN = 'cki_MDT3cC14ASTcV9yCcZOEOROZFqVgNvZlWjsC5ofjrp3x2DBe';
+// ========== KONFIGURASI QRISPY (TOKEN BARU) ==========
+const QRISPY_API_TOKEN = 'cki_c4fhFog8MV0QHTAXCDwdKxJ6HFL4EMIWrHydAhN5sHOSmuzh';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 const ADMIN_KEY = 'rahasia123';
 
-// Backup ke Telegram (pake bot lo yang udah ada)
+// Backup ke Telegram
 const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
-const TELEGRAM_BACKUP_CHAT_ID = '-5260518165'; // grup lo
+const TELEGRAM_BACKUP_CHAT_ID = '-5260518165';
 
 // ========== DATA DI MEMORY ==========
 let products = [];
@@ -22,7 +22,6 @@ let orders = [];
 async function backupToTelegram() {
   try {
     const data = JSON.stringify({ products, orders, updatedAt: new Date().toISOString() }, null, 2);
-    // Kirim sebagai file
     const formData = new FormData();
     formData.append('chat_id', TELEGRAM_BACKUP_CHAT_ID);
     formData.append('document', new Blob([data]), 'database_backup.json');
@@ -38,10 +37,9 @@ async function backupToTelegram() {
   }
 }
 
-// ========== FUNGSI RESTORE DARI TELEGRAM (panggil manual via API) ==========
+// ========== RESTORE DARI TELEGRAM ==========
 app.get('/api/restore', async (req, res) => {
   try {
-    // Ambil pesan terakhir yang berisi file backup
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -49,7 +47,6 @@ app.get('/api/restore', async (req, res) => {
     });
     const data = await response.json();
     
-    // Cari file backup terbaru
     let lastBackup = null;
     if (data.ok && data.result) {
       for (let update of data.result.reverse()) {
@@ -80,7 +77,7 @@ app.get('/api/restore', async (req, res) => {
   }
 });
 
-// ========== FUNGSI GENERATE QRIS ==========
+// ========== FUNGSI QRIS ==========
 async function generateQRIS(amount, paymentReference) {
   const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
     method: 'POST',
@@ -91,7 +88,7 @@ async function generateQRIS(amount, paymentReference) {
     body: JSON.stringify({ amount, payment_reference: paymentReference })
   });
   const data = await response.json();
-  console.log('Generate QRIS:', data);
+  console.log('Generate QRIS response:', JSON.stringify(data, null, 2));
   return data;
 }
 
@@ -109,7 +106,9 @@ app.get('/api/products', (req, res) => {
 
 app.post('/api/order', async (req, res) => {
   const { productId, customerName, customerEmail } = req.body;
-  if (!productId || !customerName) return res.status(400).json({ error: 'Nama dan produk wajib' });
+  if (!productId || !customerName) {
+    return res.status(400).json({ error: 'Nama dan produk wajib' });
+  }
   
   const product = products.find(p => p.id == productId);
   if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
@@ -119,7 +118,8 @@ app.post('/api/order', async (req, res) => {
   const qrisResult = await generateQRIS(product.price, paymentRef);
   
   if (qrisResult.status !== 'success') {
-    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
+    console.log('QRIS generate error:', qrisResult);
+    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS, cek API token' });
   }
   
   const newOrder = {
@@ -151,23 +151,36 @@ app.post('/api/order', async (req, res) => {
 app.get('/api/check-payment/:orderId', async (req, res) => {
   const order = orders.find(o => o.id == req.params.orderId);
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
-  if (order.status === 'paid') return res.json({ success: true, status: 'paid', productCode: order.productCode });
+  
+  if (order.status === 'paid') {
+    return res.json({ success: true, status: 'paid', productCode: order.productCode });
+  }
+  
   if (new Date(order.expiredAt) < new Date()) {
     order.status = 'expired';
     return res.json({ success: true, status: 'expired' });
   }
   
-  const statusResult = await checkPaymentStatus(order.qrisId);
-  if (statusResult.status === 'success' && statusResult.data.status === 'paid') {
-    const product = products.find(p => p.id == order.productId);
-    if (product && product.stock > 0) product.stock -= 1;
-    order.status = 'paid';
-    order.paidAt = new Date().toISOString();
-    await backupToTelegram(); // backup setiap ada perubahan
-    return res.json({ success: true, status: 'paid', productCode: order.productCode });
+  try {
+    const statusResult = await checkPaymentStatus(order.qrisId);
+    console.log('Check payment:', order.qrisId, statusResult);
+    
+    if (statusResult.status === 'success' && statusResult.data.status === 'paid') {
+      const product = products.find(p => p.id == order.productId);
+      if (product && product.stock > 0) {
+        product.stock -= 1;
+      }
+      order.status = 'paid';
+      order.paidAt = new Date().toISOString();
+      await backupToTelegram();
+      return res.json({ success: true, status: 'paid', productCode: order.productCode });
+    }
+    
+    res.json({ success: true, status: 'pending' });
+  } catch (err) {
+    console.error('Check payment error:', err);
+    res.json({ success: true, status: 'pending' });
   }
-  
-  res.json({ success: true, status: 'pending' });
 });
 
 app.post('/api/cancel-order/:orderId', async (req, res) => {
@@ -176,7 +189,10 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
   if (order.status !== 'pending') return res.status(400).json({ error: 'Order sudah diproses' });
   
   try {
-    await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/cancel`, { method: 'POST', headers: { 'X-API-Token': QRISPY_API_TOKEN } });
+    await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/cancel`, {
+      method: 'POST',
+      headers: { 'X-API-Token': QRISPY_API_TOKEN }
+    });
   } catch(e) {}
   
   order.status = 'cancelled';
@@ -187,7 +203,9 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
 app.post('/api/admin/product', async (req, res) => {
   const { name, price, stock, itemCode, adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  if (!name || !itemCode || price <= 0) return res.status(400).json({ error: 'Nama, harga >0, dan kode wajib' });
+  if (!name || !itemCode || price <= 0) {
+    return res.status(400).json({ error: 'Nama, harga > 0, dan kode wajib' });
+  }
   
   products.push({
     id: Date.now(),
