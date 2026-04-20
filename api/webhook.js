@@ -21,6 +21,7 @@ async function getDB() {
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     return { ...JSON.parse(content), sha: data.sha };
   } catch (err) {
+    console.error('GetDB error:', err);
     return { products: [], orders: [], sha: null };
   }
 }
@@ -38,8 +39,13 @@ async function setDB(products, orders, oldSha) {
   return data.content.sha;
 }
 
-async function sendTelegramNotification(order) {
+async function sendTelegramNotification(order, bonusContent) {
   try {
+    let bonusText = '';
+    if (bonusContent && bonusContent !== '') {
+      bonusText = `\n\n🎁 *BONUS:*\n${bonusContent}`;
+    }
+    
     const message = `
 ✅ *PEMBAYARAN BERHASIL!* (via Webhook)
 
@@ -50,7 +56,7 @@ async function sendTelegramNotification(order) {
 📅 *Waktu:* ${new Date().toLocaleString('id-ID')}
 
 🔑 *Kode Item:* 
-${order.productCode || 'Tidak ada kode'}
+${order.productCode || 'Tidak ada kode'}${bonusText}
     `;
     
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -124,11 +130,17 @@ module.exports = async (req, res) => {
       order.status = 'paid';
       order.paidAt = data.paid_at || new Date().toISOString();
       
+      // Ambil bonus dari produk
+      let bonusContent = '';
+      if (product && product.bonusContent && product.bonusContent !== '') {
+        bonusContent = product.bonusContent;
+      }
+      
       await setDB(db.products, db.orders, db.sha);
       console.log('💾 Database updated');
       
-      // Kirim notifikasi Telegram
-      await sendTelegramNotification(order);
+      // Kirim notifikasi Telegram dengan bonus
+      await sendTelegramNotification(order, bonusContent);
       
       console.log(`🎉 Order ${order.orderCode} completed!`);
     } else {
