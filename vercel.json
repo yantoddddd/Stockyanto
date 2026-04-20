@@ -16,9 +16,6 @@
   ],
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
       "src": "/api/webhook",
       "dest": "api/webhook.js"
     },
@@ -27,16 +24,16 @@
       "dest": "api/index.js"
     },
     {
-      "src": "/order/(.*)",
-      "dest": "/order.html"
+      "src": "/admin",
+      "dest": "public/admin.html"
     },
     {
-      "src": "/admin",
-      "dest": "/admin.html"
+      "src": "/order/(.*)",
+      "dest": "public/order.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "public/index.html"
     }
   ]
 }
