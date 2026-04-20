@@ -1,18 +1,5 @@
 {
-  "products": [
-    {
-      "id": 1776681131712,
-      "name": "Euushs",
-      "description": "",
-      "price": 1888,
-      "stock": 10,
-      "itemType": "text",
-      "itemContent": "Jsjaha",
-      "bonusType": "none",
-      "bonusContent": "",
-      "createdAt": "2026-04-20T10:32:11.712Z"
-    }
-  ],
+  "products": [],
   "orders": [
     {
       "id": 1776679594988,
@@ -184,5 +171,5 @@
       "createdAt": "2026-04-20T09:28:09.322Z"
     }
   ],
-  "updatedAt": "2026-04-20T10:32:11.712Z"
+  "updatedAt": "2026-04-20T10:32:15.400Z"
 }
