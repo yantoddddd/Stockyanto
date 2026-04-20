@@ -8,8 +8,6 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ========== KONFIGURASI ==========
-const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-const QRISPY_API_URL = 'https://api.qrispy.id';
 const ADMIN_KEY = 'rahasia123';
 const WEBHOOK_SECRET = 'whsec_jJfqxO5wpcbQQF7sMVURsJ7re3ofIVTX';
 
@@ -46,18 +44,7 @@ async function setDB(products, orders, oldSha) {
   return data.content.sha;
 }
 
-// ========== GENERATE QRIS (via backend) ==========
-async function generateQRIS(amount, paymentReference) {
-  const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
-    method: 'POST',
-    headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, payment_reference: paymentReference })
-  });
-  const data = await response.json();
-  return data;
-}
-
-// ========== WEBHOOK ==========
+// ========== WEBHOOK (untuk update stok otomatis) ==========
 app.post('/api/webhook', (req, res) => {
   const signature = req.headers['x-qrispy-signature'];
   const payload = JSON.stringify(req.body);
@@ -82,44 +69,36 @@ app.post('/api/webhook', (req, res) => {
   })();
 });
 
-// ========== API: BUAT ORDER (dari frontend) ==========
+// ========== API: BUAT ORDER (tanpa generate QRIS, hanya simpan) ==========
 app.post('/api/create-order', async (req, res) => {
-  const { productId, customerName, customerEmail } = req.body;
-  if (!productId || !customerName) return res.status(400).json({ error: 'Nama dan produk wajib' });
+  const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, adminFee, expiredAt } = req.body;
+  
+  if (!productId || !customerName || !qrisId) {
+    return res.status(400).json({ error: 'Data tidak lengkap' });
+  }
 
   const db = await getDB();
   const product = db.products.find(p => p.id == productId);
   if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
   if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
 
-  // Hitung total dengan admin fee (misal admin fee 2.5%)
-  const adminFee = Math.round(product.price * 0.025);
-  const totalAmount = product.price + adminFee;
-
-  const paymentRef = `order-${Date.now()}-${productId}`;
-  const qrisResult = await generateQRIS(totalAmount, paymentRef);
-  if (qrisResult.status !== 'success') {
-    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
-  }
-
-  // Buat kode unik untuk halaman order
   const orderCode = crypto.randomBytes(16).toString('hex');
   
   const newOrder = {
     id: Date.now(),
     orderCode: orderCode,
-    qrisId: qrisResult.data.qris_id,
+    qrisId: qrisId,
     productId: product.id,
     productName: product.name,
     productCode: product.itemCode,
     price: product.price,
-    adminFee: adminFee,
-    totalAmount: totalAmount,
+    adminFee: adminFee || Math.round(product.price * 0.025),
+    totalAmount: totalAmount || product.price,
     customerName,
     customerEmail: customerEmail || '-',
     status: 'pending',
-    qrisImage: qrisResult.data.qris_image_url,
-    expiredAt: qrisResult.data.expired_at,
+    qrisImage: qrisImage,
+    expiredAt: expiredAt || new Date(Date.now() + 15 * 60000).toISOString(),
     createdAt: new Date().toISOString()
   };
   db.orders.unshift(newOrder);
@@ -127,32 +106,23 @@ app.post('/api/create-order', async (req, res) => {
 
   res.json({
     success: true,
-    orderCode: orderCode,
-    qrisImage: qrisResult.data.qris_image_url,
-    totalAmount: totalAmount,
-    productPrice: product.price,
-    adminFee: adminFee,
-    expiredAt: qrisResult.data.expired_at
+    orderCode: orderCode
   });
 });
 
-// ========== HALAMAN UNIK UNTUK SETIAP ORDER (GET /order/:code) ==========
+// ========== HALAMAN UNIK UNTUK SETIAP ORDER ==========
 app.get('/order/:code', async (req, res) => {
   const db = await getDB();
   const order = db.orders.find(o => o.orderCode === req.params.code);
   if (!order) {
     return res.status(404).send(`
       <!DOCTYPE html>
-      <html>
-      <head><title>Order Not Found</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+      <html><head><title>Order Not Found</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
       <style>body{background:#0a2b5e;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;}</style>
-      </head>
-      <body><div><h1>❌ Order Tidak Ditemukan</h1><p>Link tidak valid atau sudah kadaluarsa.</p></div></body>
-      </html>
+      </head><body><div><h1>❌ Order Tidak Ditemukan</h1><p>Link tidak valid atau sudah kadaluarsa.</p></div></body></html>
     `);
   }
 
-  // Kirim halaman HTML berdasarkan status order
   if (order.status === 'paid') {
     res.send(`
       <!DOCTYPE html>
@@ -170,7 +140,6 @@ app.get('/order/:code', async (req, res) => {
           h1{color:#10b981;margin-bottom:20px;font-size:2rem;}
           .product-name{font-size:1.5rem;font-weight:700;margin:20px 0;}
           .code-box{background:#0f172a;padding:20px;border-radius:20px;margin:20px 0;word-break:break-all;font-family:monospace;font-size:1rem;border-left:4px solid #10b981;}
-          .btn{background:#3b82f6;border:none;padding:12px 24px;border-radius:40px;color:white;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;margin-top:10px;}
           .info{color:#94a3b8;font-size:0.8rem;margin-top:20px;}
         </style>
       </head>
@@ -185,14 +154,13 @@ app.get('/order/:code', async (req, res) => {
           </div>
           <div class="info">
             <i class="fas fa-save"></i> Simpan kode di atas.<br>
-            Kode ini hanya muncul sekali dan tidak akan berubah meskipun halaman di-refresh.
+            Kode ini tidak akan berubah meskipun halaman di-refresh.
           </div>
         </div>
       </body>
       </html>
     `);
   } else {
-    // Order masih pending (belum bayar)
     res.send(`
       <!DOCTYPE html>
       <html lang="id">
@@ -222,10 +190,10 @@ app.get('/order/:code', async (req, res) => {
             Harga produk: Rp ${order.price.toLocaleString()} + Admin: Rp ${order.adminFee.toLocaleString()}
           </div>
           <div class="status" id="statusText">⏳ Menunggu pembayaran...</div>
-          <button class="refresh-btn" onclick="checkStatus()"><i class="fas fa-sync-alt"></i> Cek Status Pembayaran</button>
+          <button class="refresh-btn" onclick="checkStatus()"><i class="fas fa-sync-alt"></i> Cek Status</button>
           <div class="info">
             <i class="fas fa-clock"></i> Kadaluarsa: ${new Date(order.expiredAt).toLocaleString()}<br>
-            Setelah bayar, refresh halaman ini atau klik tombol di atas.
+            Setelah bayar, refresh halaman ini.
           </div>
         </div>
         <script>
@@ -234,18 +202,18 @@ app.get('/order/:code', async (req, res) => {
             const statusDiv = document.getElementById('statusText');
             statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Mengecek...';
             try {
-              const res = await fetch('/api/check-order/${order.orderCode}');
+              const res = await fetch('/api/check-order/' + orderCode);
               const data = await res.json();
               if (data.status === 'paid') {
-                statusDiv.innerHTML = '✅ Pembayaran BERHASIL! Halaman akan dimuat ulang...';
-                setTimeout(() => location.reload(), 2000);
+                statusDiv.innerHTML = '✅ Pembayaran BERHASIL! Reload...';
+                setTimeout(() => location.reload(), 1500);
               } else if (data.status === 'expired') {
-                statusDiv.innerHTML = '❌ QRIS sudah kadaluarsa. Silakan order ulang.';
+                statusDiv.innerHTML = '❌ QRIS kadaluarsa. Silakan order ulang.';
               } else {
-                statusDiv.innerHTML = '⏳ Masih menunggu pembayaran. Cek lagi nanti.';
+                statusDiv.innerHTML = '⏳ Masih menunggu pembayaran.';
               }
             } catch(e) {
-              statusDiv.innerHTML = '⚠️ Gagal mengecek status';
+              statusDiv.innerHTML = '⚠️ Gagal mengecek';
             }
           }
           setInterval(checkStatus, 5000);
@@ -267,7 +235,7 @@ app.get('/api/check-order/:code', async (req, res) => {
   res.json({ status: 'pending' });
 });
 
-// ========== API LAINNYA (produk, admin, dll) ==========
+// ========== API LAINNYA (produk, admin) ==========
 app.get('/api/products', async (req, res) => {
   const db = await getDB();
   res.json({ success: true, products: db.products });
