@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 // ========== KONFIGURASI QRISPY ==========
 const QRISPY_API_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
@@ -19,7 +19,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
 
-// ========== FUNGSI BACA DATABASE ==========
+// ========== FUNGSI BACA DATABASE DARI GITHUB ==========
 async function getDB() {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
@@ -28,7 +28,9 @@ async function getDB() {
         'Accept': 'application/vnd.github.v3+json'
       }
     });
-    if (!res.ok) return { products: [], orders: [], sha: null };
+    if (!res.ok) {
+      return { products: [], orders: [], sha: null };
+    }
     const data = await res.json();
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     return { ...JSON.parse(content), sha: data.sha };
@@ -38,7 +40,7 @@ async function getDB() {
   }
 }
 
-// ========== FUNGSI SIMPAN DATABASE ==========
+// ========== FUNGSI SIMPAN DATABASE KE GITHUB ==========
 async function setDB(products, orders, oldSha) {
   const content = { products, orders, updatedAt: new Date().toISOString() };
   const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
@@ -54,12 +56,15 @@ async function setDB(products, orders, oldSha) {
       sha: oldSha
     })
   });
-  if (!res.ok) throw new Error(`GitHub save failed: ${await res.text()}`);
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`GitHub save failed: ${error}`);
+  }
   const data = await res.json();
   return data.content.sha;
 }
 
-// ========== FUNGSI QRIS ==========
+// ========== FUNGSI GENERATE QRIS ==========
 async function generateQRIS(amount, paymentReference) {
   try {
     const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
@@ -70,88 +75,60 @@ async function generateQRIS(amount, paymentReference) {
       },
       body: JSON.stringify({ amount, payment_reference: paymentReference })
     });
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log('QRIS Generate:', JSON.stringify(data, null, 2));
-      return data;
-    } else {
-      const text = await response.text();
-      console.error('QRIS API error:', text);
-      return { status: 'error', message: `API error: ${response.status}` };
+    const raw = await response.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      console.error('QRIS API non-JSON:', raw);
+      return { status: 'error', message: `API error: ${raw.substring(0, 100)}` };
     }
+    console.log('QRIS generate response:', data);
+    return data;
   } catch (err) {
-    console.error('Generate QRIS exception:', err);
+    console.error('QRIS generate exception:', err);
     return { status: 'error', message: err.message };
   }
 }
 
-// ========== WEBHOOK UNTUK NOTIFIKASI PEMBAYARAN (DENGAN VERIFIKASI) ==========
-app.post('/api/webhook', async (req, res) => {
-  // Ambil signature dari header
+// ========== WEBHOOK UNTUK PEMBAYARAN (DENGAN VERIFIKASI SIGNATURE) ==========
+app.post('/api/webhook', (req, res) => {
   const signature = req.headers['x-qrispy-signature'];
-  const payload = JSON.stringify(req.body); // raw body string untuk verifikasi
+  const payload = req.rawBody.toString();
+  const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
   
-  // Verifikasi signature
-  const expectedSignature = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
-  
-  if (signature !== expectedSignature) {
+  if (signature !== expected) {
     console.warn('Invalid webhook signature');
     return res.status(401).json({ error: 'Invalid signature' });
   }
   
-  // Signature valid, proses webhook
-  console.log('Webhook verified, processing...');
-  
-  // Langsung response 200 agar webhook tidak diulang
+  // Signature valid, proses async
   res.status(200).end();
   
-  try {
-    const { event, data } = req.body;
-    
-    // Terima event payment.received atau payment.success (untuk kompatibilitas)
-    if (event === 'payment.received' || event === 'payment.success') {
-      const qrisId = data?.qris_id;
-      if (!qrisId) {
-        console.log('No qris_id in webhook payload');
-        return;
+  (async () => {
+    try {
+      const { event, data } = req.body;
+      if (event === 'payment.received') {
+        const qrisId = data?.qris_id;
+        if (!qrisId) return;
+        const db = await getDB();
+        const order = db.orders.find(o => o.qrisId === qrisId);
+        if (!order || order.status === 'paid') return;
+        
+        const product = db.products.find(p => p.id == order.productId);
+        if (product && product.stock > 0) product.stock -= 1;
+        order.status = 'paid';
+        order.paidAt = data.paid_at || new Date().toISOString();
+        await setDB(db.products, db.orders, db.sha);
+        console.log(`Order ${order.id} paid via webhook`);
       }
-      
-      const db = await getDB();
-      const order = db.orders.find(o => o.qrisId === qrisId);
-      if (!order) {
-        console.log(`Order not found for qrisId: ${qrisId}`);
-        return;
-      }
-      
-      if (order.status === 'paid') {
-        console.log(`Order ${order.id} already paid`);
-        return;
-      }
-      
-      // Kurangi stok produk
-      const product = db.products.find(p => p.id == order.productId);
-      if (product && product.stock > 0) {
-        product.stock -= 1;
-        console.log(`Stok ${product.name} berkurang jadi ${product.stock}`);
-      }
-      
-      // Update status order
-      order.status = 'paid';
-      order.paidAt = data.paid_at || new Date().toISOString();
-      
-      // Simpan ke database
-      await setDB(db.products, db.orders, db.sha);
-      console.log(`Order ${order.id} marked as paid via webhook`);
-    } else {
-      console.log(`Unhandled event type: ${event}`);
+    } catch (err) {
+      console.error('Webhook process error:', err);
     }
-  } catch (err) {
-    console.error('Webhook processing error:', err);
-  }
+  })();
 });
 
-// ========== API CUSTOMER (TIDAK BERUBAH) ==========
+// ========== API CUSTOMER ==========
 app.get('/api/products', async (req, res) => {
   try {
     const db = await getDB();
@@ -166,7 +143,6 @@ app.post('/api/order', async (req, res) => {
   if (!productId || !customerName) {
     return res.status(400).json({ error: 'Nama dan produk wajib' });
   }
-  
   try {
     const db = await getDB();
     const product = db.products.find(p => p.id == productId);
@@ -175,9 +151,7 @@ app.post('/api/order', async (req, res) => {
     
     const paymentRef = `order-${Date.now()}-${productId}`;
     const qrisResult = await generateQRIS(product.price, paymentRef);
-    
     if (qrisResult.status !== 'success') {
-      console.error('QRIS generate failed:', qrisResult);
       return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
     }
     
@@ -195,10 +169,8 @@ app.post('/api/order', async (req, res) => {
       expiredAt: qrisResult.data.expired_at,
       createdAt: new Date().toISOString()
     };
-    
     db.orders.unshift(newOrder);
     await setDB(db.products, db.orders, db.sha);
-    
     res.json({
       success: true,
       orderId: newOrder.id,
@@ -228,7 +200,6 @@ app.get('/api/check-payment/:orderId', async (req, res) => {
     }
     res.json({ success: true, status: 'pending' });
   } catch (err) {
-    console.error('Check payment error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -252,7 +223,7 @@ app.post('/api/admin/product', async (req, res) => {
   const { name, price, stock, itemCode, adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
   if (!name || !itemCode || price <= 0) {
-    return res.status(400).json({ error: 'Nama, harga > 0, dan kode wajib' });
+    return res.status(400).json({ error: 'Nama, harga >0, dan kode wajib' });
   }
   try {
     const db = await getDB();
