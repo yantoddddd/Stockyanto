@@ -7,7 +7,7 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
         body{background:linear-gradient(135deg,#0f172a,#1e1b4b);font-family:system-ui;color:white;padding:20px;}
-        .container{max-width:1000px;margin:0 auto;}
+        .container{max-width:800px;margin:0 auto;}
         .card{background:rgba(15,23,42,0.8);border-radius:20px;padding:24px;margin-bottom:20px;}
         input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:10px;border:none;background:#0f172a;color:white;}
         button{background:#3b82f6;border:none;padding:10px20px;border-radius:10px;color:white;cursor:pointer;}
@@ -19,14 +19,7 @@
 <div class="container">
     <div class="card"><h1>Admin Panel</h1><input type="password" id="adminKey" placeholder="Kunci Admin"><button id="authBtn">Login</button></div>
     <div id="content" style="display:none;">
-        <div class="card">
-            <h2>Tambah Produk</h2>
-            <input id="name" placeholder="Nama Produk (contoh: Akun Roblox VIP)">
-            <input id="price" type="number" placeholder="Harga (contoh: 25000)">
-            <input id="stock" type="number" placeholder="Stok">
-            <textarea id="code" rows="3" placeholder="Kode/Item Digital (contoh: username:password atau link download)"></textarea>
-            <button id="addBtn">Simpan</button>
-        </div>
+        <div class="card"><h2>Tambah Produk</h2><input id="name" placeholder="Nama Produk"><input id="price" type="number" placeholder="Harga"><input id="stock" type="number" placeholder="Stok"><textarea id="code" rows="3" placeholder="Kode/Item Digital"></textarea><button id="addBtn">Simpan</button></div>
         <div class="card"><h2>Daftar Produk</h2><div id="products"></div></div>
         <div class="card"><h2>Riwayat Order</h2><div id="orders"></div></div>
     </div>
@@ -39,8 +32,7 @@ document.getElementById('authBtn').onclick=()=>{adminKey=document.getElementById
 async function loadProducts(){let res=await fetch(`/api/admin/products?adminKey=${adminKey}`);let data=await res.json();let div=document.getElementById('products');if(data.success&&data.products.length){div.innerHTML=data.products.map(p=>`<div class="item"><strong>${p.name}</strong> - Rp ${(p.price||0).toLocaleString()} - Stok: ${p.stock}<button onclick="deleteProduct(${p.id})" style="background:#ef4444;margin-left:10px;">Hapus</button></div>`).join('');}else{div.innerHTML='<p>Belum ada produk</p>';}}
 async function deleteProduct(id){if(confirm('Hapus produk ini?')){await fetch(`/api/admin/product/${id}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey})});loadProducts();}}
 async function loadOrders(){let res=await fetch(`/api/admin/orders?adminKey=${adminKey}`);let data=await res.json();let div=document.getElementById('orders');if(data.success&&data.orders.length){div.innerHTML=data.orders.map(o=>`<div class="item"><strong>${o.productName}</strong><br>Pembeli: ${o.customerName}<br>Harga: Rp ${(o.price||0).toLocaleString()}<br>Status: ${o.status}<br>${new Date(o.createdAt).toLocaleString()}</div>`).join('');}else{div.innerHTML='<p>Belum ada order</p>';}}
-document.getElementById('addBtn').onclick=async()=>{let name=document.getElementById('name').value;let price=parseInt(document.getElementById('price').value);let stock=parseInt(document.getElementById('stock').value)||1;let itemCode=document.getElementById('code').value;if(!name||!price||price<=0||!itemCode){toast('Nama, harga >0, dan kode wajib',true);return;}
-let res=await fetch('/api/admin/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,price,stock,itemCode,adminKey})});if(res.ok){toast('Produk ditambahkan');document.getElementById('name').value='';document.getElementById('price').value='';document.getElementById('stock').value='';document.getElementById('code').value='';loadProducts();}else{toast('Gagal',true);}};
+document.getElementById('addBtn').onclick=async()=>{let name=document.getElementById('name').value;let price=parseInt(document.getElementById('price').value);let stock=parseInt(document.getElementById('stock').value)||1;let itemCode=document.getElementById('code').value;if(!name||!price||price<=0||!itemCode){toast('Nama, harga >0, dan kode wajib',true);return;} let res=await fetch('/api/admin/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,price,stock,itemCode,adminKey})});if(res.ok){toast('Produk ditambahkan');document.getElementById('name').value='';document.getElementById('price').value='';document.getElementById('stock').value='';document.getElementById('code').value='';loadProducts();}else{toast('Gagal',true);}};
 </script>
 </body>
 </html>
