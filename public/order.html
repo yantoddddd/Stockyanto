@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menunggu Pembayaran</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:linear-gradient(135deg,#0a2b5e,#0f3b7a);font-family:'Inter',sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;}
+        .card{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:32px;padding:40px;max-width:500px;width:100%;text-align:center;}
+        .qris-img{width:100%;max-width:250px;margin:20px auto;display:block;background:white;padding:16px;border-radius:24px;}
+        .total{font-size:1.5rem;font-weight:800;color:#60a5fa;margin:10px 0;}
+        .status{color:#f59e0b;margin:10px 0;}
+        .info{color:#94a3b8;font-size:0.7rem;margin-top:20px;}
+        .refresh-btn{background:#3b82f6;border:none;padding:12px 24px;border-radius:40px;color:white;font-weight:600;cursor:pointer;margin-top:20px;}
+        .success-card{background:rgba(255,255,255,0.1);border-radius:32px;padding:40px;max-width:500px;width:100%;text-align:center;}
+        .code-box{background:#0f172a;padding:20px;border-radius:20px;margin:20px 0;word-break:break-all;border-left:4px solid #10b981;}
+    </style>
+</head>
+<body>
+    <div id="pendingContent" style="display:block;">
+        <div class="card">
+            <h2><i class="fas fa-qrcode"></i> Scan QRIS untuk Membayar</h2>
+            <img id="qrisImage" class="qris-img" alt="QRIS">
+            <div class="total">💰 Total: Rp <span id="totalAmount"></span></div>
+            <div class="status" id="statusText">⏳ Menunggu pembayaran...</div>
+            <button class="refresh-btn" onclick="checkStatus()"><i class="fas fa-sync-alt"></i> Cek Status</button>
+            <div class="info"><i class="fas fa-clock"></i> Kadaluarsa: <span id="expiryTime"></span></div>
+        </div>
+    </div>
+    <div id="successContent" style="display:none;">
+        <div class="success-card">
+            <i class="fas fa-check-circle" style="font-size:4rem;color:#10b981;"></i>
+            <h1 style="color:#10b981; margin:20px 0;">✅ Pembayaran Berhasil!</h1>
+            <div id="productName" style="font-size:1.5rem;font-weight:700;color:white;"></div>
+            <div class="code-box" id="productCode"></div>
+            <div class="info"><i class="fas fa-save"></i> Simpan kode di atas.</div>
+        </div>
+    </div>
+
+    <script>
+        // Ambil orderCode dari URL
+        const orderCode = window.location.pathname.split('/').pop();
+        
+        async function loadOrder() {
+            try {
+                const res = await fetch(`/api/get-order/${orderCode}`);
+                const data = await res.json();
+                
+                if (!data.success) {
+                    document.body.innerHTML = '<div class="card"><h1>❌ Order Tidak Ditemukan</h1><a href="/" style="color:#60a5fa;">Kembali</a></div>';
+                    return;
+                }
+                
+                if (data.status === 'paid') {
+                    document.getElementById('pendingContent').style.display = 'none';
+                    document.getElementById('successContent').style.display = 'block';
+                    document.getElementById('productName').innerText = data.productName;
+                    document.getElementById('productCode').innerHTML = data.productCode;
+                } else {
+                    document.getElementById('qrisImage').src = data.qrisImage;
+                    document.getElementById('totalAmount').innerText = data.totalAmount.toLocaleString();
+                    document.getElementById('expiryTime').innerText = new Date(data.expiredAt).toLocaleString();
+                    startPolling();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        let pollingInterval;
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/check-payment/${orderCode}`);
+                    const data = await res.json();
+                    if (data.status === 'paid') {
+                        clearInterval(pollingInterval);
+                        document.getElementById('statusText').innerHTML = '✅ Pembayaran BERHASIL! Reload...';
+                        setTimeout(() => location.reload(), 1500);
+                    } else if (data.status === 'expired') {
+                        clearInterval(pollingInterval);
+                        document.getElementById('statusText').innerHTML = '❌ QRIS kadaluarsa';
+                    }
+                } catch(e) {}
+            }, 5000);
+        }
+        
+        async function checkStatus() {
+            const statusDiv = document.getElementById('statusText');
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Mengecek...';
+            try {
+                const res = await fetch(`/api/check-payment/${orderCode}`);
+                const data = await res.json();
+                if (data.status === 'paid') {
+                    statusDiv.innerHTML = '✅ Pembayaran BERHASIL! Reload...';
+                    setTimeout(() => location.reload(), 1500);
+                } else if (data.status === 'expired') {
+                    statusDiv.innerHTML = '❌ QRIS kadaluarsa';
+                } else {
+                    statusDiv.innerHTML = '⏳ Masih menunggu pembayaran';
+                }
+            } catch(e) {
+                statusDiv.innerHTML = '⚠️ Gagal mengecek';
+            }
+        }
+        
+        loadOrder();
+    </script>
+</body>
+</html>
