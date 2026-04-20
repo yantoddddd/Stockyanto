@@ -11,6 +11,18 @@
       "bonusType": "text",
       "bonusContent": "- ZevalDigital\n- Nexapay\n- Davpay",
       "createdAt": "2026-04-20T10:34:17.269Z"
+    },
+    {
+      "id": 1776697382375,
+      "name": "Yanti tes produk",
+      "description": "Tes123",
+      "price": 100,
+      "stock": 10,
+      "itemType": "text",
+      "itemContent": "Abcd123.com",
+      "bonusType": "none",
+      "bonusContent": "",
+      "createdAt": "2026-04-20T15:03:02.375Z"
     }
   ],
   "orders": [
@@ -303,5 +315,5 @@
       "createdAt": "2026-04-20T09:28:09.322Z"
     }
   ],
-  "updatedAt": "2026-04-20T14:39:41.582Z"
+  "updatedAt": "2026-04-20T15:03:02.375Z"
 }
