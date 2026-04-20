@@ -1,14 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ========== KONFIGURASI QRISPY (TOKEN BARU) ==========
+// ========== KONFIGURASI QRISPY ==========
 const QRISPY_API_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 const ADMIN_KEY = 'rahasia123';
+
+// ========== KONFIGURASI WEBHOOK ==========
+const WEBHOOK_SECRET = 'whsec_jJfqxO5wpcbQQF7sMVURsJ7re3ofIVTX';
 
 // ========== KONFIGURASI GITHUB ==========
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -24,11 +28,7 @@ async function getDB() {
         'Accept': 'application/vnd.github.v3+json'
       }
     });
-    
-    if (!res.ok) {
-      return { products: [], orders: [], sha: null };
-    }
-    
+    if (!res.ok) return { products: [], orders: [], sha: null };
     const data = await res.json();
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     return { ...JSON.parse(content), sha: data.sha };
@@ -42,7 +42,6 @@ async function getDB() {
 async function setDB(products, orders, oldSha) {
   const content = { products, orders, updatedAt: new Date().toISOString() };
   const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
-  
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
     method: 'PUT',
     headers: {
@@ -55,12 +54,7 @@ async function setDB(products, orders, oldSha) {
       sha: oldSha
     })
   });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`GitHub save failed: ${error}`);
-  }
-  
+  if (!res.ok) throw new Error(`GitHub save failed: ${await res.text()}`);
   const data = await res.json();
   return data.content.sha;
 }
@@ -76,7 +70,6 @@ async function generateQRIS(amount, paymentReference) {
       },
       body: JSON.stringify({ amount, payment_reference: paymentReference })
     });
-    
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
@@ -93,29 +86,39 @@ async function generateQRIS(amount, paymentReference) {
   }
 }
 
-// ========== WEBHOOK UNTUK NOTIFIKASI PEMBAYARAN ==========
+// ========== WEBHOOK UNTUK NOTIFIKASI PEMBAYARAN (DENGAN VERIFIKASI) ==========
 app.post('/api/webhook', async (req, res) => {
-  // Langsung response 200 dulu biar ga dianggap gagal
+  // Ambil signature dari header
+  const signature = req.headers['x-qrispy-signature'];
+  const payload = JSON.stringify(req.body); // raw body string untuk verifikasi
+  
+  // Verifikasi signature
+  const expectedSignature = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
+  
+  if (signature !== expectedSignature) {
+    console.warn('Invalid webhook signature');
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // Signature valid, proses webhook
+  console.log('Webhook verified, processing...');
+  
+  // Langsung response 200 agar webhook tidak diulang
   res.status(200).end();
   
-  console.log('Webhook received:', JSON.stringify(req.body, null, 2));
-  
   try {
-    const payload = req.body;
+    const { event, data } = req.body;
     
-    // Cek apakah ini event payment success
-    if (payload.event === 'payment.success' || payload.status === 'paid') {
-      const qrisId = payload.data?.qris_id || payload.qris_id;
-      
+    // Terima event payment.received atau payment.success (untuk kompatibilitas)
+    if (event === 'payment.received' || event === 'payment.success') {
+      const qrisId = data?.qris_id;
       if (!qrisId) {
         console.log('No qris_id in webhook payload');
         return;
       }
       
-      // Cari order berdasarkan qrisId
       const db = await getDB();
       const order = db.orders.find(o => o.qrisId === qrisId);
-      
       if (!order) {
         console.log(`Order not found for qrisId: ${qrisId}`);
         return;
@@ -135,18 +138,20 @@ app.post('/api/webhook', async (req, res) => {
       
       // Update status order
       order.status = 'paid';
-      order.paidAt = new Date().toISOString();
+      order.paidAt = data.paid_at || new Date().toISOString();
       
       // Simpan ke database
       await setDB(db.products, db.orders, db.sha);
       console.log(`Order ${order.id} marked as paid via webhook`);
+    } else {
+      console.log(`Unhandled event type: ${event}`);
     }
   } catch (err) {
-    console.error('Webhook error:', err);
+    console.error('Webhook processing error:', err);
   }
 });
 
-// ========== API CUSTOMER ==========
+// ========== API CUSTOMER (TIDAK BERUBAH) ==========
 app.get('/api/products', async (req, res) => {
   try {
     const db = await getDB();
@@ -165,7 +170,6 @@ app.post('/api/order', async (req, res) => {
   try {
     const db = await getDB();
     const product = db.products.find(p => p.id == productId);
-    
     if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
     if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
     
@@ -213,7 +217,6 @@ app.get('/api/check-payment/:orderId', async (req, res) => {
   try {
     const db = await getDB();
     const order = db.orders.find(o => o.id == req.params.orderId);
-    
     if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
     if (order.status === 'paid') {
       return res.json({ success: true, status: 'paid', productCode: order.productCode });
@@ -223,7 +226,6 @@ app.get('/api/check-payment/:orderId', async (req, res) => {
       await setDB(db.products, db.orders, db.sha);
       return res.json({ success: true, status: 'expired' });
     }
-    
     res.json({ success: true, status: 'pending' });
   } catch (err) {
     console.error('Check payment error:', err);
@@ -235,12 +237,8 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
   try {
     const db = await getDB();
     const order = db.orders.find(o => o.id == req.params.orderId);
-    
     if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
-    if (order.status !== 'pending') {
-      return res.status(400).json({ error: 'Order sudah diproses' });
-    }
-    
+    if (order.status !== 'pending') return res.status(400).json({ error: 'Order sudah diproses' });
     order.status = 'cancelled';
     await setDB(db.products, db.orders, db.sha);
     res.json({ success: true });
@@ -256,7 +254,6 @@ app.post('/api/admin/product', async (req, res) => {
   if (!name || !itemCode || price <= 0) {
     return res.status(400).json({ error: 'Nama, harga > 0, dan kode wajib' });
   }
-  
   try {
     const db = await getDB();
     db.products.push({
@@ -277,7 +274,6 @@ app.post('/api/admin/product', async (req, res) => {
 app.delete('/api/admin/product/:id', async (req, res) => {
   const { adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
   try {
     const db = await getDB();
     db.products = db.products.filter(p => p.id != req.params.id);
@@ -291,7 +287,6 @@ app.delete('/api/admin/product/:id', async (req, res) => {
 app.get('/api/admin/orders', async (req, res) => {
   const { adminKey } = req.query;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
   try {
     const db = await getDB();
     res.json({ success: true, orders: db.orders });
@@ -303,7 +298,6 @@ app.get('/api/admin/orders', async (req, res) => {
 app.get('/api/admin/products', async (req, res) => {
   const { adminKey } = req.query;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
   try {
     const db = await getDB();
     res.json({ success: true, products: db.products });
