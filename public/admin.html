@@ -38,18 +38,14 @@
             <input type="number" id="productStock" placeholder="Stok">
             
             <div class="form-group">
-                <label>Tipe Item</label>
-                <select id="itemType" onchange="toggleItemFields()">
+                <label>Tipe Item (wajib)</label>
+                <select id="itemType">
                     <option value="text">Teks (copy-paste)</option>
-                    <option value="file">File (upload)</option>
                     <option value="link">Link</option>
                 </select>
             </div>
             <div id="itemTextField">
                 <textarea id="itemText" rows="3" placeholder="Kode/teks yang akan diberikan ke customer"></textarea>
-            </div>
-            <div id="itemFileField" class="hidden">
-                <input type="file" id="itemFile">
             </div>
             <div id="itemLinkField" class="hidden">
                 <input type="url" id="itemLink" placeholder="https://...">
@@ -57,18 +53,14 @@
 
             <div class="form-group">
                 <label>Bonus (opsional)</label>
-                <select id="bonusType" onchange="toggleBonusFields()">
+                <select id="bonusType">
                     <option value="none">Tidak ada bonus</option>
                     <option value="text">Bonus Teks</option>
-                    <option value="file">Bonus File</option>
                     <option value="link">Bonus Link</option>
                 </select>
             </div>
             <div id="bonusTextField" class="hidden">
                 <textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea>
-            </div>
-            <div id="bonusFileField" class="hidden">
-                <input type="file" id="bonusFile">
             </div>
             <div id="bonusLinkField" class="hidden">
                 <input type="url" id="bonusLink" placeholder="https://...">
@@ -102,20 +94,16 @@ function toast(msg, isError = false) {
 function toggleItemFields() {
     const type = document.getElementById('itemType').value;
     document.getElementById('itemTextField').classList.add('hidden');
-    document.getElementById('itemFileField').classList.add('hidden');
     document.getElementById('itemLinkField').classList.add('hidden');
     if (type === 'text') document.getElementById('itemTextField').classList.remove('hidden');
-    else if (type === 'file') document.getElementById('itemFileField').classList.remove('hidden');
     else if (type === 'link') document.getElementById('itemLinkField').classList.remove('hidden');
 }
 
 function toggleBonusFields() {
     const type = document.getElementById('bonusType').value;
     document.getElementById('bonusTextField').classList.add('hidden');
-    document.getElementById('bonusFileField').classList.add('hidden');
     document.getElementById('bonusLinkField').classList.add('hidden');
     if (type === 'text') document.getElementById('bonusTextField').classList.remove('hidden');
-    else if (type === 'file') document.getElementById('bonusFileField').classList.remove('hidden');
     else if (type === 'link') document.getElementById('bonusLinkField').classList.remove('hidden');
 }
 
@@ -134,29 +122,39 @@ async function login() {
 }
 
 async function addProduct() {
-    const formData = new FormData();
-    formData.append('adminKey', adminKey);
-    formData.append('name', document.getElementById('productName').value);
-    formData.append('description', document.getElementById('productDesc').value);
-    formData.append('price', document.getElementById('productPrice').value);
-    formData.append('stock', document.getElementById('productStock').value);
-    
     const itemType = document.getElementById('itemType').value;
-    formData.append('itemType', itemType);
-    if (itemType === 'text') formData.append('itemText', document.getElementById('itemText').value);
-    else if (itemType === 'file') formData.append('itemFile', document.getElementById('itemFile').files[0]);
-    else if (itemType === 'link') formData.append('itemLink', document.getElementById('itemLink').value);
+    let itemContent = '';
+    if (itemType === 'text') itemContent = document.getElementById('itemText').value;
+    else if (itemType === 'link') itemContent = document.getElementById('itemLink').value;
+    
+    if (!itemContent) {
+        toast('Konten item wajib diisi', true);
+        return;
+    }
     
     const bonusType = document.getElementById('bonusType').value;
-    formData.append('bonusType', bonusType);
-    if (bonusType === 'text') formData.append('bonusText', document.getElementById('bonusText').value);
-    else if (bonusType === 'file') formData.append('bonusFile', document.getElementById('bonusFile').files[0]);
-    else if (bonusType === 'link') formData.append('bonusLink', document.getElementById('bonusLink').value);
+    let bonusContent = '';
+    if (bonusType === 'text') bonusContent = document.getElementById('bonusText').value;
+    else if (bonusType === 'link') bonusContent = document.getElementById('bonusLink').value;
     
-    const res = await fetch('/api/admin/product', { method: 'POST', body: formData });
+    const res = await fetch('/api/admin/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminKey: adminKey,
+            name: document.getElementById('productName').value,
+            description: document.getElementById('productDesc').value,
+            price: parseInt(document.getElementById('productPrice').value),
+            stock: parseInt(document.getElementById('productStock').value) || 1,
+            itemType: itemType,
+            itemContent: itemContent,
+            bonusType: bonusType,
+            bonusContent: bonusContent
+        })
+    });
+    
     if (res.ok) {
         toast('Produk ditambahkan');
-        loadProducts();
         document.getElementById('productName').value = '';
         document.getElementById('productDesc').value = '';
         document.getElementById('productPrice').value = '';
@@ -165,10 +163,10 @@ async function addProduct() {
         document.getElementById('itemLink').value = '';
         document.getElementById('bonusText').value = '';
         document.getElementById('bonusLink').value = '';
-        document.getElementById('itemFile').value = '';
-        document.getElementById('bonusFile').value = '';
+        loadProducts();
     } else {
-        toast('Gagal tambah produk', true);
+        const err = await res.json();
+        toast(err.error || 'Gagal tambah produk', true);
     }
 }
 
@@ -179,7 +177,7 @@ async function loadProducts() {
     if (data.success && data.products.length) {
         container.innerHTML = data.products.map(p => `
             <div class="item">
-                <div><strong>${p.name}</strong> - Rp ${p.price.toLocaleString()} - Stok: ${p.stock}</div>
+                <div><strong>${p.name}</strong> - Rp ${p.price.toLocaleString()} - Stok: ${p.stock}<br><small>${p.itemType}: ${p.itemContent.substring(0, 50)}</small></div>
                 <button onclick="deleteProduct(${p.id})" style="background:#b91c1c;">Hapus</button>
             </div>
         `).join('');
@@ -212,6 +210,8 @@ async function loadOrders() {
 
 toggleItemFields();
 toggleBonusFields();
+document.getElementById('itemType').addEventListener('change', toggleItemFields);
+document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
 </script>
 </body>
 </html>
