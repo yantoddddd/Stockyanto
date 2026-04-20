@@ -1,8 +1,6 @@
 const crypto = require('crypto');
 
 const WEBHOOK_SECRET = 'whsec_AVu3fFLUBVMLjo6OdCWq7I3qdQ2CJ6e2';
-const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-const QRISPY_API_URL = 'https://api.qrispy.id';
 
 // Telegram Config
 const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
@@ -23,7 +21,6 @@ async function getDB() {
     const content = Buffer.from(data.content, 'base64').toString('utf8');
     return { ...JSON.parse(content), sha: data.sha };
   } catch (err) {
-    console.error('GetDB error:', err);
     return { products: [], orders: [], sha: null };
   }
 }
@@ -53,7 +50,7 @@ async function sendTelegramNotification(order) {
 📅 *Waktu:* ${new Date().toLocaleString('id-ID')}
 
 🔑 *Kode Item:* 
-${order.productCode}
+${order.productCode || 'Tidak ada kode'}
     `;
     
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -83,10 +80,9 @@ module.exports = async (req, res) => {
   }
 
   console.log('📨 Webhook received at:', new Date().toISOString());
-  console.log('📦 Headers:', req.headers);
   console.log('📦 Body:', JSON.stringify(req.body, null, 2));
 
-  // Verifikasi signature (skip dulu buat testing)
+  // Skip signature check for testing
   // const signature = req.headers['x-qrispy-signature'];
   // const payload = JSON.stringify(req.body);
   // const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
@@ -98,26 +94,15 @@ module.exports = async (req, res) => {
   try {
     const { event, data } = req.body;
     
-    // Format asli Qrispy: event = "payment.received"
     if (event === 'payment.received') {
       const qrisId = data.qris_id;
-      const amount = data.amount;
-      const receivedAmount = data.received_amount;
-      const paymentReference = data.payment_reference;
-      const paidAt = data.paid_at;
-      
-      console.log(`💰 Payment received: qrisId=${qrisId}, amount=${amount}, received=${receivedAmount}, ref=${paymentReference}`);
+      console.log(`💰 Payment received for qrisId: ${qrisId}`);
       
       const db = await getDB();
-      console.log(`📊 Total orders in DB: ${db.orders.length}`);
-      
-      // Cari order berdasarkan qrisId
       const order = db.orders.find(o => o.qrisId === qrisId);
       
       if (!order) {
         console.log('❌ Order tidak ditemukan untuk qrisId:', qrisId);
-        const pendingOrders = db.orders.filter(o => o.status === 'pending');
-        console.log('Pending qrisIds:', pendingOrders.map(o => ({ orderCode: o.orderCode, qrisId: o.qrisId })));
         return res.status(200).end();
       }
       
@@ -137,8 +122,7 @@ module.exports = async (req, res) => {
       
       // Update status order
       order.status = 'paid';
-      order.paidAt = paidAt || new Date().toISOString();
-      order.receivedAmount = receivedAmount;
+      order.paidAt = data.paid_at || new Date().toISOString();
       
       await setDB(db.products, db.orders, db.sha);
       console.log('💾 Database updated');
