@@ -5,7 +5,7 @@
       "name": "WEB QRIS DINAMIS",
       "description": "Qris dinamis: qris sementara\nBonus pembelian: apk qris no ktp",
       "price": 1000,
-      "stock": 1000,
+      "stock": 999,
       "itemType": "link",
       "itemContent": "https://qrispy.id",
       "bonusType": "text",
@@ -24,10 +24,12 @@
       "totalAmount": 1000,
       "customerName": "Yanto",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a196e869-a360-46a2-a8b0-5d9914164f68/image",
       "expiredAt": "2026-04-20T14:41:04+00:00",
-      "createdAt": "2026-04-20T14:26:04.932Z"
+      "createdAt": "2026-04-20T14:26:04.932Z",
+      "paidAt": "2026-04-20T15:00:00+07:00",
+      "receivedAmount": 1000
     },
     {
       "id": 1776693728292,
@@ -284,5 +286,5 @@
       "createdAt": "2026-04-20T09:28:09.322Z"
     }
   ],
-  "updatedAt": "2026-04-20T14:26:04.932Z"
+  "updatedAt": "2026-04-20T14:28:45.181Z"
 }
