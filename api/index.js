@@ -5,77 +5,65 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ========== KONFIGURASI QRISPY (TOKEN BARU) ==========
+// ========== KONFIGURASI QRISPY ==========
 const QRISPY_API_TOKEN = 'cki_c4fhFog8MV0QHTAXCDwdKxJ6HFL4EMIWrHydAhN5sHOSmuzh';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 const ADMIN_KEY = 'rahasia123';
 
-// Backup ke Telegram
-const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
-const TELEGRAM_BACKUP_CHAT_ID = '-5260518165';
+// ========== KONFIGURASI GITHUB (UPDATE DENGAN REPO BARU) ==========
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = 'yantoddddd/stockyanto';  // <-- UDAH DIGANTI
+const GITHUB_PATH = 'database.json';
 
-// ========== DATA DI MEMORY ==========
-let products = [];
-let orders = [];
-
-// ========== FUNGSI BACKUP KE TELEGRAM ==========
-async function backupToTelegram() {
+// ========== FUNGSI BACA DATABASE ==========
+async function getDB() {
   try {
-    const data = JSON.stringify({ products, orders, updatedAt: new Date().toISOString() }, null, 2);
-    const formData = new FormData();
-    formData.append('chat_id', TELEGRAM_BACKUP_CHAT_ID);
-    formData.append('document', new Blob([data]), 'database_backup.json');
-    formData.append('caption', `Backup ${new Date().toLocaleString()}`);
-    
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
-      method: 'POST',
-      body: formData
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+      headers: { 
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
     });
-    console.log('Backup ke Telegram berhasil');
+    
+    if (!res.ok) {
+      return { products: [], orders: [], sha: null };
+    }
+    
+    const data = await res.json();
+    const content = Buffer.from(data.content, 'base64').toString('utf8');
+    return { ...JSON.parse(content), sha: data.sha };
   } catch (err) {
-    console.error('Backup gagal:', err);
+    console.error('Get DB error:', err);
+    return { products: [], orders: [], sha: null };
   }
 }
 
-// ========== RESTORE DARI TELEGRAM ==========
-app.get('/api/restore', async (req, res) => {
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ limit: 50, allowed_updates: ['message'] })
-    });
-    const data = await response.json();
-    
-    let lastBackup = null;
-    if (data.ok && data.result) {
-      for (let update of data.result.reverse()) {
-        if (update.message?.document?.file_name === 'database_backup.json') {
-          lastBackup = update.message.document;
-          break;
-        }
-      }
-    }
-    
-    if (lastBackup) {
-      const fileInfo = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${lastBackup.file_id}`);
-      const fileData = await fileInfo.json();
-      const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`;
-      
-      const backupRes = await fetch(fileUrl);
-      const backupData = await backupRes.json();
-      
-      if (backupData.products) products = backupData.products;
-      if (backupData.orders) orders = backupData.orders;
-      
-      res.json({ success: true, message: 'Restore berhasil', products: products.length, orders: orders.length });
-    } else {
-      res.json({ success: false, message: 'Tidak ada backup ditemukan' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// ========== FUNGSI SIMPAN DATABASE ==========
+async function setDB(products, orders, oldSha) {
+  const content = { products, orders, updatedAt: new Date().toISOString() };
+  const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+  
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: `Update database ${new Date().toISOString()}`,
+      content: updatedContent,
+      sha: oldSha
+    })
+  });
+  
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`GitHub save failed: ${error}`);
   }
-});
+  
+  const data = await res.json();
+  return data.content.sha;
+}
 
 // ========== FUNGSI QRIS ==========
 async function generateQRIS(amount, paymentReference) {
@@ -88,7 +76,7 @@ async function generateQRIS(amount, paymentReference) {
     body: JSON.stringify({ amount, payment_reference: paymentReference })
   });
   const data = await response.json();
-  console.log('Generate QRIS response:', JSON.stringify(data, null, 2));
+  console.log('Generate QRIS:', JSON.stringify(data, null, 2));
   return data;
 }
 
@@ -100,8 +88,13 @@ async function checkPaymentStatus(qrisId) {
 }
 
 // ========== API CUSTOMER ==========
-app.get('/api/products', (req, res) => {
-  res.json({ success: true, products });
+app.get('/api/products', async (req, res) => {
+  try {
+    const db = await getDB();
+    res.json({ success: true, products: db.products });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/order', async (req, res) => {
@@ -110,93 +103,111 @@ app.post('/api/order', async (req, res) => {
     return res.status(400).json({ error: 'Nama dan produk wajib' });
   }
   
-  const product = products.find(p => p.id == productId);
-  if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
-  if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
-  
-  const paymentRef = `order-${Date.now()}-${productId}`;
-  const qrisResult = await generateQRIS(product.price, paymentRef);
-  
-  if (qrisResult.status !== 'success') {
-    console.log('QRIS generate error:', qrisResult);
-    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS, cek API token' });
+  try {
+    const db = await getDB();
+    const product = db.products.find(p => p.id == productId);
+    
+    if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
+    if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
+    
+    const paymentRef = `order-${Date.now()}-${productId}`;
+    const qrisResult = await generateQRIS(product.price, paymentRef);
+    
+    if (qrisResult.status !== 'success') {
+      return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
+    }
+    
+    const newOrder = {
+      id: Date.now(),
+      qrisId: qrisResult.data.qris_id,
+      productId: product.id,
+      productName: product.name,
+      productCode: product.itemCode,
+      price: product.price,
+      customerName,
+      customerEmail: customerEmail || '-',
+      status: 'pending',
+      qrisImage: qrisResult.data.qris_image_url,
+      expiredAt: qrisResult.data.expired_at,
+      createdAt: new Date().toISOString()
+    };
+    
+    db.orders.unshift(newOrder);
+    const newSha = await setDB(db.products, db.orders, db.sha);
+    
+    res.json({
+      success: true,
+      orderId: newOrder.id,
+      qrisId: qrisResult.data.qris_id,
+      qrisImage: qrisResult.data.qris_image_url,
+      amount: product.price,
+      expiredAt: qrisResult.data.expired_at
+    });
+  } catch (err) {
+    console.error('Order error:', err);
+    res.status(500).json({ error: err.message });
   }
-  
-  const newOrder = {
-    id: Date.now(),
-    qrisId: qrisResult.data.qris_id,
-    productId: product.id,
-    productName: product.name,
-    productCode: product.itemCode,
-    price: product.price,
-    customerName,
-    customerEmail: customerEmail || '-',
-    status: 'pending',
-    qrisImage: qrisResult.data.qris_image_url,
-    expiredAt: qrisResult.data.expired_at,
-    createdAt: new Date().toISOString()
-  };
-  orders.unshift(newOrder);
-  
-  res.json({
-    success: true,
-    orderId: newOrder.id,
-    qrisId: qrisResult.data.qris_id,
-    qrisImage: qrisResult.data.qris_image_url,
-    amount: product.price,
-    expiredAt: qrisResult.data.expired_at
-  });
 });
 
 app.get('/api/check-payment/:orderId', async (req, res) => {
-  const order = orders.find(o => o.id == req.params.orderId);
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
-  
-  if (order.status === 'paid') {
-    return res.json({ success: true, status: 'paid', productCode: order.productCode });
-  }
-  
-  if (new Date(order.expiredAt) < new Date()) {
-    order.status = 'expired';
-    return res.json({ success: true, status: 'expired' });
-  }
-  
   try {
+    const db = await getDB();
+    const order = db.orders.find(o => o.id == req.params.orderId);
+    
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    if (order.status === 'paid') {
+      return res.json({ success: true, status: 'paid', productCode: order.productCode });
+    }
+    if (new Date(order.expiredAt) < new Date()) {
+      order.status = 'expired';
+      await setDB(db.products, db.orders, db.sha);
+      return res.json({ success: true, status: 'expired' });
+    }
+    
     const statusResult = await checkPaymentStatus(order.qrisId);
-    console.log('Check payment:', order.qrisId, statusResult);
     
     if (statusResult.status === 'success' && statusResult.data.status === 'paid') {
-      const product = products.find(p => p.id == order.productId);
+      const product = db.products.find(p => p.id == order.productId);
       if (product && product.stock > 0) {
         product.stock -= 1;
       }
       order.status = 'paid';
       order.paidAt = new Date().toISOString();
-      await backupToTelegram();
+      
+      await setDB(db.products, db.orders, db.sha);
       return res.json({ success: true, status: 'paid', productCode: order.productCode });
     }
     
     res.json({ success: true, status: 'pending' });
   } catch (err) {
     console.error('Check payment error:', err);
-    res.json({ success: true, status: 'pending' });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.post('/api/cancel-order/:orderId', async (req, res) => {
-  const order = orders.find(o => o.id == req.params.orderId);
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
-  if (order.status !== 'pending') return res.status(400).json({ error: 'Order sudah diproses' });
-  
   try {
-    await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/cancel`, {
-      method: 'POST',
-      headers: { 'X-API-Token': QRISPY_API_TOKEN }
-    });
-  } catch(e) {}
-  
-  order.status = 'cancelled';
-  res.json({ success: true });
+    const db = await getDB();
+    const order = db.orders.find(o => o.id == req.params.orderId);
+    
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    if (order.status !== 'pending') {
+      return res.status(400).json({ error: 'Order sudah diproses' });
+    }
+    
+    try {
+      await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/cancel`, {
+        method: 'POST',
+        headers: { 'X-API-Token': QRISPY_API_TOKEN }
+      });
+    } catch(e) {}
+    
+    order.status = 'cancelled';
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ========== API ADMIN ==========
@@ -207,36 +218,59 @@ app.post('/api/admin/product', async (req, res) => {
     return res.status(400).json({ error: 'Nama, harga > 0, dan kode wajib' });
   }
   
-  products.push({
-    id: Date.now(),
-    name,
-    price: parseInt(price),
-    stock: parseInt(stock) || 1,
-    itemCode,
-    createdAt: new Date().toISOString()
-  });
-  await backupToTelegram();
-  res.json({ success: true });
+  try {
+    const db = await getDB();
+    db.products.push({
+      id: Date.now(),
+      name,
+      price: parseInt(price),
+      stock: parseInt(stock) || 1,
+      itemCode,
+      createdAt: new Date().toISOString()
+    });
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete('/api/admin/product/:id', async (req, res) => {
   const { adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  products = products.filter(p => p.id != req.params.id);
-  await backupToTelegram();
-  res.json({ success: true });
+  
+  try {
+    const db = await getDB();
+    db.products = db.products.filter(p => p.id != req.params.id);
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/admin/orders', (req, res) => {
+app.get('/api/admin/orders', async (req, res) => {
   const { adminKey } = req.query;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ success: true, orders });
+  
+  try {
+    const db = await getDB();
+    res.json({ success: true, orders: db.orders });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/admin/products', (req, res) => {
+app.get('/api/admin/products', async (req, res) => {
   const { adminKey } = req.query;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ success: true, products });
+  
+  try {
+    const db = await getDB();
+    res.json({ success: true, products: db.products });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = app;
