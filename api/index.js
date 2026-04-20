@@ -44,7 +44,7 @@ async function setDB(products, orders, oldSha) {
   return data.content.sha;
 }
 
-// ========== WEBHOOK (untuk update stok otomatis) ==========
+// ========== WEBHOOK ==========
 app.post('/api/webhook', (req, res) => {
   const signature = req.headers['x-qrispy-signature'];
   const payload = JSON.stringify(req.body);
@@ -63,15 +63,15 @@ app.post('/api/webhook', (req, res) => {
         order.status = 'paid';
         order.paidAt = data.paid_at || new Date().toISOString();
         await setDB(db.products, db.orders, db.sha);
-        console.log(`Order ${order.id} paid`);
+        console.log(`Order ${order.id} paid via webhook`);
       }
     } catch(e) {}
   })();
 });
 
-// ========== API: BUAT ORDER (tanpa generate QRIS, hanya simpan) ==========
+// ========== API: BUAT ORDER ==========
 app.post('/api/create-order', async (req, res) => {
-  const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, adminFee, expiredAt } = req.body;
+  const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body;
   
   if (!productId || !customerName || !qrisId) {
     return res.status(400).json({ error: 'Data tidak lengkap' });
@@ -92,7 +92,6 @@ app.post('/api/create-order', async (req, res) => {
     productName: product.name,
     productCode: product.itemCode,
     price: product.price,
-    adminFee: adminFee || Math.round(product.price * 0.025),
     totalAmount: totalAmount || product.price,
     customerName,
     customerEmail: customerEmail || '-',
@@ -110,7 +109,7 @@ app.post('/api/create-order', async (req, res) => {
   });
 });
 
-// ========== HALAMAN UNIK UNTUK SETIAP ORDER ==========
+// ========== HALAMAN UNIK ORDER ==========
 app.get('/order/:code', async (req, res) => {
   const db = await getDB();
   const order = db.orders.find(o => o.orderCode === req.params.code);
@@ -186,9 +185,6 @@ app.get('/order/:code', async (req, res) => {
           <h2><i class="fas fa-qrcode"></i> Scan QRIS untuk Membayar</h2>
           <img src="${order.qrisImage}" class="qris-img" alt="QRIS">
           <div class="total">💰 Total: Rp ${order.totalAmount.toLocaleString()}</div>
-          <div class="detail" style="font-size:0.8rem; color:#94a3b8;">
-            Harga produk: Rp ${order.price.toLocaleString()} + Admin: Rp ${order.adminFee.toLocaleString()}
-          </div>
           <div class="status" id="statusText">⏳ Menunggu pembayaran...</div>
           <button class="refresh-btn" onclick="checkStatus()"><i class="fas fa-sync-alt"></i> Cek Status</button>
           <div class="info">
@@ -235,12 +231,13 @@ app.get('/api/check-order/:code', async (req, res) => {
   res.json({ status: 'pending' });
 });
 
-// ========== API LAINNYA (produk, admin) ==========
+// ========== API PRODUK ==========
 app.get('/api/products', async (req, res) => {
   const db = await getDB();
   res.json({ success: true, products: db.products });
 });
 
+// ========== API ADMIN ==========
 app.post('/api/admin/product', async (req, res) => {
   const { name, price, stock, itemCode, adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
