@@ -19,7 +19,7 @@
       "price": 20000,
       "customerName": "Yanto",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1968316-3ffb-48b8-a521-37a2d187ea71/image",
       "expiredAt": "2026-04-20T09:57:44+00:00",
       "createdAt": "2026-04-20T09:42:45.087Z"
@@ -95,5 +95,5 @@
       "createdAt": "2026-04-20T09:28:09.322Z"
     }
   ],
-  "updatedAt": "2026-04-20T09:42:45.087Z"
+  "updatedAt": "2026-04-20T09:42:51.754Z"
 }
