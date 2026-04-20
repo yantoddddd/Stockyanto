@@ -5,14 +5,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ========== KONFIGURASI QRISPY ==========
-const QRISPY_API_TOKEN = 'cki_c4fhFog8MV0QHTAXCDwdKxJ6HFL4EMIWrHydAhN5sHOSmuzh';
+// ========== KONFIGURASI QRISPY (TOKEN BARU) ==========
+const QRISPY_API_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 const ADMIN_KEY = 'rahasia123';
 
-// ========== KONFIGURASI GITHUB (UPDATE DENGAN REPO BARU) ==========
+// ========== KONFIGURASI GITHUB ==========
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = 'yantoddddd/stockyanto';  // <-- UDAH DIGANTI
+const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
 
 // ========== FUNGSI BACA DATABASE ==========
@@ -67,25 +67,84 @@ async function setDB(products, orders, oldSha) {
 
 // ========== FUNGSI QRIS ==========
 async function generateQRIS(amount, paymentReference) {
-  const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
-    method: 'POST',
-    headers: {
-      'X-API-Token': QRISPY_API_TOKEN,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ amount, payment_reference: paymentReference })
-  });
-  const data = await response.json();
-  console.log('Generate QRIS:', JSON.stringify(data, null, 2));
-  return data;
+  try {
+    const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
+      method: 'POST',
+      headers: {
+        'X-API-Token': QRISPY_API_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ amount, payment_reference: paymentReference })
+    });
+    
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('QRIS Generate:', JSON.stringify(data, null, 2));
+      return data;
+    } else {
+      const text = await response.text();
+      console.error('QRIS API error:', text);
+      return { status: 'error', message: `API error: ${response.status}` };
+    }
+  } catch (err) {
+    console.error('Generate QRIS exception:', err);
+    return { status: 'error', message: err.message };
+  }
 }
 
-async function checkPaymentStatus(qrisId) {
-  const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/status`, {
-    headers: { 'X-API-Token': QRISPY_API_TOKEN }
-  });
-  return await response.json();
-}
+// ========== WEBHOOK UNTUK NOTIFIKASI PEMBAYARAN ==========
+app.post('/api/webhook', async (req, res) => {
+  // Langsung response 200 dulu biar ga dianggap gagal
+  res.status(200).end();
+  
+  console.log('Webhook received:', JSON.stringify(req.body, null, 2));
+  
+  try {
+    const payload = req.body;
+    
+    // Cek apakah ini event payment success
+    if (payload.event === 'payment.success' || payload.status === 'paid') {
+      const qrisId = payload.data?.qris_id || payload.qris_id;
+      
+      if (!qrisId) {
+        console.log('No qris_id in webhook payload');
+        return;
+      }
+      
+      // Cari order berdasarkan qrisId
+      const db = await getDB();
+      const order = db.orders.find(o => o.qrisId === qrisId);
+      
+      if (!order) {
+        console.log(`Order not found for qrisId: ${qrisId}`);
+        return;
+      }
+      
+      if (order.status === 'paid') {
+        console.log(`Order ${order.id} already paid`);
+        return;
+      }
+      
+      // Kurangi stok produk
+      const product = db.products.find(p => p.id == order.productId);
+      if (product && product.stock > 0) {
+        product.stock -= 1;
+        console.log(`Stok ${product.name} berkurang jadi ${product.stock}`);
+      }
+      
+      // Update status order
+      order.status = 'paid';
+      order.paidAt = new Date().toISOString();
+      
+      // Simpan ke database
+      await setDB(db.products, db.orders, db.sha);
+      console.log(`Order ${order.id} marked as paid via webhook`);
+    }
+  } catch (err) {
+    console.error('Webhook error:', err);
+  }
+});
 
 // ========== API CUSTOMER ==========
 app.get('/api/products', async (req, res) => {
@@ -114,6 +173,7 @@ app.post('/api/order', async (req, res) => {
     const qrisResult = await generateQRIS(product.price, paymentRef);
     
     if (qrisResult.status !== 'success') {
+      console.error('QRIS generate failed:', qrisResult);
       return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
     }
     
@@ -133,7 +193,7 @@ app.post('/api/order', async (req, res) => {
     };
     
     db.orders.unshift(newOrder);
-    const newSha = await setDB(db.products, db.orders, db.sha);
+    await setDB(db.products, db.orders, db.sha);
     
     res.json({
       success: true,
@@ -164,20 +224,6 @@ app.get('/api/check-payment/:orderId', async (req, res) => {
       return res.json({ success: true, status: 'expired' });
     }
     
-    const statusResult = await checkPaymentStatus(order.qrisId);
-    
-    if (statusResult.status === 'success' && statusResult.data.status === 'paid') {
-      const product = db.products.find(p => p.id == order.productId);
-      if (product && product.stock > 0) {
-        product.stock -= 1;
-      }
-      order.status = 'paid';
-      order.paidAt = new Date().toISOString();
-      
-      await setDB(db.products, db.orders, db.sha);
-      return res.json({ success: true, status: 'paid', productCode: order.productCode });
-    }
-    
     res.json({ success: true, status: 'pending' });
   } catch (err) {
     console.error('Check payment error:', err);
@@ -194,13 +240,6 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
     if (order.status !== 'pending') {
       return res.status(400).json({ error: 'Order sudah diproses' });
     }
-    
-    try {
-      await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/cancel`, {
-        method: 'POST',
-        headers: { 'X-API-Token': QRISPY_API_TOKEN }
-      });
-    } catch(e) {}
     
     order.status = 'cancelled';
     await setDB(db.products, db.orders, db.sha);
