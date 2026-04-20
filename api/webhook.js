@@ -86,33 +86,36 @@ module.exports = async (req, res) => {
   console.log('📦 Headers:', req.headers);
   console.log('📦 Body:', JSON.stringify(req.body, null, 2));
 
-  // Verifikasi signature (opsional, bisa di-skip untuk testing)
-  const signature = req.headers['x-qrispy-signature'];
-  const payload = JSON.stringify(req.body);
-  const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
-  
-  if (signature !== expected) {
-    console.log('⚠️ Invalid signature! Expected:', expected, 'Got:', signature);
-    // Untuk testing, kita proses tetap jalan (comment return)
-    // return res.status(401).json({ error: 'Invalid signature' });
-  } else {
-    console.log('✅ Signature valid');
-  }
+  // Verifikasi signature (skip dulu buat testing)
+  // const signature = req.headers['x-qrispy-signature'];
+  // const payload = JSON.stringify(req.body);
+  // const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
+  // if (signature !== expected) {
+  //   console.log('⚠️ Invalid signature!');
+  //   return res.status(401).json({ error: 'Invalid signature' });
+  // }
 
   try {
     const { event, data } = req.body;
     
+    // Format asli Qrispy: event = "payment.received"
     if (event === 'payment.received') {
-      console.log('💰 Payment received event, qrisId:', data.qris_id);
+      const qrisId = data.qris_id;
+      const amount = data.amount;
+      const receivedAmount = data.received_amount;
+      const paymentReference = data.payment_reference;
+      const paidAt = data.paid_at;
+      
+      console.log(`💰 Payment received: qrisId=${qrisId}, amount=${amount}, received=${receivedAmount}, ref=${paymentReference}`);
       
       const db = await getDB();
       console.log(`📊 Total orders in DB: ${db.orders.length}`);
       
-      const order = db.orders.find(o => o.qrisId === data.qris_id);
+      // Cari order berdasarkan qrisId
+      const order = db.orders.find(o => o.qrisId === qrisId);
       
       if (!order) {
-        console.log('❌ Order tidak ditemukan untuk qrisId:', data.qris_id);
-        // Log semua qrisId yang pending
+        console.log('❌ Order tidak ditemukan untuk qrisId:', qrisId);
         const pendingOrders = db.orders.filter(o => o.status === 'pending');
         console.log('Pending qrisIds:', pendingOrders.map(o => ({ orderCode: o.orderCode, qrisId: o.qrisId })));
         return res.status(200).end();
@@ -134,7 +137,8 @@ module.exports = async (req, res) => {
       
       // Update status order
       order.status = 'paid';
-      order.paidAt = data.paid_at || new Date().toISOString();
+      order.paidAt = paidAt || new Date().toISOString();
+      order.receivedAmount = receivedAmount;
       
       await setDB(db.products, db.orders, db.sha);
       console.log('💾 Database updated');
