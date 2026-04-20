@@ -1,74 +1,210 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoOrder - Beli Digital</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{background:linear-gradient(135deg,#0f172a,#1e1b4b);font-family:system-ui;color:white;padding:20px;}
-        .container{max-width:1000px;margin:0 auto;}
-        .header{text-align:center;margin-bottom:30px;}
-        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
-        .card{background:rgba(15,23,42,0.8);border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,0.1);}
-        .price{color:#10b981;font-size:1.5rem;margin:10px 0;}
-        .stock{color:#64748b;font-size:0.8rem;}
-        button{background:#3b82f6;border:none;padding:10px;border-radius:12px;color:white;cursor:pointer;width:100%;margin-top:10px;}
-        button:disabled{opacity:0.5;}
-        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);justify-content:center;align-items:center;z-index:1000;}
-        .modal-content{background:#1e293b;border-radius:24px;padding:30px;max-width:500px;width:90%;}
-        input{width:100%;padding:10px;margin:10px 0;border-radius:10px;border:none;background:#0f172a;color:white;}
-        .qris-img{width:100%;max-width:250px;margin:10px auto;display:block;}
-        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:10px20px;border-radius:40px;opacity:0;transition:0.2s;z-index:1001;}
-        .code-box{background:#0f172a;padding:15px;border-radius:12px;font-family:monospace;word-break:break-all;margin-top:15px;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoOrder - Beli Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+.container{max-width:500px;margin:0 auto;background:rgba(255,255,255,0.95);border-radius:30px;box-shadow:0 20px 40px rgba(0,0,0,0.2);overflow:hidden}
+.header{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:30px;text-align:center}
+h1{font-size:2rem;font-weight:900}
+.content{padding:30px}
+.product-card{background:#f8fafc;border-radius:20px;padding:20px;margin-bottom:20px;box-shadow:0 5px 15px rgba(0,0,0,0.05)}
+.product-name{font-size:1.4rem;font-weight:700}
+.product-price{color:#10b981;font-size:1.8rem;font-weight:900;margin:10px 0}
+.product-stock{color:#64748b;font-size:0.8rem}
+button{background:#3b82f6;border:none;padding:15px;border-radius:15px;color:white;font-weight:700;font-size:1rem;cursor:pointer;width:100%;margin-top:10px;transition:0.2s}
+button:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);justify-content:center;align-items:center;z-index:1000}
+.modal-content{background:#1e293b;border-radius:30px;padding:30px;max-width:500px;width:90%;color:white}
+input{width:100%;padding:12px;margin:10px 0;border-radius:12px;border:none;background:#0f172a;color:white}
+.qris-img{width:100%;max-width:250px;margin:15px auto;display:block;border-radius:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:10px20px;border-radius:40px;opacity:0;transition:0.2s;z-index:1001}
+.code-box{background:#0f172a;padding:15px;border-radius:12px;word-break:break-all;margin-top:15px}
+</style>
 </head>
 <body>
 <div class="container">
-    <div class="header"><h1>AutoOrder Digital</h1><p>Akun Roblox | Web | APK | DLL</p></div>
-    <div class="grid" id="grid">Loading...</div>
+<div class="header"><h1>AutoOrder Digital</h1><p>Akun Roblox | Web | APK | DLL</p></div>
+<div class="content" id="productsList">Loading produk...</div>
 </div>
 
 <div id="paymentModal" class="modal">
-    <div class="modal-content">
-        <h3 id="modalProductName"></h3>
-        <p id="modalPrice" class="price"></p>
-        <div id="orderForm">
-            <input type="text" id="customerName" placeholder="Nama Anda *" required>
-            <input type="email" id="customerEmail" placeholder="Email (opsional)">
-            <button id="confirmBtn">Beli Sekarang</button>
-            <button onclick="closeModal()" style="background:#334155;">Tutup</button>
-        </div>
-        <div id="qrisContainer" style="display:none;">
-            <div style="text-align:center;">
-                <p>Scan QRIS di bawah untuk membayar:</p>
-                <img id="qrisImage" class="qris-img" alt="QRIS">
-                <p>Nominal: Rp <span id="qrisAmount"></span></p>
-                <p id="expiryTime" style="color:#f59e0b;"></p>
-                <div id="paymentStatus">⏳ Menunggu pembayaran...</div>
-                <div id="resultCode" style="display:none;"></div>
-                <button id="cancelBtn" style="background:#ef4444;margin-top:10px;">Batalkan</button>
-            </div>
-        </div>
-    </div>
+<div class="modal-content">
+<h3 id="modalProductName"></h3>
+<p id="modalPrice" style="color:#10b981;font-size:1.5rem;margin:10px 0"></p>
+<input type="text" id="customerName" placeholder="Nama Anda *" required>
+<input type="email" id="customerEmail" placeholder="Email (opsional)">
+<button id="confirmOrderBtn">Beli Sekarang</button>
+<button onclick="closeModal()" style="background:#334155;margin-top:10px;">Tutup</button>
+<div id="qrisContainer" style="display:none; margin-top:20px;">
+<img id="qrisImage" class="qris-img" alt="QRIS">
+<p id="paymentStatus">⏳ Menunggu pembayaran...</p>
+<div id="resultCode"></div>
+<button id="cancelBtn" style="background:#ef4444;">Batalkan</button>
+</div>
+</div>
 </div>
 <div id="toast" class="toast"></div>
+
 <script>
-let currentProduct = null, currentOrderId = null, paymentInterval = null, isGenerating = false;
-function toast(msg, err=false){let t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'#7f1a1a':'#1e293b';t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3000);}
-async function loadProducts(){
-    try{
-        let res=await fetch('/api/products'); let data=await res.json(); let g=document.getElementById('grid');
-        if(!data.products||!data.products.length){g.innerHTML='<div style="text-align:center;">Belum ada produk</div>';return;}
-        g.innerHTML=data.products.map(p=>`<div class="card"><h3>${escapeHtml(p.name)}</h3><div class="price">Rp ${(p.price||0).toLocaleString()}</div><div class="stock">Stok: ${p.stock}</div><button onclick='openOrder(${JSON.stringify(p).replace(/'/g,"&#39;")})' ${p.stock<=0?'disabled':''}>${p.stock>0?'Beli Sekarang':'Stok Habis'}</button></div>`).join('');
-    }catch(e){toast('Gagal load produk',true);}
+const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
+const API_URL = 'https://api.qrispy.id';
+
+let currentProduct = null;
+let currentOrderId = null;
+let paymentInterval = null;
+
+function toast(msg, err=false) {
+    let t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = err ? '#7f1a1a' : '#1e293b';
+    t.style.opacity = '1';
+    setTimeout(() => t.style.opacity = '0', 3000);
 }
-function escapeHtml(str){if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');}
-function openOrder(product){if(paymentInterval) clearInterval(paymentInterval); currentProduct=product; document.getElementById('modalProductName').innerText=product.name; document.getElementById('modalPrice').innerHTML=`Rp ${product.price.toLocaleString()}`; document.getElementById('orderForm').style.display='block'; document.getElementById('qrisContainer').style.display='none'; document.getElementById('customerName').value=''; document.getElementById('customerEmail').value=''; document.getElementById('resultCode').style.display='none'; document.getElementById('confirmBtn').disabled=false; document.getElementById('confirmBtn').innerHTML='Beli Sekarang'; isGenerating=false; document.getElementById('paymentModal').style.display='flex';}
-function closeModal(){if(paymentInterval) clearInterval(paymentInterval); document.getElementById('paymentModal').style.display='none'; currentProduct=null; currentOrderId=null;}
-document.getElementById('confirmBtn').onclick=async()=>{if(isGenerating) return; let name=document.getElementById('customerName').value.trim(); if(!name){toast('Nama wajib diisi',true);return;} isGenerating=true; let btn=document.getElementById('confirmBtn'); btn.disabled=true; btn.innerHTML='⏳ Membuat QRIS...'; try{let res=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:currentProduct.id,customerName:name,customerEmail:document.getElementById('customerEmail').value.trim()})}); let data=await res.json(); if(data.success){currentOrderId=data.orderId; document.getElementById('qrisImage').src=data.qrisImage; document.getElementById('qrisAmount').innerText=data.amount.toLocaleString(); let expiredDate=new Date(data.expiredAt); document.getElementById('expiryTime').innerHTML=`Kadaluarsa: ${expiredDate.toLocaleTimeString()}`; document.getElementById('orderForm').style.display='none'; document.getElementById('qrisContainer').style.display='block'; startPaymentCheck(); toast('QRIS berhasil dibuat, silakan scan');}else{toast(data.error||'Gagal',true); btn.disabled=false; btn.innerHTML='Beli Sekarang';}}catch(e){toast('Error: '+e.message,true); btn.disabled=false; btn.innerHTML='Beli Sekarang';}finally{isGenerating=false;}};
-function startPaymentCheck(){if(paymentInterval) clearInterval(paymentInterval); paymentInterval=setInterval(async()=>{if(!currentOrderId) return; try{let res=await fetch(`/api/check-payment/${currentOrderId}`); let data=await res.json(); if(data.status==='paid'){clearInterval(paymentInterval); document.getElementById('paymentStatus').innerHTML='✅ Pembayaran BERHASIL!'; document.getElementById('resultCode').style.display='block'; document.getElementById('resultCode').innerHTML=`<div class="code-box"><strong>Barang Digital Anda:</strong><br>${escapeHtml(data.productCode)}</div>`; document.getElementById('cancelBtn').style.display='none'; toast('Pembayaran berhasil!'); loadProducts();}else if(data.status==='expired'){clearInterval(paymentInterval); document.getElementById('paymentStatus').innerHTML='❌ QRIS kadaluarsa'; toast('QRIS kadaluarsa',true);}}catch(e){}},3000);}
-document.getElementById('cancelBtn')?.addEventListener('click',async()=>{if(!currentOrderId) return; if(confirm('Batalkan pesanan?')){await fetch(`/api/cancel-order/${currentOrderId}`,{method:'POST'}); clearInterval(paymentInterval); toast('Pesanan dibatalkan'); closeModal();}});
+
+async function loadProducts() {
+    try {
+        let res = await fetch('/api/products');
+        let data = await res.json();
+        let container = document.getElementById('productsList');
+        if (!data.products || data.products.length === 0) {
+            container.innerHTML = '<div style="text-align:center;">Belum ada produk. Login admin untuk menambahkan.</div>';
+            return;
+        }
+        container.innerHTML = data.products.map(p => `
+            <div class="product-card">
+                <div class="product-name">${escapeHtml(p.name)}</div>
+                <div class="product-price">Rp ${(p.price || 0).toLocaleString()}</div>
+                <div class="product-stock">Stok: ${p.stock}</div>
+                <button onclick='openOrder(${JSON.stringify(p).replace(/'/g, "&#39;")})' ${p.stock <= 0 ? 'disabled' : ''}>
+                    ${p.stock > 0 ? 'Beli Sekarang' : 'Stok Habis'}
+                </button>
+            </div>
+        `).join('');
+    } catch(e) { toast('Gagal load produk', true); }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+}
+
+function openOrder(product) {
+    currentProduct = product;
+    document.getElementById('modalProductName').innerText = product.name;
+    document.getElementById('modalPrice').innerHTML = `Rp ${product.price.toLocaleString()}`;
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerEmail').value = '';
+    document.getElementById('qrisContainer').style.display = 'none';
+    document.getElementById('confirmOrderBtn').style.display = 'block';
+    document.getElementById('paymentModal').style.display = 'flex';
+}
+
+function closeModal() {
+    if (paymentInterval) clearInterval(paymentInterval);
+    document.getElementById('paymentModal').style.display = 'none';
+    currentProduct = null;
+    currentOrderId = null;
+}
+
+// Generate QRIS langsung dari frontend
+async function generateQRIS(amount) {
+    const response = await fetch(`${API_URL}/api/payment/qris/generate`, {
+        method: 'POST',
+        headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+    });
+    const data = await response.json();
+    if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS');
+    return data.data;
+}
+
+document.getElementById('confirmOrderBtn').onclick = async () => {
+    const name = document.getElementById('customerName').value.trim();
+    if (!name) { toast('Nama wajib diisi', true); return; }
+    const email = document.getElementById('customerEmail').value.trim();
+
+    const btn = document.getElementById('confirmOrderBtn');
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Membuat QRIS...';
+
+    try {
+        // 1. Generate QRIS via frontend
+        const qrisData = await generateQRIS(currentProduct.price);
+        
+        // 2. Kirim order ke backend untuk disimpan (stok akan dikurangi saat payment sukses via webhook)
+        const orderRes = await fetch('/api/order-frontend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: currentProduct.id,
+                customerName: name,
+                customerEmail: email,
+                qrisId: qrisData.qris_id,
+                qrisImage: qrisData.qris_image_url,
+                amount: currentProduct.price,
+                expiredAt: qrisData.expired_at
+            })
+        });
+        const orderData = await orderRes.json();
+        if (!orderData.success) throw new Error(orderData.error);
+
+        currentOrderId = orderData.orderId;
+
+        // Tampilkan QRIS
+        document.getElementById('qrisImage').src = qrisData.qris_image_url;
+        document.getElementById('qrisContainer').style.display = 'block';
+        document.getElementById('confirmOrderBtn').style.display = 'none';
+        document.getElementById('paymentStatus').innerHTML = '⏳ Menunggu pembayaran...';
+        document.getElementById('resultCode').innerHTML = '';
+        
+        // Mulai polling status (fallback jika webhook lambat)
+        startPaymentPolling();
+        toast('QRIS berhasil dibuat, silakan scan');
+    } catch (err) {
+        toast(err.message, true);
+        btn.disabled = false;
+        btn.innerHTML = 'Beli Sekarang';
+    }
+};
+
+function startPaymentPolling() {
+    if (paymentInterval) clearInterval(paymentInterval);
+    paymentInterval = setInterval(async () => {
+        if (!currentOrderId) return;
+        try {
+            const res = await fetch(`/api/check-payment/${currentOrderId}`);
+            const data = await res.json();
+            if (data.status === 'paid') {
+                clearInterval(paymentInterval);
+                document.getElementById('paymentStatus').innerHTML = '✅ Pembayaran BERHASIL!';
+                document.getElementById('resultCode').innerHTML = `<div class="code-box"><strong>Barang Digital Anda:</strong><br>${escapeHtml(data.productCode)}</div>`;
+                document.getElementById('cancelBtn').style.display = 'none';
+                toast('Pembayaran berhasil! Cek kode di atas');
+                loadProducts(); // refresh stok
+            } else if (data.status === 'expired') {
+                clearInterval(paymentInterval);
+                document.getElementById('paymentStatus').innerHTML = '❌ QRIS kadaluarsa';
+                toast('QRIS kadaluarsa, silakan order ulang', true);
+            }
+        } catch(e) {}
+    }, 3000);
+}
+
+document.getElementById('cancelBtn')?.addEventListener('click', async () => {
+    if (!currentOrderId) return;
+    if (confirm('Batalkan pesanan?')) {
+        await fetch(`/api/cancel-order/${currentOrderId}`, { method: 'POST' });
+        clearInterval(paymentInterval);
+        toast('Pesanan dibatalkan');
+        closeModal();
+    }
+});
+
 loadProducts();
 </script>
 </body>
