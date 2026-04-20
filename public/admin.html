@@ -3,36 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - AutoOrder</title>
+    <title>Admin Panel | AutoOrder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{background:linear-gradient(135deg,#0f172a,#1e1b4b);font-family:system-ui;color:white;padding:20px;}
-        .container{max-width:800px;margin:0 auto;}
-        .card{background:rgba(15,23,42,0.8);border-radius:20px;padding:24px;margin-bottom:20px;}
-        input,textarea{width:100%;padding:10px;margin:8px 0;border-radius:10px;border:none;background:#0f172a;color:white;}
-        button{background:#3b82f6;border:none;padding:10px20px;border-radius:10px;color:white;cursor:pointer;}
-        .item{background:#1e293b;padding:15px;border-radius:12px;margin-bottom:10px;}
-        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:10px20px;border-radius:40px;opacity:0;transition:0.2s;}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a2b5e 0%, #0f3b7a 100%);
+            font-family: 'Inter', 'Poppins', sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Card style */
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 28px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #ffffff, #b8e1ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 16px;
+        }
+
+        /* Form elements */
+        input, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 12px 0;
+            border-radius: 40px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        textarea {
+            border-radius: 24px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        button {
+            background: #3b82f6;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #b91c1c;
+        }
+
+        .btn-danger:hover {
+            background: #991b1b;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3b82f6;
+        }
+
+        .btn-outline:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Login section */
+        .login-section {
+            text-align: center;
+        }
+
+        .login-section input {
+            max-width: 300px;
+            margin: 12px auto;
+        }
+
+        /* Item list */
+        .item-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .item {
+            background: #1e293b;
+            padding: 16px 20px;
+            border-radius: 24px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            transition: 0.2s;
+            border: 1px solid #334155;
+        }
+
+        .item:hover {
+            border-color: #3b82f6;
+            background: #2d3a5e;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .item-detail {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .item-actions button {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1100;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            h1 { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card"><h1>Admin Panel</h1><input type="password" id="adminKey" placeholder="Kunci Admin"><button id="authBtn">Login</button></div>
-    <div id="content" style="display:none;">
-        <div class="card"><h2>Tambah Produk</h2><input id="name" placeholder="Nama Produk"><input id="price" type="number" placeholder="Harga"><input id="stock" type="number" placeholder="Stok"><textarea id="code" rows="3" placeholder="Kode/Item Digital"></textarea><button id="addBtn">Simpan</button></div>
-        <div class="card"><h2>Daftar Produk</h2><div id="products"></div></div>
-        <div class="card"><h2>Riwayat Order</h2><div id="orders"></div></div>
+    <!-- Login Card -->
+    <div class="card" id="loginCard">
+        <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
+        <div class="login-section">
+            <input type="password" id="adminKeyInput" placeholder="Masukkan Kunci Admin" onkeypress="if(event.key==='Enter') login()">
+            <button onclick="login()"><i class="fas fa-key"></i> Login</button>
+        </div>
+    </div>
+
+    <!-- Admin Content (hidden until login) -->
+    <div id="adminContent" style="display: none;">
+        <!-- Add Product Card -->
+        <div class="card">
+            <h2><i class="fas fa-plus-circle"></i> Tambah Produk Baru</h2>
+            <input type="text" id="productName" placeholder="Nama Produk (contoh: Akun Roblox VIP)">
+            <input type="number" id="productPrice" placeholder="Harga (contoh: 25000)">
+            <input type="number" id="productStock" placeholder="Stok (contoh: 10)">
+            <textarea id="productCode" rows="3" placeholder="Kode/Item Digital (contoh: username:password atau link download)"></textarea>
+            <button id="addProductBtn"><i class="fas fa-save"></i> Simpan Produk</button>
+        </div>
+
+        <!-- Products List Card -->
+        <div class="card">
+            <h2><i class="fas fa-boxes"></i> Daftar Produk</h2>
+            <div id="productsList" class="item-list">
+                <div style="text-align:center; color:#94a3b8; padding:20px;">Loading produk...</div>
+            </div>
+        </div>
+
+        <!-- Orders History Card -->
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Riwayat Order</h2>
+            <div id="ordersList" class="item-list">
+                <div style="text-align:center; color:#94a3b8; padding:20px;">Loading order...</div>
+            </div>
+        </div>
     </div>
 </div>
+
 <div id="toast" class="toast"></div>
+
 <script>
-let adminKey='';
-function toast(msg,err=false){let t=document.getElementById('toast');t.textContent=msg;t.style.background=err?'#7f1a1a':'#1e293b';t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3000);}
-document.getElementById('authBtn').onclick=()=>{adminKey=document.getElementById('adminKey').value;if(adminKey==='rahasia123'){document.getElementById('content').style.display='block';loadProducts();loadOrders();toast('Login berhasil');}else{toast('Kunci salah',true);}};
-async function loadProducts(){let res=await fetch(`/api/admin/products?adminKey=${adminKey}`);let data=await res.json();let div=document.getElementById('products');if(data.success&&data.products.length){div.innerHTML=data.products.map(p=>`<div class="item"><strong>${p.name}</strong> - Rp ${(p.price||0).toLocaleString()} - Stok: ${p.stock}<button onclick="deleteProduct(${p.id})" style="background:#ef4444;margin-left:10px;">Hapus</button></div>`).join('');}else{div.innerHTML='<p>Belum ada produk</p>';}}
-async function deleteProduct(id){if(confirm('Hapus produk ini?')){await fetch(`/api/admin/product/${id}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminKey})});loadProducts();}}
-async function loadOrders(){let res=await fetch(`/api/admin/orders?adminKey=${adminKey}`);let data=await res.json();let div=document.getElementById('orders');if(data.success&&data.orders.length){div.innerHTML=data.orders.map(o=>`<div class="item"><strong>${o.productName}</strong><br>Pembeli: ${o.customerName}<br>Harga: Rp ${(o.price||0).toLocaleString()}<br>Status: ${o.status}<br>${new Date(o.createdAt).toLocaleString()}</div>`).join('');}else{div.innerHTML='<p>Belum ada order</p>';}}
-document.getElementById('addBtn').onclick=async()=>{let name=document.getElementById('name').value;let price=parseInt(document.getElementById('price').value);let stock=parseInt(document.getElementById('stock').value)||1;let itemCode=document.getElementById('code').value;if(!name||!price||price<=0||!itemCode){toast('Nama, harga >0, dan kode wajib',true);return;} let res=await fetch('/api/admin/product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,price,stock,itemCode,adminKey})});if(res.ok){toast('Produk ditambahkan');document.getElementById('name').value='';document.getElementById('price').value='';document.getElementById('stock').value='';document.getElementById('code').value='';loadProducts();}else{toast('Gagal',true);}};
+    let adminKey = '';
+
+    function toast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = isError ? '#b91c1c' : '#1e293b';
+        t.style.opacity = '1';
+        setTimeout(() => t.style.opacity = '0', 3000);
+    }
+
+    async function login() {
+        const key = document.getElementById('adminKeyInput').value;
+        if (key === 'rahasia123') {
+            adminKey = key;
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            await loadProducts();
+            await loadOrders();
+            toast('Login berhasil!');
+        } else {
+            toast('Kunci admin salah!', true);
+        }
+    }
+
+    async function loadProducts() {
+        try {
+            const res = await fetch(`/api/admin/products?adminKey=${adminKey}`);
+            const data = await res.json();
+            const container = document.getElementById('productsList');
+            if (data.success && data.products && data.products.length > 0) {
+                container.innerHTML = data.products.map(p => `
+                    <div class="item">
+                        <div class="item-info">
+                            <div class="item-name"><i class="fas fa-cube"></i> ${escapeHtml(p.name)}</div>
+                            <div class="item-detail">💰 Rp ${(p.price || 0).toLocaleString()} | 📦 Stok: ${p.stock}</div>
+                            <div class="item-detail" style="font-family:monospace; font-size:0.7rem;">🔑 Kode: ${escapeHtml(p.itemCode.substring(0, 50))}${p.itemCode.length > 50 ? '...' : ''}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Hapus</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
+            }
+        } catch (err) {
+            toast('Gagal load produk', true);
+        }
+    }
+
+    async function deleteProduct(id) {
+        if (confirm('Yakin ingin menghapus produk ini?')) {
+            try {
+                const res = await fetch(`/api/admin/product/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminKey })
+                });
+                if (res.ok) {
+                    toast('Produk berhasil dihapus');
+                    await loadProducts();
+                } else {
+                    toast('Gagal menghapus produk', true);
+                }
+            } catch (err) {
+                toast('Error: ' + err.message, true);
+            }
+        }
+    }
+
+    async function loadOrders() {
+        try {
+            const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
+            const data = await res.json();
+            const container = document.getElementById('ordersList');
+            if (data.success && data.orders && data.orders.length > 0) {
+                container.innerHTML = data.orders.map(o => `
+                    <div class="item">
+                        <div class="item-info">
+                            <div class="item-name"><i class="fas fa-shopping-cart"></i> ${escapeHtml(o.productName)}</div>
+                            <div class="item-detail">👤 ${escapeHtml(o.customerName)} | 💰 Rp ${(o.price || 0).toLocaleString()}</div>
+                            <div class="item-detail">📅 ${new Date(o.createdAt).toLocaleString()}</div>
+                            <div class="item-detail">🏷️ Status: ${o.status === 'paid' ? '<span style="color:#10b981;">✅ Lunas</span>' : (o.status === 'pending' ? '<span style="color:#f59e0b;">⏳ Pending</span>' : '<span style="color:#ef4444;">❌ Batal</span>')}</div>
+                            ${o.status === 'paid' ? `<div class="item-detail" style="font-family:monospace; font-size:0.7rem;">🎁 Kode: ${escapeHtml(o.productCode)}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;"><i class="fas fa-inbox"></i> Belum ada order</div>';
+            }
+        } catch (err) {
+            toast('Gagal load order', true);
+        }
+    }
+
+    document.getElementById('addProductBtn').onclick = async () => {
+        const name = document.getElementById('productName').value.trim();
+        const price = parseInt(document.getElementById('productPrice').value);
+        const stock = parseInt(document.getElementById('productStock').value) || 1;
+        const itemCode = document.getElementById('productCode').value.trim();
+
+        if (!name || !price || price <= 0 || !itemCode) {
+            toast('Nama, harga > 0, dan kode wajib diisi', true);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin/product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, price, stock, itemCode, adminKey })
+            });
+            if (res.ok) {
+                toast('Produk berhasil ditambahkan');
+                document.getElementById('productName').value = '';
+                document.getElementById('productPrice').value = '';
+                document.getElementById('productStock').value = '';
+                document.getElementById('productCode').value = '';
+                await loadProducts();
+            } else {
+                toast('Gagal menambahkan produk', true);
+            }
+        } catch (err) {
+            toast('Error: ' + err.message, true);
+        }
+    };
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    // Enter key login
+    document.getElementById('adminKeyInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
 </script>
 </body>
 </html>
