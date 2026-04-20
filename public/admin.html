@@ -1,259 +1,565 @@
-const express = require('express');
-const cors = require('cors');
-const crypto = require('crypto');
-const path = require('path');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin Panel | AutoOrder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            font-family: 'Inter', sans-serif;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 28px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        h1, h2 {
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 {
+            font-size: 1.5rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            border-left: 3px solid #3b82f6;
+            padding-left: 16px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 10px 0;
+            border-radius: 28px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #b91c1c;
+        }
+        .btn-danger:hover {
+            background: #991b1b;
+        }
+        .btn-warning {
+            background: #f59e0b;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        .reset-btn {
+            background: #ef4444;
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .reset-btn:hover {
+            background: #dc2626;
+        }
+        .item {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .item-detail {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: 0.2s;
+            color: white;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 8px;
+        }
+        label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+        }
+        .modal-content {
+            background: #0f172a;
+            border-radius: 32px;
+            padding: 28px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid #334155;
+        }
+        .modal-content h3 {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card" id="loginCard">
+        <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
+        <input type="password" id="adminKey" placeholder="Kunci Admin">
+        <button onclick="login()"><i class="fas fa-key"></i> Login</button>
+    </div>
+    <div id="adminContent" style="display:none;">
+        <div class="card">
+            <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
+            <input type="text" id="productName" placeholder="Nama Produk">
+            <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
+            <input type="number" id="productPrice" placeholder="Harga">
+            <input type="number" id="productStock" placeholder="Stok">
+            
+            <div class="form-group">
+                <label>Tipe Item</label>
+                <select id="itemType">
+                    <option value="text">Teks (copy-paste)</option>
+                    <option value="link">Link</option>
+                </select>
+            </div>
+            <div id="itemTextField">
+                <textarea id="itemText" rows="3" placeholder="Kode/teks yang akan diberikan ke customer"></textarea>
+            </div>
+            <div id="itemLinkField" class="hidden">
+                <input type="url" id="itemLink" placeholder="https://...">
+            </div>
+            
+            <div class="form-group">
+                <label>Bonus (opsional)</label>
+                <select id="bonusType">
+                    <option value="none">Tidak ada bonus</option>
+                    <option value="text">Bonus Teks</option>
+                    <option value="link">Bonus Link</option>
+                </select>
+            </div>
+            <div id="bonusTextField" class="hidden">
+                <textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea>
+            </div>
+            <div id="bonusLinkField" class="hidden">
+                <input type="url" id="bonusLink" placeholder="https://...">
+            </div>
+            
+            <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fas fa-boxes"></i> Daftar Produk</h2>
+            <div id="productsList"></div>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Riwayat Order</h2>
+            <div id="ordersList"></div>
+            <button class="reset-btn" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Semua Order</button>
+        </div>
+    </div>
+</div>
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-edit"></i> Edit Produk</h3>
+        <input type="text" id="editProductId" style="display:none;">
+        <input type="text" id="editProductName" placeholder="Nama Produk">
+        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
+        <input type="number" id="editProductPrice" placeholder="Harga">
+        <input type="number" id="editProductStock" placeholder="Stok">
+        
+        <div class="form-group">
+            <label>Tipe Item</label>
+            <select id="editItemType">
+                <option value="text">Teks (copy-paste)</option>
+                <option value="link">Link</option>
+            </select>
+        </div>
+        <div id="editItemTextField">
+            <textarea id="editItemText" rows="3" placeholder="Kode/teks"></textarea>
+        </div>
+        <div id="editItemLinkField" class="hidden">
+            <input type="url" id="editItemLink" placeholder="https://...">
+        </div>
+        
+        <div class="form-group">
+            <label>Bonus (opsional)</label>
+            <select id="editBonusType">
+                <option value="none">Tidak ada bonus</option>
+                <option value="text">Bonus Teks</option>
+                <option value="link">Bonus Link</option>
+            </select>
+        </div>
+        <div id="editBonusTextField" class="hidden">
+            <textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea>
+        </div>
+        <div id="editBonusLinkField" class="hidden">
+            <input type="url" id="editBonusLink" placeholder="https://...">
+        </div>
+        
+        <div class="modal-buttons">
+            <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
+            <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
+        </div>
+    </div>
+</div>
 
-const ADMIN_KEY = 'rahasia123';
-const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-const QRISPY_API_URL = 'https://api.qrispy.id';
+<div id="toast" class="toast"></div>
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
-const GITHUB_PATH = 'database.json';
+<script>
+let adminKey = '';
+let currentEditId = null;
 
-async function getDB() {
-  try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) return { products: [], orders: [], sha: null };
-    const data = await res.json();
-    const content = Buffer.from(data.content, 'base64').toString('utf8');
-    return { ...JSON.parse(content), sha: data.sha };
-  } catch (err) {
-    console.error('GetDB error:', err);
-    return { products: [], orders: [], sha: null };
-  }
+function toast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+    t.style.background = isError ? '#b91c1c' : '#1e293b';
+    t.style.opacity = '1';
+    setTimeout(() => t.style.opacity = '0', 3000);
 }
 
-async function setDB(products, orders, oldSha) {
-  const content = { products, orders, updatedAt: new Date().toISOString() };
-  const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-    method: 'PUT',
-    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: 'Update db', content: updatedContent, sha: oldSha })
-  });
-  if (!res.ok) throw new Error('GitHub save failed');
-  const data = await res.json();
-  return data.content.sha;
+function toggleItemFields() {
+    const type = document.getElementById('itemType').value;
+    document.getElementById('itemTextField').classList.add('hidden');
+    document.getElementById('itemLinkField').classList.add('hidden');
+    if (type === 'text') document.getElementById('itemTextField').classList.remove('hidden');
+    else if (type === 'link') document.getElementById('itemLinkField').classList.remove('hidden');
 }
 
-// ========== RESET ORDER (HAPUS SEMUA ORDER) ==========
-app.post('/api/admin/reset-orders', async (req, res) => {
-  const { adminKey } = req.body;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const db = await getDB();
-  db.orders = [];
-  await setDB(db.products, db.orders, db.sha);
-  res.json({ success: true });
-});
+function toggleBonusFields() {
+    const type = document.getElementById('bonusType').value;
+    document.getElementById('bonusTextField').classList.add('hidden');
+    document.getElementById('bonusLinkField').classList.add('hidden');
+    if (type === 'text') document.getElementById('bonusTextField').classList.remove('hidden');
+    else if (type === 'link') document.getElementById('bonusLinkField').classList.remove('hidden');
+}
 
-// ========== GET PRODUCT BY ID (untuk edit) ==========
-app.get('/api/admin/product/:id', async (req, res) => {
-  const { adminKey } = req.query;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const db = await getDB();
-  const product = db.products.find(p => p.id == req.params.id);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-  
-  res.json({ success: true, product });
-});
+function toggleEditItemFields() {
+    const type = document.getElementById('editItemType').value;
+    document.getElementById('editItemTextField').classList.add('hidden');
+    document.getElementById('editItemLinkField').classList.add('hidden');
+    if (type === 'text') document.getElementById('editItemTextField').classList.remove('hidden');
+    else if (type === 'link') document.getElementById('editItemLinkField').classList.remove('hidden');
+}
 
-// ========== UPDATE PRODUCT ==========
-app.put('/api/admin/product/:id', async (req, res) => {
-  const { adminKey, name, description, price, stock, itemType, itemContent, bonusType, bonusContent } = req.body;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid data' });
-  
-  const db = await getDB();
-  const index = db.products.findIndex(p => p.id == req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Product not found' });
-  
-  db.products[index] = {
-    ...db.products[index],
-    name,
-    description: description || '',
-    price: parseInt(price),
-    stock: parseInt(stock) || 1,
-    itemType: itemType || 'text',
-    itemContent,
-    bonusType: bonusType || 'none',
-    bonusContent: bonusContent || '',
-    updatedAt: new Date().toISOString()
-  };
-  
-  await setDB(db.products, db.orders, db.sha);
-  res.json({ success: true });
-});
+function toggleEditBonusFields() {
+    const type = document.getElementById('editBonusType').value;
+    document.getElementById('editBonusTextField').classList.add('hidden');
+    document.getElementById('editBonusLinkField').classList.add('hidden');
+    if (type === 'text') document.getElementById('editBonusTextField').classList.remove('hidden');
+    else if (type === 'link') document.getElementById('editBonusLinkField').classList.remove('hidden');
+}
 
-// ========== API GET ORDER (dengan bonus) ==========
-app.get('/api/get-order/:orderCode', async (req, res) => {
-  const db = await getDB();
-  const order = db.orders.find(o => o.orderCode === req.params.orderCode);
-  if (!order) return res.json({ success: false });
-  
-  const product = db.products.find(p => p.id == order.productId);
-  const bonusContent = product?.bonusContent || '';
-  
-  res.json({
-    success: true,
-    status: order.status,
-    productName: order.productName,
-    productCode: order.productCode || 'Tidak ada kode',
-    bonusContent: bonusContent,
-    qrisImage: order.qrisImage,
-    totalAmount: order.totalAmount,
-    expiredAt: order.expiredAt
-  });
-});
-
-// ========== CEK STATUS PEMBAYARAN (POLLING) ==========
-app.get('/api/check-payment/:orderCode', async (req, res) => {
-  const db = await getDB();
-  const order = db.orders.find(o => o.orderCode === req.params.orderCode);
-  if (!order) return res.json({ status: 'not_found' });
-  
-  if (order.status === 'paid') {
-    return res.json({ status: 'paid', productCode: order.productCode });
-  }
-  
-  if (new Date(order.expiredAt) < new Date()) {
-    order.status = 'expired';
-    await setDB(db.products, db.orders, db.sha);
-    return res.json({ status: 'expired' });
-  }
-  
-  try {
-    const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, {
-      headers: { 'X-API-Token': QRISPY_TOKEN }
-    });
-    const data = await response.json();
-    
-    if (data.status === 'success' && data.data.status === 'paid') {
-      const product = db.products.find(p => p.id == order.productId);
-      if (product && product.stock > 0) product.stock -= 1;
-      order.status = 'paid';
-      order.paidAt = new Date().toISOString();
-      await setDB(db.products, db.orders, db.sha);
-      return res.json({ status: 'paid', productCode: order.productCode });
+async function login() {
+    const key = document.getElementById('adminKey').value;
+    if (key === 'rahasia123') {
+        adminKey = key;
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        await loadProducts();
+        await loadOrders();
+        toast('Login berhasil');
+    } else {
+        toast('Kunci salah', true);
     }
-    res.json({ status: 'pending' });
-  } catch (err) {
-    console.error('Check payment error:', err);
-    res.json({ status: 'pending' });
-  }
-});
+}
 
-// ========== API PRODUK (untuk customer) ==========
-app.get('/api/products', async (req, res) => {
-  const db = await getDB();
-  res.json({ success: true, products: db.products });
-});
+async function addProduct() {
+    const itemType = document.getElementById('itemType').value;
+    let itemContent = '';
+    if (itemType === 'text') itemContent = document.getElementById('itemText').value;
+    else if (itemType === 'link') itemContent = document.getElementById('itemLink').value;
+    
+    if (!itemContent) { toast('Konten item wajib diisi', true); return; }
+    
+    const bonusType = document.getElementById('bonusType').value;
+    let bonusContent = '';
+    if (bonusType === 'text') bonusContent = document.getElementById('bonusText').value;
+    else if (bonusType === 'link') bonusContent = document.getElementById('bonusLink').value;
+    
+    const res = await fetch('/api/admin/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminKey: adminKey,
+            name: document.getElementById('productName').value,
+            description: document.getElementById('productDesc').value,
+            price: parseInt(document.getElementById('productPrice').value),
+            stock: parseInt(document.getElementById('productStock').value) || 1,
+            itemType: itemType,
+            itemContent: itemContent,
+            bonusType: bonusType,
+            bonusContent: bonusContent
+        })
+    });
+    
+    if (res.ok) {
+        toast('Produk ditambahkan');
+        document.getElementById('productName').value = '';
+        document.getElementById('productDesc').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('itemText').value = '';
+        document.getElementById('itemLink').value = '';
+        document.getElementById('bonusText').value = '';
+        document.getElementById('bonusLink').value = '';
+        loadProducts();
+    } else {
+        toast('Gagal tambah produk', true);
+    }
+}
 
-// ========== API BUAT ORDER ==========
-app.post('/api/create-order', async (req, res) => {
-  const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body;
-  if (!productId || !customerName || !qrisId) {
-    return res.status(400).json({ error: 'Data tidak lengkap' });
-  }
-  
-  const db = await getDB();
-  const product = db.products.find(p => p.id == productId);
-  if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
-  if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
-  
-  const orderCode = crypto.randomBytes(16).toString('hex');
-  const newOrder = {
-    id: Date.now(),
-    orderCode: orderCode,
-    qrisId: qrisId,
-    productId: product.id,
-    productName: product.name,
-    productCode: product.itemContent,
-    price: product.price,
-    totalAmount: totalAmount || product.price,
-    customerName,
-    customerEmail: customerEmail || '-',
-    status: 'pending',
-    qrisImage: qrisImage,
-    expiredAt: expiredAt,
-    createdAt: new Date().toISOString()
-  };
-  db.orders.unshift(newOrder);
-  await setDB(db.products, db.orders, db.sha);
-  
-  res.json({ success: true, orderCode: orderCode });
-});
+async function loadProducts() {
+    const res = await fetch(`/api/admin/products?adminKey=${adminKey}`);
+    const data = await res.json();
+    const container = document.getElementById('productsList');
+    if (data.success && data.products.length) {
+        container.innerHTML = data.products.map(p => `
+            <div class="item">
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(p.name)}</div>
+                    <div class="item-detail">Rp ${p.price.toLocaleString()} | Stok: ${p.stock} | Tipe: ${p.itemType}</div>
+                    <div class="item-detail" style="font-size:0.6rem;">Kode: ${escapeHtml(p.itemContent.substring(0, 50))}${p.itemContent.length > 50 ? '...' : ''}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="btn-warning" onclick="openEditModal(${p.id})"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Hapus</button>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
+    }
+}
 
-// ========== ADMIN API ==========
-// Tambah produk
-app.post('/api/admin/product', async (req, res) => {
-  const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent, adminKey } = req.body;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid data' });
-  
-  const db = await getDB();
-  db.products.push({
-    id: Date.now(),
-    name,
-    description: description || '',
-    price: parseInt(price),
-    stock: parseInt(stock) || 1,
-    itemType: itemType || 'text',
-    itemContent: itemContent,
-    bonusType: bonusType || 'none',
-    bonusContent: bonusContent || '',
-    createdAt: new Date().toISOString()
-  });
-  await setDB(db.products, db.orders, db.sha);
-  res.json({ success: true });
-});
+async function deleteProduct(id) {
+    if (confirm('Hapus produk ini?')) {
+        await fetch(`/api/admin/product/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
+        loadProducts();
+    }
+}
 
-// Hapus produk
-app.delete('/api/admin/product/:id', async (req, res) => {
-  const { adminKey } = req.body;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const db = await getDB();
-  db.products = db.products.filter(p => p.id != req.params.id);
-  await setDB(db.products, db.orders, db.sha);
-  res.json({ success: true });
-});
+async function openEditModal(id) {
+    const res = await fetch(`/api/admin/product/${id}?adminKey=${adminKey}`);
+    const data = await res.json();
+    if (data.success && data.product) {
+        const p = data.product;
+        currentEditId = p.id;
+        document.getElementById('editProductId').value = p.id;
+        document.getElementById('editProductName').value = p.name;
+        document.getElementById('editProductDesc').value = p.description || '';
+        document.getElementById('editProductPrice').value = p.price;
+        document.getElementById('editProductStock').value = p.stock;
+        
+        document.getElementById('editItemType').value = p.itemType || 'text';
+        if (p.itemType === 'link') {
+            document.getElementById('editItemLink').value = p.itemContent;
+        } else {
+            document.getElementById('editItemText').value = p.itemContent;
+        }
+        
+        document.getElementById('editBonusType').value = p.bonusType || 'none';
+        if (p.bonusType === 'link') {
+            document.getElementById('editBonusLink').value = p.bonusContent || '';
+        } else if (p.bonusType === 'text') {
+            document.getElementById('editBonusText').value = p.bonusContent || '';
+        }
+        
+        toggleEditItemFields();
+        toggleEditBonusFields();
+        
+        document.getElementById('editModal').style.display = 'flex';
+    }
+}
 
-// Lihat semua order (admin)
-app.get('/api/admin/orders', async (req, res) => {
-  const { adminKey } = req.query;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const db = await getDB();
-  res.json({ success: true, orders: db.orders });
-});
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEditId = null;
+}
 
-// Lihat semua produk (admin)
-app.get('/api/admin/products', async (req, res) => {
-  const { adminKey } = req.query;
-  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const db = await getDB();
-  res.json({ success: true, products: db.products });
-});
+async function saveEditProduct() {
+    const itemType = document.getElementById('editItemType').value;
+    let itemContent = '';
+    if (itemType === 'text') itemContent = document.getElementById('editItemText').value;
+    else if (itemType === 'link') itemContent = document.getElementById('editItemLink').value;
+    
+    if (!itemContent) { toast('Konten item wajib diisi', true); return; }
+    
+    const bonusType = document.getElementById('editBonusType').value;
+    let bonusContent = '';
+    if (bonusType === 'text') bonusContent = document.getElementById('editBonusText').value;
+    else if (bonusType === 'link') bonusContent = document.getElementById('editBonusLink').value;
+    
+    const res = await fetch(`/api/admin/product/${currentEditId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminKey: adminKey,
+            name: document.getElementById('editProductName').value,
+            description: document.getElementById('editProductDesc').value,
+            price: parseInt(document.getElementById('editProductPrice').value),
+            stock: parseInt(document.getElementById('editProductStock').value) || 1,
+            itemType: itemType,
+            itemContent: itemContent,
+            bonusType: bonusType,
+            bonusContent: bonusContent
+        })
+    });
+    
+    if (res.ok) {
+        toast('Produk berhasil diupdate');
+        closeEditModal();
+        loadProducts();
+    } else {
+        toast('Gagal update produk', true);
+    }
+}
 
-// ========== ROUTING HALAMAN ==========
-app.get('/order/:code', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/order.html'));
-});
+async function loadOrders() {
+    const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
+    const data = await res.json();
+    const container = document.getElementById('ordersList');
+    if (data.success && data.orders.length) {
+        container.innerHTML = data.orders.map(o => `
+            <div class="item">
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(o.productName)}</div>
+                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : '❌ Batal')}</div>
+                    <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()}</div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>';
+    }
+}
 
-// ========== HEALTH CHECK ==========
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
-});
+async function resetOrders() {
+    if (confirm('⚠️ PERINGATAN: Semua riwayat order akan dihapus permanen! Lanjutkan?')) {
+        const res = await fetch('/api/admin/reset-orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey })
+        });
+        if (res.ok) {
+            toast('Semua order berhasil direset');
+            loadOrders();
+        } else {
+            toast('Gagal reset order', true);
+        }
+    }
+}
 
-module.exports = app;
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+}
+
+toggleItemFields();
+toggleBonusFields();
+document.getElementById('itemType').addEventListener('change', toggleItemFields);
+document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
+document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
+document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
+</script>
+</body>
+</html>
