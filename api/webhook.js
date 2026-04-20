@@ -88,14 +88,16 @@ module.exports = async (req, res) => {
   console.log('📨 Webhook received at:', new Date().toISOString());
   console.log('📦 Body:', JSON.stringify(req.body, null, 2));
 
-  // Skip signature check for testing
-  // const signature = req.headers['x-qrispy-signature'];
-  // const payload = JSON.stringify(req.body);
-  // const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
-  // if (signature !== expected) {
-  //   console.log('⚠️ Invalid signature!');
-  //   return res.status(401).json({ error: 'Invalid signature' });
-  // }
+  // ========== VERIFIKASI SIGNATURE (DIAMANKAN) ==========
+  const signature = req.headers['x-qrispy-signature'];
+  const payload = JSON.stringify(req.body);
+  const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
+  
+  if (signature !== expected) {
+    console.log('⚠️ Invalid signature! Expected:', expected, 'Got:', signature);
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  console.log('✅ Signature valid');
 
   try {
     const { event, data } = req.body;
