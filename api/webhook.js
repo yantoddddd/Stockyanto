@@ -4,7 +4,7 @@ const WEBHOOK_SECRET = 'whsec_AVu3fFLUBVMLjo6OdCWq7I3qdQ2CJ6e2';
 
 // Telegram Config
 const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
-const TELEGRAM_CHAT_ID = '-5260518165';
+const TELEGRAM_CHAT_ID = '8182530431';
 
 // GitHub Config
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
