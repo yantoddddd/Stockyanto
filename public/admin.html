@@ -12,7 +12,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         .container { max-width: 1000px; margin: 0 auto; }
-        .card { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 28px; margin-bottom: 28px; border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.3s; }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 28px; margin-bottom: 28px; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.3s; }
         .card:hover { transform: translateY(-4px); }
         h1, h2 { color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
         h1 { font-size: 1.5rem; }
@@ -28,12 +28,13 @@
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; }
-        .item:hover { background: #334155; transform: translateX(4px); }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .item:hover { background: #334155; }
+        .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6; }
         .item-info { flex: 1; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
-        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .item-actions { display: flex; gap: 8px; }
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
         .hidden { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
@@ -43,7 +44,8 @@
         .modal-buttons button { flex: 1; justify-content: center; }
         .broadcast-area { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
         textarea { resize: vertical; }
-        @media (max-width: 640px) { .item-actions { width: 100%; justify-content: flex-end; } .stats-grid { grid-template-columns: repeat(2,1fr); } }
+        .selection-bar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+        @media (max-width: 640px) { .item { flex-wrap: wrap; } .item-checkbox { order: 0; } .item-info { order: 1; width: calc(100% - 80px); } .item-actions { order: 2; width: 100%; justify-content: flex-end; } }
     </style>
 </head>
 <body>
@@ -72,6 +74,11 @@
         <div class="card"><h2><i class="fas fa-boxes"></i> Daftar Produk</h2><div id="productsList"></div></div>
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
+            <div class="selection-bar">
+                <button id="selectAllBtn" class="btn-success" style="background:#475569;"><i class="fas fa-check-double"></i> Pilih Semua</button>
+                <button id="deleteSelectedBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih</button>
+                <span id="selectedCount" style="color:#94a3b8; font-size:0.8rem;">0 dipilih</span>
+            </div>
             <div id="ordersList"></div>
             <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
                 <button class="btn-warning" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Pending & Cancelled</button>
@@ -107,6 +114,7 @@
 
 <script>
 let adminKey = '', currentEditId = null;
+let selectedOrders = new Set();
 
 function toast(msg, isError = false) {
     const t = document.getElementById('toast');
@@ -114,6 +122,39 @@ function toast(msg, isError = false) {
     t.style.background = isError ? '#b91c1c' : '#1e293b';
     t.style.opacity = '1';
     setTimeout(() => t.style.opacity = '0', 3000);
+}
+
+function updateSelectedCount() {
+    document.getElementById('selectedCount').innerText = `${selectedOrders.size} dipilih`;
+}
+
+async function deleteSelected() {
+    if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
+    if (confirm(`Hapus ${selectedOrders.size} order yang dipilih?`)) {
+        const orderIds = Array.from(selectedOrders);
+        const res = await fetch('/api/admin/delete-selected-orders', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey, orderIds })
+        });
+        if (res.ok) {
+            toast(`✅ ${selectedOrders.size} order dihapus`);
+            selectedOrders.clear();
+            updateSelectedCount();
+            loadOrders();
+            loadStats();
+        } else { toast('Gagal hapus', true); }
+    }
+}
+
+function selectAllOrders() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => {
+        cb.checked = !allSelected;
+        if (!allSelected) selectedOrders.add(cb.value);
+        else selectedOrders.delete(cb.value);
+    });
+    updateSelectedCount();
 }
 
 async function loadStats() {
@@ -221,11 +262,13 @@ async function testProduct(productId) {
     toast('⏳ Membuat test order...');
     try {
         const res = await fetch('/api/admin/test-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, adminKey }) });
-        const data = await res.json();
-        if (data.success) {
+        if (res.ok) {
+            const html = await res.text();
+            const win = window.open();
+            win.document.write(html);
+            win.document.close();
             toast('✅ Test order berhasil!');
-            window.open(`/order/${data.orderCode}`, '_blank');
-        } else { toast('❌ Gagal: ' + data.error, true); }
+        } else { toast('❌ Gagal', true); }
     } catch(e) { toast('❌ Error: ' + e.message, true); }
 }
 
@@ -284,14 +327,36 @@ async function loadOrders() {
     if (data.success && data.orders.length) {
         container.innerHTML = data.orders.map(o => `
             <div class="item">
+                <input type="checkbox" class="order-checkbox" value="${o.id}" onchange="toggleOrderSelect(this)">
                 <div class="item-info">
                     <div class="item-name">${escapeHtml(o.productName)}</div>
-                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : (o.status === 'expired' ? '❌ Expired' : (o.status === 'test' ? '🧪 Test' : '🗑️ Cancelled')))}</div>
-                    <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()}</div>
+                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : (o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled'))}</div>
+                    <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()} | ID: ${o.id}</div>
                 </div>
             </div>
         `).join('');
+        selectedOrders.clear();
+        updateSelectedCount();
+        document.getElementById('selectAllBtn').onclick = () => selectAllOrders();
+        document.getElementById('deleteSelectedBtn').onclick = () => deleteSelected();
     } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
+}
+
+function toggleOrderSelect(checkbox) {
+    if (checkbox.checked) selectedOrders.add(checkbox.value);
+    else selectedOrders.delete(checkbox.value);
+    updateSelectedCount();
+}
+
+function selectAllOrders() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => {
+        cb.checked = !allSelected;
+        if (!allSelected) selectedOrders.add(cb.value);
+        else selectedOrders.delete(cb.value);
+    });
+    updateSelectedCount();
 }
 
 async function resetOrders() {
