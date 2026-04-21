@@ -294,9 +294,13 @@ async function testProduct(productId) {
         
         if (res.ok) {
             const html = await res.text();
-            const win = window.open();
-            win.document.write(html);
-            win.document.close();
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const win = window.open(url);
+            if (!win) {
+                toast('⚠️ Popup diblokir! Izinkan popup untuk halaman ini.', true);
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             toast('✅ Test order berhasil!');
         } else {
             const error = await res.text();
