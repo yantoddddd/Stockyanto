@@ -5,13 +5,13 @@
       "name": "WEB QRIS DINAMIS",
       "description": "Qris dinamis adalah qris sementara yang cocok digunakan untuk bot/web auto order",
       "price": 1000,
-      "stock": 997,
+      "stock": 100,
       "itemType": "link",
       "itemContent": "https://qrispy.id",
       "bonusType": "text",
       "bonusContent": "APK QRIS: (NO KTP)\n- ZevalDigital\n- Nexapay\n- Davpay",
       "createdAt": "2026-04-20T10:34:17.269Z",
-      "updatedAt": "2026-04-21T16:56:08.363Z"
+      "updatedAt": "2026-04-21T17:02:36.193Z"
     },
     {
       "id": 1776700746939,
@@ -58,5 +58,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-21T17:02:26.115Z"
+  "updatedAt": "2026-04-21T17:02:36.193Z"
 }
