@@ -149,18 +149,18 @@ app.post('/api/admin/test-order', async (req, res) => {
     }
   }
   
-  // Format item
+  // Format item berdasarkan tipe
   let itemHtml = '';
   const isLink = product.itemContent.startsWith('http');
   const isHtml = product.itemType === 'html';
-  const escapedContent = escapeHtml(product.itemContent).replace(/"/g, '&quot;');
   const rawHtml = product.itemContent;
+  // Untuk atribut data-html, kita simpan HTML asli (tanpa escape berlebihan)
   const escapedForAttr = rawHtml.replace(/"/g, '&quot;').replace(/\n/g, '\\n');
   
   if (isHtml) {
     itemHtml = `
       <div class="section">
-        <div class-section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div>
+        <div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div>
         <div class="item-row">
           <div class="item-content"></div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -177,7 +177,7 @@ app.post('/api/admin/test-order', async (req, res) => {
         <div class="item-row">
           <div class="item-content"><div class="text-content">${escapeHtml(product.itemContent)}</div></div>
           <div style="display: flex; gap: 8px;">
-            <button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Link</button>
+            <button class="chip-btn copy-btn" data-copy="${escapeHtml(product.itemContent).replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Salin Link</button>
             <a href="${escapeHtml(product.itemContent)}" class="chip-btn link-chip" target="_blank"><i class="fas fa-external-link-alt"></i> Buka</a>
           </div>
         </div>
@@ -189,7 +189,7 @@ app.post('/api/admin/test-order', async (req, res) => {
         <div class="section-title"><i class="fas fa-box"></i> Barang Utama</div>
         <div class="item-row">
           <div class="item-content"><div class="text-content">${escapeHtml(product.itemContent)}</div></div>
-          <button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Teks</button>
+          <button class="chip-btn copy-btn" data-copy="${escapeHtml(product.itemContent).replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Salin Teks</button>
         </div>
       </div>
     `;
@@ -277,9 +277,15 @@ app.post('/api/admin/test-order', async (req, res) => {
             document.querySelectorAll('.preview-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const htmlContent = this.getAttribute('data-html');
-                    const win = window.open();
-                    win.document.write(htmlContent);
-                    win.document.close();
+                    if (htmlContent) {
+                        const win = window.open();
+                        if (win) {
+                            win.document.write(htmlContent);
+                            win.document.close();
+                        } else {
+                            alert('Popup diblokir browser! Izinkan popup untuk halaman ini.');
+                        }
+                    }
                 });
             });
         </script>
