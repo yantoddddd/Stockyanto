@@ -28,13 +28,13 @@
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; transition: 0.3s; flex-wrap: wrap; }
         .item:hover { background: #334155; }
         .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6; }
         .item-info { flex: 1; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
-        .item-actions { display: flex; gap: 8px; }
+        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
         .hidden { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
@@ -45,7 +45,7 @@
         .broadcast-area { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
         textarea { resize: vertical; }
         .selection-bar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-        @media (max-width: 640px) { .item { flex-wrap: wrap; } .item-checkbox { order: 0; } .item-info { order: 1; width: calc(100% - 80px); } .item-actions { order: 2; width: 100%; justify-content: flex-end; } }
+        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-checkbox { order: 0; } .item-info { order: 1; width: 100%; } .item-actions { order: 2; width: 100%; justify-content: flex-end; } }
     </style>
 </head>
 <body>
@@ -63,10 +63,19 @@
             <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
             <input type="number" id="productPrice" placeholder="Harga">
             <input type="number" id="productStock" placeholder="Stok">
-            <select id="itemType"><option value="text">Teks (copy-paste)</option><option value="link">Link</option></select>
-            <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Kode/teks"></textarea></div>
+            <select id="itemType">
+                <option value="text">Teks (copy-paste)</option>
+                <option value="link">Link</option>
+                <option value="html">HTML (kode web)</option>
+            </select>
+            <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Kode/teks yang akan diberikan ke customer"></textarea></div>
             <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-            <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+            <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>Kode HTML di sini...</div>"></textarea></div>
+            <select id="bonusType">
+                <option value="none">Tidak ada bonus</option>
+                <option value="text">Bonus Teks</option>
+                <option value="link">Bonus Link</option>
+            </select>
             <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
             <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
             <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
@@ -101,10 +110,19 @@
         <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
         <input type="number" id="editProductPrice" placeholder="Harga">
         <input type="number" id="editProductStock" placeholder="Stok">
-        <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Kode/teks"></textarea></div>
+        <select id="editItemType">
+            <option value="text">Teks</option>
+            <option value="link">Link</option>
+            <option value="html">HTML</option>
+        </select>
+        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Kode/teks"></textarea></div>
         <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="Kode HTML..."></textarea></div>
+        <select id="editBonusType">
+            <option value="none">Tidak ada bonus</option>
+            <option value="text">Bonus Teks</option>
+            <option value="link">Bonus Link</option>
+        </select>
         <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
         <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
         <div class="modal-buttons"><button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button><button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button></div>
@@ -124,9 +142,7 @@ function toast(msg, isError = false) {
     setTimeout(() => t.style.opacity = '0', 3000);
 }
 
-function updateSelectedCount() {
-    document.getElementById('selectedCount').innerText = `${selectedOrders.size} dipilih`;
-}
+function updateSelectedCount() { document.getElementById('selectedCount').innerText = `${selectedOrders.size} dipilih`; }
 
 async function deleteSelected() {
     if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
@@ -138,10 +154,8 @@ async function deleteSelected() {
         });
         if (res.ok) {
             toast(`✅ ${selectedOrders.size} order dihapus`);
-            selectedOrders.clear();
-            updateSelectedCount();
-            loadOrders();
-            loadStats();
+            selectedOrders.clear(); updateSelectedCount();
+            loadOrders(); loadStats();
         } else { toast('Gagal hapus', true); }
     }
 }
@@ -154,6 +168,12 @@ function selectAllOrders() {
         if (!allSelected) selectedOrders.add(cb.value);
         else selectedOrders.delete(cb.value);
     });
+    updateSelectedCount();
+}
+
+function toggleOrderSelect(checkbox) {
+    if (checkbox.checked) selectedOrders.add(checkbox.value);
+    else selectedOrders.delete(checkbox.value);
     updateSelectedCount();
 }
 
@@ -179,9 +199,7 @@ async function login() {
         adminKey = key;
         document.getElementById('loginCard').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
-        await loadStats();
-        await loadProducts();
-        await loadOrders();
+        await loadStats(); await loadProducts(); await loadOrders();
         toast('Login berhasil');
     } else { toast('Kunci salah', true); }
 }
@@ -190,8 +208,10 @@ function toggleItemFields() {
     const type = document.getElementById('itemType').value;
     document.getElementById('itemTextField').classList.add('hidden');
     document.getElementById('itemLinkField').classList.add('hidden');
+    document.getElementById('itemHtmlField').classList.add('hidden');
     if (type === 'text') document.getElementById('itemTextField').classList.remove('hidden');
     else if (type === 'link') document.getElementById('itemLinkField').classList.remove('hidden');
+    else if (type === 'html') document.getElementById('itemHtmlField').classList.remove('hidden');
 }
 function toggleBonusFields() {
     const type = document.getElementById('bonusType').value;
@@ -204,8 +224,10 @@ function toggleEditItemFields() {
     const type = document.getElementById('editItemType').value;
     document.getElementById('editItemTextField').classList.add('hidden');
     document.getElementById('editItemLinkField').classList.add('hidden');
+    document.getElementById('editItemHtmlField').classList.add('hidden');
     if (type === 'text') document.getElementById('editItemTextField').classList.remove('hidden');
     else if (type === 'link') document.getElementById('editItemLinkField').classList.remove('hidden');
+    else if (type === 'html') document.getElementById('editItemHtmlField').classList.remove('hidden');
 }
 function toggleEditBonusFields() {
     const type = document.getElementById('editBonusType').value;
@@ -220,6 +242,7 @@ async function addProduct() {
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('itemText').value;
     else if (itemType === 'link') itemContent = document.getElementById('itemLink').value;
+    else if (itemType === 'html') itemContent = document.getElementById('itemHtml').value;
     if (!itemContent) { toast('Konten item wajib diisi', true); return; }
     const bonusType = document.getElementById('bonusType').value;
     let bonusContent = '';
@@ -232,7 +255,8 @@ async function addProduct() {
     if (res.ok) {
         toast('Produk ditambahkan');
         document.getElementById('productName').value = ''; document.getElementById('productDesc').value = ''; document.getElementById('productPrice').value = ''; document.getElementById('productStock').value = '';
-        document.getElementById('itemText').value = ''; document.getElementById('itemLink').value = ''; document.getElementById('bonusText').value = ''; document.getElementById('bonusLink').value = '';
+        document.getElementById('itemText').value = ''; document.getElementById('itemLink').value = ''; document.getElementById('itemHtml').value = '';
+        document.getElementById('bonusText').value = ''; document.getElementById('bonusLink').value = '';
         loadProducts(); loadStats();
     } else { toast('Gagal tambah produk', true); }
 }
@@ -292,6 +316,7 @@ async function openEditModal(id) {
         document.getElementById('editProductStock').value = p.stock;
         document.getElementById('editItemType').value = p.itemType || 'text';
         if (p.itemType === 'link') document.getElementById('editItemLink').value = p.itemContent;
+        else if (p.itemType === 'html') document.getElementById('editItemHtml').value = p.itemContent;
         else document.getElementById('editItemText').value = p.itemContent;
         document.getElementById('editBonusType').value = p.bonusType || 'none';
         if (p.bonusType === 'link') document.getElementById('editBonusLink').value = p.bonusContent || '';
@@ -307,6 +332,7 @@ async function saveEditProduct() {
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('editItemText').value;
     else if (itemType === 'link') itemContent = document.getElementById('editItemLink').value;
+    else if (itemType === 'html') itemContent = document.getElementById('editItemHtml').value;
     if (!itemContent) { toast('Konten item wajib diisi', true); return; }
     const bonusType = document.getElementById('editBonusType').value;
     let bonusContent = '';
@@ -335,28 +361,10 @@ async function loadOrders() {
                 </div>
             </div>
         `).join('');
-        selectedOrders.clear();
-        updateSelectedCount();
+        selectedOrders.clear(); updateSelectedCount();
         document.getElementById('selectAllBtn').onclick = () => selectAllOrders();
         document.getElementById('deleteSelectedBtn').onclick = () => deleteSelected();
     } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
-}
-
-function toggleOrderSelect(checkbox) {
-    if (checkbox.checked) selectedOrders.add(checkbox.value);
-    else selectedOrders.delete(checkbox.value);
-    updateSelectedCount();
-}
-
-function selectAllOrders() {
-    const checkboxes = document.querySelectorAll('.order-checkbox');
-    const allSelected = Array.from(checkboxes).every(cb => cb.checked);
-    checkboxes.forEach(cb => {
-        cb.checked = !allSelected;
-        if (!allSelected) selectedOrders.add(cb.value);
-        else selectedOrders.delete(cb.value);
-    });
-    updateSelectedCount();
 }
 
 async function resetOrders() {
