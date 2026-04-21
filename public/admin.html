@@ -282,18 +282,29 @@ async function loadProducts() {
     } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; }
 }
 
+// ========== FUNGSI TEST PRODUCT YANG BENAR ==========
 async function testProduct(productId) {
     toast('⏳ Membuat test order...');
     try {
-        const res = await fetch('/api/admin/test-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, adminKey }) });
+        const res = await fetch('/api/admin/test-order', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ productId, adminKey }) 
+        });
+        
         if (res.ok) {
             const html = await res.text();
             const win = window.open();
             win.document.write(html);
             win.document.close();
             toast('✅ Test order berhasil!');
-        } else { toast('❌ Gagal', true); }
-    } catch(e) { toast('❌ Error: ' + e.message, true); }
+        } else {
+            const error = await res.text();
+            toast('❌ Gagal: ' + error.substring(0, 100), true);
+        }
+    } catch(e) { 
+        toast('❌ Error: ' + e.message, true); 
+    }
 }
 
 async function deleteProduct(id) {
