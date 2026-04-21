@@ -12,7 +12,6 @@ const ADMIN_KEY = 'rahasia123';
 const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 
-// ========== TELEGRAM CONFIG ==========
 const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
 const TELEGRAM_CHAT_ID = '8182530431';
 
@@ -48,7 +47,7 @@ async function setDB(products, orders, oldSha) {
   return data.content.sha;
 }
 
-// ========== AUTO DELETE CANCELLED & EXPIRED ORDERS ==========
+// ========== AUTO DELETE: CANCELLED LANGSUNG, EXPIRED LANGSUNG ==========
 async function cleanupOrders() {
   console.log('🧹 Menjalankan cleanup orders...');
   const db = await getDB();
@@ -59,20 +58,25 @@ async function cleanupOrders() {
   for (const order of db.orders) {
     let shouldKeep = true;
     
-    if (order.status === 'cancelled' && order.cancelledAt) {
-      const cancelledTime = new Date(order.cancelledAt);
-      const diffMinutes = (now - cancelledTime) / (1000 * 60);
-      if (diffMinutes >= 5) shouldKeep = false;
+    // CANCELLED: LANGSUNG DIHAPUS (no jeda)
+    if (order.status === 'cancelled') {
+      shouldKeep = false;
+      deletedCount++;
+      console.log(`🗑️ Hapus order cancelled: ${order.orderCode}`);
     }
     
-    if (order.status === 'expired') {
-      const expiredTime = new Date(order.expiredAt);
-      const diffMinutes = (now - expiredTime) / (1000 * 60);
-      if (diffMinutes >= 5) shouldKeep = false;
+    // EXPIRED: LANGSUNG DIHAPUS (no jeda)
+    else if (order.status === 'expired') {
+      shouldKeep = false;
+      deletedCount++;
+      console.log(`🗑️ Hapus order expired: ${order.orderCode}`);
     }
+    
+    // PENDING: tetap disimpan sampai expired (tidak dihapus)
+    // PAID: tetap disimpan (tidak dihapus)
+    // TEST: tetap disimpan
     
     if (shouldKeep) ordersToKeep.push(order);
-    else deletedCount++;
   }
   
   if (deletedCount > 0) {
@@ -82,7 +86,8 @@ async function cleanupOrders() {
   }
 }
 
-setInterval(cleanupOrders, 60 * 1000);
+// Jalankan cleanup setiap 30 detik (biar cepet)
+setInterval(cleanupOrders, 30 * 1000);
 cleanupOrders();
 
 // ========== RESET ORDER (HAPUS HANYA PENDING & CANCELLED) ==========
@@ -110,7 +115,7 @@ app.post('/api/admin/reset-orders', async (req, res) => {
   res.json({ success: true, deletedCount, keptCount: paidOrders.length });
 });
 
-// ========== TEST ORDER (untuk admin cek produk, tidak mengurangi stok) ==========
+// ========== TEST ORDER (LANGSUNG SUCCESS, TIDAK PAKAI QRIS) ==========
 app.post('/api/admin/test-order', async (req, res) => {
   const { productId, adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -119,17 +124,11 @@ app.post('/api/admin/test-order', async (req, res) => {
   const product = db.products.find(p => p.id == productId);
   if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
   
-  const paymentRef = `test-${Date.now()}-${productId}`;
-  const qrisResult = await generateQRIS(product.price, paymentRef);
-  if (qrisResult.status !== 'success') {
-    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
-  }
-  
   const testOrderCode = crypto.randomBytes(16).toString('hex');
   const testOrder = {
     id: Date.now(),
     orderCode: testOrderCode,
-    qrisId: qrisResult.data.qris_id,
+    qrisId: `test-${Date.now()}`,
     productId: product.id,
     productName: product.name,
     productCode: product.itemContent,
@@ -137,21 +136,16 @@ app.post('/api/admin/test-order', async (req, res) => {
     totalAmount: product.price,
     customerName: 'ADMIN_TEST',
     customerEmail: '-',
-    status: 'test',
-    qrisImage: qrisResult.data.qris_image_url,
-    expiredAt: qrisResult.data.expired_at,
-    createdAt: new Date().toISOString()
+    status: 'paid',
+    qrisImage: '',
+    expiredAt: new Date(Date.now() + 15 * 60000).toISOString(),
+    createdAt: new Date().toISOString(),
+    paidAt: new Date().toISOString()
   };
   db.orders.unshift(testOrder);
   await setDB(db.products, db.orders, db.sha);
   
-  res.json({
-    success: true,
-    orderCode: testOrderCode,
-    qrisImage: qrisResult.data.qris_image_url,
-    amount: product.price,
-    expiredAt: qrisResult.data.expired_at
-  });
+  res.json({ success: true, orderCode: testOrderCode });
 });
 
 // ========== GET PRODUCT BY ID ==========
