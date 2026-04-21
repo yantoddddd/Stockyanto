@@ -12,9 +12,9 @@ const ADMIN_KEY = 'rahasia123';
 const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 
-// ========== TELEGRAM CONFIG (DIUPDATE) ==========
+// ========== TELEGRAM CONFIG ==========
 const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
-const TELEGRAM_CHAT_ID = '8182530431';  // ID TELEGRAM ANDA
+const TELEGRAM_CHAT_ID = '8182530431';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
@@ -91,17 +91,12 @@ app.post('/api/admin/reset-orders', async (req, res) => {
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
   
   const db = await getDB();
-  const now = new Date();
-  
-  // Filter: hanya keep order yang status 'paid' (sudah lunas)
-  // Order pending & cancelled akan dihapus
   const paidOrders = db.orders.filter(o => o.status === 'paid');
   const deletedCount = db.orders.length - paidOrders.length;
   
   db.orders = paidOrders;
   await setDB(db.products, db.orders, db.sha);
   
-  // Kirim notifikasi ke Telegram
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -113,6 +108,50 @@ app.post('/api/admin/reset-orders', async (req, res) => {
   }).catch(console.error);
   
   res.json({ success: true, deletedCount, keptCount: paidOrders.length });
+});
+
+// ========== TEST ORDER (untuk admin cek produk, tidak mengurangi stok) ==========
+app.post('/api/admin/test-order', async (req, res) => {
+  const { productId, adminKey } = req.body;
+  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  
+  const db = await getDB();
+  const product = db.products.find(p => p.id == productId);
+  if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
+  
+  const paymentRef = `test-${Date.now()}-${productId}`;
+  const qrisResult = await generateQRIS(product.price, paymentRef);
+  if (qrisResult.status !== 'success') {
+    return res.status(500).json({ error: qrisResult.message || 'Gagal generate QRIS' });
+  }
+  
+  const testOrderCode = crypto.randomBytes(16).toString('hex');
+  const testOrder = {
+    id: Date.now(),
+    orderCode: testOrderCode,
+    qrisId: qrisResult.data.qris_id,
+    productId: product.id,
+    productName: product.name,
+    productCode: product.itemContent,
+    price: product.price,
+    totalAmount: product.price,
+    customerName: 'ADMIN_TEST',
+    customerEmail: '-',
+    status: 'test',
+    qrisImage: qrisResult.data.qris_image_url,
+    expiredAt: qrisResult.data.expired_at,
+    createdAt: new Date().toISOString()
+  };
+  db.orders.unshift(testOrder);
+  await setDB(db.products, db.orders, db.sha);
+  
+  res.json({
+    success: true,
+    orderCode: testOrderCode,
+    qrisImage: qrisResult.data.qris_image_url,
+    amount: product.price,
+    expiredAt: qrisResult.data.expired_at
+  });
 });
 
 // ========== GET PRODUCT BY ID ==========
@@ -259,8 +298,25 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
   res.json({ success: true });
 });
 
+// ========== FUNGSI GENERATE QRIS ==========
+async function generateQRIS(amount, paymentReference) {
+  try {
+    const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
+      method: 'POST',
+      headers: {
+        'X-API-Token': QRISPY_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ amount, payment_reference: paymentReference })
+    });
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    return { status: 'error', message: err.message };
+  }
+}
+
 // ========== FUNGSI TAMBAHAN ADMIN ==========
-// 1. Get statistik (total produk, total order, total pendapatan)
 app.get('/api/admin/stats', async (req, res) => {
   const { adminKey } = req.query;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -288,7 +344,6 @@ app.get('/api/admin/stats', async (req, res) => {
   });
 });
 
-// 2. Backup database (kirim ke Telegram)
 app.post('/api/admin/backup', async (req, res) => {
   const { adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -308,7 +363,6 @@ app.post('/api/admin/backup', async (req, res) => {
   res.json({ success: true });
 });
 
-// 3. Broadcast message ke semua customer (kirim pesan ke semua order)
 app.post('/api/admin/broadcast', async (req, res) => {
   const { adminKey, message } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -316,17 +370,14 @@ app.post('/api/admin/broadcast', async (req, res) => {
   
   const db = await getDB();
   const uniqueCustomers = [...new Map(db.orders.map(o => [o.customerName, o.customerEmail])).entries()];
-  
   let sentCount = 0;
   for (const [name, email] of uniqueCustomers) {
     if (email && email !== '-') {
-      // Kirim email (simulasi)
       console.log(`Send email to ${email}: ${message}`);
       sentCount++;
     }
   }
   
-  // Juga kirim ke Telegram owner
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
