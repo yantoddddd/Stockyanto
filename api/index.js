@@ -12,6 +12,10 @@ const ADMIN_KEY = 'rahasia123';
 const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
 const QRISPY_API_URL = 'https://api.qrispy.id';
 
+// ========== TELEGRAM CONFIG (DIUPDATE) ==========
+const TELEGRAM_BOT_TOKEN = '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
+const TELEGRAM_CHAT_ID = '8182530431';  // ID TELEGRAM ANDA
+
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
@@ -55,29 +59,20 @@ async function cleanupOrders() {
   for (const order of db.orders) {
     let shouldKeep = true;
     
-    // Hapus order cancelled setelah 5 menit
     if (order.status === 'cancelled' && order.cancelledAt) {
       const cancelledTime = new Date(order.cancelledAt);
       const diffMinutes = (now - cancelledTime) / (1000 * 60);
-      if (diffMinutes >= 5) {
-        shouldKeep = false;
-        deletedCount++;
-        console.log(`🗑️ Hapus order cancelled: ${order.orderCode}`);
-      }
+      if (diffMinutes >= 5) shouldKeep = false;
     }
     
-    // Hapus order expired setelah 5 menit
     if (order.status === 'expired') {
       const expiredTime = new Date(order.expiredAt);
       const diffMinutes = (now - expiredTime) / (1000 * 60);
-      if (diffMinutes >= 5) {
-        shouldKeep = false;
-        deletedCount++;
-        console.log(`🗑️ Hapus order expired: ${order.orderCode}`);
-      }
+      if (diffMinutes >= 5) shouldKeep = false;
     }
     
     if (shouldKeep) ordersToKeep.push(order);
+    else deletedCount++;
   }
   
   if (deletedCount > 0) {
@@ -87,18 +82,37 @@ async function cleanupOrders() {
   }
 }
 
-// Jalankan cleanup setiap 1 menit
 setInterval(cleanupOrders, 60 * 1000);
 cleanupOrders();
 
-// ========== RESET ORDER ==========
+// ========== RESET ORDER (HAPUS HANYA PENDING & CANCELLED) ==========
 app.post('/api/admin/reset-orders', async (req, res) => {
   const { adminKey } = req.body;
   if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  
   const db = await getDB();
-  db.orders = [];
+  const now = new Date();
+  
+  // Filter: hanya keep order yang status 'paid' (sudah lunas)
+  // Order pending & cancelled akan dihapus
+  const paidOrders = db.orders.filter(o => o.status === 'paid');
+  const deletedCount = db.orders.length - paidOrders.length;
+  
+  db.orders = paidOrders;
   await setDB(db.products, db.orders, db.sha);
-  res.json({ success: true });
+  
+  // Kirim notifikasi ke Telegram
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: `🗑️ *RESET ORDER*\n\n✅ ${deletedCount} order (pending/cancelled) telah dihapus.\n📦 ${paidOrders.length} order paid tetap tersimpan.`,
+      parse_mode: 'Markdown'
+    })
+  }).catch(console.error);
+  
+  res.json({ success: true, deletedCount, keptCount: paidOrders.length });
 });
 
 // ========== GET PRODUCT BY ID ==========
@@ -243,6 +257,87 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
   await setDB(db.products, db.orders, db.sha);
   
   res.json({ success: true });
+});
+
+// ========== FUNGSI TAMBAHAN ADMIN ==========
+// 1. Get statistik (total produk, total order, total pendapatan)
+app.get('/api/admin/stats', async (req, res) => {
+  const { adminKey } = req.query;
+  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  
+  const db = await getDB();
+  const totalProducts = db.products.length;
+  const totalOrders = db.orders.length;
+  const paidOrders = db.orders.filter(o => o.status === 'paid');
+  const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.totalAmount || o.price || 0), 0);
+  const pendingCount = db.orders.filter(o => o.status === 'pending').length;
+  const expiredCount = db.orders.filter(o => o.status === 'expired').length;
+  const cancelledCount = db.orders.filter(o => o.status === 'cancelled').length;
+  
+  res.json({
+    success: true,
+    stats: {
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      pendingCount,
+      expiredCount,
+      cancelledCount,
+      paidCount: paidOrders.length
+    }
+  });
+});
+
+// 2. Backup database (kirim ke Telegram)
+app.post('/api/admin/backup', async (req, res) => {
+  const { adminKey } = req.body;
+  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  
+  const db = await getDB();
+  const backupData = JSON.stringify(db, null, 2);
+  const formData = new FormData();
+  formData.append('chat_id', TELEGRAM_CHAT_ID);
+  formData.append('document', new Blob([backupData]), `backup_${Date.now()}.json`);
+  formData.append('caption', `📦 Backup database Yanto Store\n📅 ${new Date().toLocaleString()}`);
+  
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
+    method: 'POST',
+    body: formData
+  });
+  
+  res.json({ success: true });
+});
+
+// 3. Broadcast message ke semua customer (kirim pesan ke semua order)
+app.post('/api/admin/broadcast', async (req, res) => {
+  const { adminKey, message } = req.body;
+  if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  if (!message) return res.status(400).json({ error: 'Pesan wajib diisi' });
+  
+  const db = await getDB();
+  const uniqueCustomers = [...new Map(db.orders.map(o => [o.customerName, o.customerEmail])).entries()];
+  
+  let sentCount = 0;
+  for (const [name, email] of uniqueCustomers) {
+    if (email && email !== '-') {
+      // Kirim email (simulasi)
+      console.log(`Send email to ${email}: ${message}`);
+      sentCount++;
+    }
+  }
+  
+  // Juga kirim ke Telegram owner
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: `📢 *BROADCAST*\n\n${message}\n\n📨 Terkirim ke ${sentCount} customer.`,
+      parse_mode: 'Markdown'
+    })
+  });
+  
+  res.json({ success: true, sentCount });
 });
 
 // ========== ADMIN API ==========
