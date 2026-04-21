@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Admin Panel | AutoOrder</title>
+    <title>Admin Panel | Yanto Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -18,11 +18,20 @@
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
             font-family: 'Inter', sans-serif;
             padding: 24px;
+            animation: fadeIn 0.5s ease;
         }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
         .card {
             background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(12px);
@@ -30,6 +39,11 @@
             padding: 28px;
             margin-bottom: 28px;
             border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         h1, h2 {
             color: white;
@@ -38,14 +52,8 @@
             align-items: center;
             gap: 12px;
         }
-        h1 {
-            font-size: 1.5rem;
-        }
-        h2 {
-            font-size: 1.2rem;
-            border-left: 3px solid #3b82f6;
-            padding-left: 16px;
-        }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.2rem; border-left: 3px solid #3b82f6; padding-left: 16px; }
         input, textarea, select {
             width: 100%;
             padding: 12px 16px;
@@ -56,7 +64,7 @@
             color: white;
             font-size: 0.85rem;
             outline: none;
-            transition: 0.2s;
+            transition: all 0.3s;
         }
         input:focus, textarea:focus, select:focus {
             border-color: #3b82f6;
@@ -73,32 +81,40 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: 0.2s;
+            transition: all 0.3s;
             font-size: 0.85rem;
         }
         button:hover {
             transform: translateY(-2px);
+            filter: brightness(1.05);
         }
-        .btn-danger {
-            background: #b91c1c;
+        .btn-danger { background: #b91c1c; }
+        .btn-danger:hover { background: #991b1b; }
+        .btn-warning { background: #f59e0b; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
         }
-        .btn-danger:hover {
-            background: #991b1b;
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
         }
-        .btn-warning {
-            background: #f59e0b;
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #60a5fa;
         }
-        .btn-warning:hover {
-            background: #d97706;
-        }
-        .reset-btn {
-            background: #ef4444;
-            margin-top: 20px;
-            width: 100%;
-            justify-content: center;
-        }
-        .reset-btn:hover {
-            background: #dc2626;
+        .stat-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-top: 4px;
         }
         .item {
             background: #1e293b;
@@ -110,23 +126,17 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
+            transition: all 0.3s;
+            animation: fadeIn 0.3s ease;
         }
-        .item-info {
-            flex: 1;
+        .item:hover {
+            background: #334155;
+            transform: translateX(4px);
         }
-        .item-name {
-            font-weight: 600;
-            color: white;
-            margin-bottom: 4px;
-        }
-        .item-detail {
-            font-size: 0.7rem;
-            color: #94a3b8;
-        }
-        .item-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .item-info { flex: 1; }
+        .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
+        .item-detail { font-size: 0.7rem; color: #94a3b8; }
+        .item-actions { display: flex; gap: 8px; }
         .toast {
             position: fixed;
             bottom: 20px;
@@ -137,24 +147,23 @@
             border-radius: 40px;
             font-size: 0.85rem;
             opacity: 0;
-            transition: 0.2s;
+            transition: opacity 0.3s;
             color: white;
             z-index: 1000;
             display: flex;
             align-items: center;
             gap: 8px;
+            animation: pulse 0.5s ease;
         }
-        .hidden {
-            display: none;
-        }
-        .form-group {
-            margin-bottom: 8px;
-        }
-        label {
-            color: #94a3b8;
-            font-size: 0.7rem;
-            margin-bottom: 4px;
-            display: block;
+        .hidden { display: none; }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
         .modal {
             display: none;
@@ -168,6 +177,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1100;
+            animation: fadeIn 0.3s ease;
         }
         .modal-content {
             background: #0f172a;
@@ -192,10 +202,13 @@
             gap: 12px;
             margin-top: 20px;
         }
-        .modal-buttons button {
-            flex: 1;
-            justify-content: center;
+        .modal-buttons button { flex: 1; justify-content: center; }
+        .broadcast-area {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+        textarea { resize: vertical; }
     </style>
 </head>
 <body>
@@ -206,42 +219,31 @@
         <button onclick="login()"><i class="fas fa-key"></i> Login</button>
     </div>
     <div id="adminContent" style="display:none;">
+        <!-- Stats Card -->
+        <div class="card">
+            <h2><i class="fas fa-chart-line"></i> Statistik</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+        
         <div class="card">
             <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
             <input type="text" id="productName" placeholder="Nama Produk">
             <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
             <input type="number" id="productPrice" placeholder="Harga">
             <input type="number" id="productStock" placeholder="Stok">
-            
-            <div class="form-group">
-                <label>Tipe Item</label>
-                <select id="itemType">
-                    <option value="text">Teks (copy-paste)</option>
-                    <option value="link">Link</option>
-                </select>
-            </div>
-            <div id="itemTextField">
-                <textarea id="itemText" rows="3" placeholder="Kode/teks yang akan diberikan ke customer"></textarea>
-            </div>
-            <div id="itemLinkField" class="hidden">
-                <input type="url" id="itemLink" placeholder="https://...">
-            </div>
-            
-            <div class="form-group">
-                <label>Bonus (opsional)</label>
-                <select id="bonusType">
-                    <option value="none">Tidak ada bonus</option>
-                    <option value="text">Bonus Teks</option>
-                    <option value="link">Bonus Link</option>
-                </select>
-            </div>
-            <div id="bonusTextField" class="hidden">
-                <textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea>
-            </div>
-            <div id="bonusLinkField" class="hidden">
-                <input type="url" id="bonusLink" placeholder="https://...">
-            </div>
-            
+            <select id="itemType">
+                <option value="text">Teks (copy-paste)</option>
+                <option value="link">Link</option>
+            </select>
+            <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Kode/teks"></textarea></div>
+            <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
+            <select id="bonusType">
+                <option value="none">Tidak ada bonus</option>
+                <option value="text">Bonus Teks</option>
+                <option value="link">Bonus Link</option>
+            </select>
+            <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+            <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
             <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
         </div>
         
@@ -253,7 +255,15 @@
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
             <div id="ordersList"></div>
-            <button class="reset-btn" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Semua Order</button>
+            <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                <button class="btn-warning" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Pending & Cancelled</button>
+                <button class="btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup Database</button>
+            </div>
+            <div class="broadcast-area">
+                <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
+                <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
+                <button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
+            </div>
         </div>
     </div>
 </div>
@@ -266,36 +276,19 @@
         <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
         <input type="number" id="editProductPrice" placeholder="Harga">
         <input type="number" id="editProductStock" placeholder="Stok">
-        
-        <div class="form-group">
-            <label>Tipe Item</label>
-            <select id="editItemType">
-                <option value="text">Teks (copy-paste)</option>
-                <option value="link">Link</option>
-            </select>
-        </div>
-        <div id="editItemTextField">
-            <textarea id="editItemText" rows="3" placeholder="Kode/teks"></textarea>
-        </div>
-        <div id="editItemLinkField" class="hidden">
-            <input type="url" id="editItemLink" placeholder="https://...">
-        </div>
-        
-        <div class="form-group">
-            <label>Bonus (opsional)</label>
-            <select id="editBonusType">
-                <option value="none">Tidak ada bonus</option>
-                <option value="text">Bonus Teks</option>
-                <option value="link">Bonus Link</option>
-            </select>
-        </div>
-        <div id="editBonusTextField" class="hidden">
-            <textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea>
-        </div>
-        <div id="editBonusLinkField" class="hidden">
-            <input type="url" id="editBonusLink" placeholder="https://...">
-        </div>
-        
+        <select id="editItemType">
+            <option value="text">Teks</option>
+            <option value="link">Link</option>
+        </select>
+        <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Kode/teks"></textarea></div>
+        <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
+        <select id="editBonusType">
+            <option value="none">Tidak ada bonus</option>
+            <option value="text">Bonus Teks</option>
+            <option value="link">Bonus Link</option>
+        </select>
+        <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+        <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
         <div class="modal-buttons">
             <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
             <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
@@ -315,6 +308,37 @@ function toast(msg, isError = false) {
     t.style.background = isError ? '#b91c1c' : '#1e293b';
     t.style.opacity = '1';
     setTimeout(() => t.style.opacity = '0', 3000);
+}
+
+async function loadStats() {
+    const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
+    const data = await res.json();
+    if (data.success) {
+        const s = data.stats;
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Total Produk</div></div>
+            <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Total Order</div></div>
+            <div class="stat-card"><div class="stat-number">Rp ${s.totalRevenue.toLocaleString()}</div><div class="stat-label">Pendapatan</div></div>
+            <div class="stat-card"><div class="stat-number">${s.pendingCount}</div><div class="stat-label">Pending</div></div>
+            <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
+            <div class="stat-card"><div class="stat-number">${s.expiredCount + s.cancelledCount}</div><div class="stat-label">Expired/Cancel</div></div>
+        `;
+    }
+}
+
+async function login() {
+    const key = document.getElementById('adminKey').value;
+    if (key === 'rahasia123') {
+        adminKey = key;
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        await loadStats();
+        await loadProducts();
+        await loadOrders();
+        toast('Login berhasil');
+    } else {
+        toast('Kunci salah', true);
+    }
 }
 
 function toggleItemFields() {
@@ -349,49 +373,27 @@ function toggleEditBonusFields() {
     else if (type === 'link') document.getElementById('editBonusLinkField').classList.remove('hidden');
 }
 
-async function login() {
-    const key = document.getElementById('adminKey').value;
-    if (key === 'rahasia123') {
-        adminKey = key;
-        document.getElementById('loginCard').style.display = 'none';
-        document.getElementById('adminContent').style.display = 'block';
-        await loadProducts();
-        await loadOrders();
-        toast('Login berhasil');
-    } else {
-        toast('Kunci salah', true);
-    }
-}
-
 async function addProduct() {
     const itemType = document.getElementById('itemType').value;
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('itemText').value;
     else if (itemType === 'link') itemContent = document.getElementById('itemLink').value;
-    
     if (!itemContent) { toast('Konten item wajib diisi', true); return; }
-    
     const bonusType = document.getElementById('bonusType').value;
     let bonusContent = '';
     if (bonusType === 'text') bonusContent = document.getElementById('bonusText').value;
     else if (bonusType === 'link') bonusContent = document.getElementById('bonusLink').value;
-    
     const res = await fetch('/api/admin/product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            adminKey: adminKey,
-            name: document.getElementById('productName').value,
+            adminKey, name: document.getElementById('productName').value,
             description: document.getElementById('productDesc').value,
             price: parseInt(document.getElementById('productPrice').value),
             stock: parseInt(document.getElementById('productStock').value) || 1,
-            itemType: itemType,
-            itemContent: itemContent,
-            bonusType: bonusType,
-            bonusContent: bonusContent
+            itemType, itemContent, bonusType, bonusContent
         })
     });
-    
     if (res.ok) {
         toast('Produk ditambahkan');
         document.getElementById('productName').value = '';
@@ -403,9 +405,8 @@ async function addProduct() {
         document.getElementById('bonusText').value = '';
         document.getElementById('bonusLink').value = '';
         loadProducts();
-    } else {
-        toast('Gagal tambah produk', true);
-    }
+        loadStats();
+    } else { toast('Gagal tambah produk', true); }
 }
 
 async function loadProducts() {
@@ -418,7 +419,6 @@ async function loadProducts() {
                 <div class="item-info">
                     <div class="item-name">${escapeHtml(p.name)}</div>
                     <div class="item-detail">Rp ${p.price.toLocaleString()} | Stok: ${p.stock} | Tipe: ${p.itemType}</div>
-                    <div class="item-detail" style="font-size:0.6rem;">Kode: ${escapeHtml(p.itemContent.substring(0, 50))}${p.itemContent.length > 50 ? '...' : ''}</div>
                 </div>
                 <div class="item-actions">
                     <button class="btn-warning" onclick="openEditModal(${p.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -426,15 +426,14 @@ async function loadProducts() {
                 </div>
             </div>
         `).join('');
-    } else {
-        container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
-    }
+    } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; }
 }
 
 async function deleteProduct(id) {
     if (confirm('Hapus produk ini?')) {
         await fetch(`/api/admin/product/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
         loadProducts();
+        loadStats();
     }
 }
 
@@ -449,69 +448,43 @@ async function openEditModal(id) {
         document.getElementById('editProductDesc').value = p.description || '';
         document.getElementById('editProductPrice').value = p.price;
         document.getElementById('editProductStock').value = p.stock;
-        
         document.getElementById('editItemType').value = p.itemType || 'text';
-        if (p.itemType === 'link') {
-            document.getElementById('editItemLink').value = p.itemContent;
-        } else {
-            document.getElementById('editItemText').value = p.itemContent;
-        }
-        
+        if (p.itemType === 'link') document.getElementById('editItemLink').value = p.itemContent;
+        else document.getElementById('editItemText').value = p.itemContent;
         document.getElementById('editBonusType').value = p.bonusType || 'none';
-        if (p.bonusType === 'link') {
-            document.getElementById('editBonusLink').value = p.bonusContent || '';
-        } else if (p.bonusType === 'text') {
-            document.getElementById('editBonusText').value = p.bonusContent || '';
-        }
-        
+        if (p.bonusType === 'link') document.getElementById('editBonusLink').value = p.bonusContent || '';
+        else if (p.bonusType === 'text') document.getElementById('editBonusText').value = p.bonusContent || '';
         toggleEditItemFields();
         toggleEditBonusFields();
-        
         document.getElementById('editModal').style.display = 'flex';
     }
 }
 
-function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-    currentEditId = null;
-}
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; currentEditId = null; }
 
 async function saveEditProduct() {
     const itemType = document.getElementById('editItemType').value;
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('editItemText').value;
     else if (itemType === 'link') itemContent = document.getElementById('editItemLink').value;
-    
     if (!itemContent) { toast('Konten item wajib diisi', true); return; }
-    
     const bonusType = document.getElementById('editBonusType').value;
     let bonusContent = '';
     if (bonusType === 'text') bonusContent = document.getElementById('editBonusText').value;
     else if (bonusType === 'link') bonusContent = document.getElementById('editBonusLink').value;
-    
     const res = await fetch(`/api/admin/product/${currentEditId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            adminKey: adminKey,
-            name: document.getElementById('editProductName').value,
+            adminKey, name: document.getElementById('editProductName').value,
             description: document.getElementById('editProductDesc').value,
             price: parseInt(document.getElementById('editProductPrice').value),
             stock: parseInt(document.getElementById('editProductStock').value) || 1,
-            itemType: itemType,
-            itemContent: itemContent,
-            bonusType: bonusType,
-            bonusContent: bonusContent
+            itemType, itemContent, bonusType, bonusContent
         })
     });
-    
-    if (res.ok) {
-        toast('Produk berhasil diupdate');
-        closeEditModal();
-        loadProducts();
-    } else {
-        toast('Gagal update produk', true);
-    }
+    if (res.ok) { toast('Produk diupdate'); closeEditModal(); loadProducts(); loadStats(); }
+    else { toast('Gagal update', true); }
 }
 
 async function loadOrders() {
@@ -523,36 +496,56 @@ async function loadOrders() {
             <div class="item">
                 <div class="item-info">
                     <div class="item-name">${escapeHtml(o.productName)}</div>
-                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : '❌ Batal')}</div>
+                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : (o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled'))}</div>
                     <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()}</div>
                 </div>
             </div>
         `).join('');
-    } else {
-        container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>';
-    }
+    } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
 }
 
 async function resetOrders() {
-    if (confirm('⚠️ PERINGATAN: Semua riwayat order akan dihapus permanen! Lanjutkan?')) {
+    if (confirm('⚠️ PERINGATAN: Semua order PENDING dan CANCELLED akan dihapus! Order PAID tetap aman. Lanjutkan?')) {
         const res = await fetch('/api/admin/reset-orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ adminKey })
         });
         if (res.ok) {
-            toast('Semua order berhasil direset');
+            const data = await res.json();
+            toast(`✅ ${data.deletedCount} order dihapus, ${data.keptCount} order paid tersimpan`);
             loadOrders();
-        } else {
-            toast('Gagal reset order', true);
-        }
+            loadStats();
+        } else { toast('Gagal reset order', true); }
     }
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+async function backupData() {
+    const res = await fetch('/api/admin/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey })
+    });
+    if (res.ok) toast('📦 Backup dikirim ke Telegram');
+    else toast('Gagal backup', true);
 }
+
+async function sendBroadcast() {
+    const message = document.getElementById('broadcastMessage').value.trim();
+    if (!message) { toast('Pesan broadcast wajib diisi', true); return; }
+    const res = await fetch('/api/admin/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey, message })
+    });
+    const data = await res.json();
+    if (data.success) {
+        toast(`📢 Broadcast terkirim ke ${data.sentCount} customer`);
+        document.getElementById('broadcastMessage').value = '';
+    } else { toast('Gagal kirim broadcast', true); }
+}
+
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
 toggleItemFields();
 toggleBonusFields();
@@ -562,4 +555,4 @@ document.getElementById('editItemType').addEventListener('change', toggleEditIte
 document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 </script>
 </body>
-</html>
+    </html>
