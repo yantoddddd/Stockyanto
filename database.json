@@ -42,23 +42,6 @@
   ],
   "orders": [
     {
-      "id": 1776849041416,
-      "orderCode": "ad5da364ec85c1eb791f12c00be63a42",
-      "qrisId": "a19a7d96-a824-4552-8a63-7d1d08e80ef9",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Asyayayya",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19a7d96-a824-4552-8a63-7d1d08e80ef9/image",
-      "expiredAt": "2026-04-22T09:25:40+00:00",
-      "createdAt": "2026-04-22T09:10:41.416Z",
-      "cancelledAt": "2026-04-22T09:10:48.354Z"
-    },
-    {
       "id": 1776844053136,
       "orderCode": "f25fbf8ec1605921e5f6c1d3c1eedec3",
       "qrisId": "a19a5fdb-1a2b-4723-8fb4-e095b286e160",
@@ -108,5 +91,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-22T09:10:48.354Z"
+  "updatedAt": "2026-04-22T09:10:57.119Z"
 }
