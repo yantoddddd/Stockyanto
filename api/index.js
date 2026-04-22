@@ -116,16 +116,28 @@ app.post('/api/admin/reset-orders', async (req, res) => {
 // ========== FUNGSI CANCEL QRIS DI QRISPY ==========
 async function cancelQRISInQrispy(qrisId) {
   try {
+    console.log(`🔄 Mencoba cancel QRIS: ${qrisId}`);
     const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/cancel`, {
       method: 'POST',
-      headers: { 'X-API-Token': QRISPY_TOKEN }
+      headers: { 
+        'X-API-Token': QRISPY_TOKEN,
+        'Content-Type': 'application/json'
+      }
     });
+    
     const data = await response.json();
-    console.log(`Cancel QRIS ${qrisId}:`, data);
-    return data;
+    console.log(`📡 Response cancel QRIS:`, data);
+    
+    if (data.status === 'success') {
+      console.log(`✅ QRIS ${qrisId} berhasil di-cancel`);
+      return true;
+    } else {
+      console.log(`⚠️ Gagal cancel QRIS: ${data.message || 'Unknown error'}`);
+      return false;
+    }
   } catch (err) {
-    console.error('Cancel QRIS error:', err);
-    return null;
+    console.error('❌ Cancel QRIS error:', err);
+    return false;
   }
 }
 
@@ -136,16 +148,19 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
   if (order.status !== 'pending') return res.status(400).json({ error: 'Order sudah diproses' });
   
-  // Cancel QRIS di Qrispy
-  if (order.qrisId && order.qrisId !== 'test-') {
-    await cancelQRISInQrispy(order.qrisId);
+  // Cancel QRIS di Qrispy (hanya jika qrisId valid dan bukan test)
+  if (order.qrisId && order.qrisId !== 'test-' && !order.qrisId.startsWith('test')) {
+    const cancelled = await cancelQRISInQrispy(order.qrisId);
+    if (!cancelled) {
+      console.log(`⚠️ Gagal cancel QRIS di Qrispy, tetap lanjutkan cancel order di database`);
+    }
   }
   
   order.status = 'cancelled';
   order.cancelledAt = new Date().toISOString();
   await setDB(db.products, db.orders, db.sha);
   
-  res.json({ success: true });
+  res.json({ success: true, message: 'Order dibatalkan' });
 });
 
 // ========== TEST ORDER (TIDAK DISIMPAN) ==========
