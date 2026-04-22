@@ -52,10 +52,11 @@
       "totalAmount": 1000,
       "customerName": "Asyayayya",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19a7d96-a824-4552-8a63-7d1d08e80ef9/image",
       "expiredAt": "2026-04-22T09:25:40+00:00",
-      "createdAt": "2026-04-22T09:10:41.416Z"
+      "createdAt": "2026-04-22T09:10:41.416Z",
+      "cancelledAt": "2026-04-22T09:10:48.354Z"
     },
     {
       "id": 1776844053136,
@@ -107,5 +108,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-22T09:10:41.416Z"
+  "updatedAt": "2026-04-22T09:10:48.354Z"
 }
