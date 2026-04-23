@@ -64,10 +64,11 @@
       "totalAmount": 2000,
       "customerName": "Yanto",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19cb3e2-9dc8-4770-ac23-004259450e36/image",
       "expiredAt": "2026-04-23T11:49:09+00:00",
-      "createdAt": "2026-04-23T11:34:10.791Z"
+      "createdAt": "2026-04-23T11:34:10.791Z",
+      "cancelledAt": "2026-04-23T11:34:23.086Z"
     },
     {
       "id": 1776942957848,
@@ -169,5 +170,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-23T11:34:10.791Z"
+  "updatedAt": "2026-04-23T11:34:23.086Z"
 }
