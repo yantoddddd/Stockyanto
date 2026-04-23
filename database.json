@@ -64,10 +64,11 @@
       "totalAmount": 2000,
       "customerName": "M.erdiyano Satrio p",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19cc750-ade0-4de4-9b26-ae13583f3231/image",
       "expiredAt": "2026-04-23T12:43:29+00:00",
-      "createdAt": "2026-04-23T12:28:30.606Z"
+      "createdAt": "2026-04-23T12:28:30.606Z",
+      "cancelledAt": "2026-04-23T12:28:39.450Z"
     },
     {
       "id": 1776942957848,
@@ -169,5 +170,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-23T12:28:30.606Z"
+  "updatedAt": "2026-04-23T12:28:39.450Z"
 }
