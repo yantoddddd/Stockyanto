@@ -2,7 +2,7 @@
   "products": [
     {
       "id": 1776681257269,
-      "name": "WEB QRIS DINAMIS",
+      "name": "WEB QRIS DINAMIS NO KTP",
       "description": "Qris dinamis adalah qris sementara yang cocok digunakan untuk bot/web auto order",
       "price": 1000,
       "stock": 100,
@@ -11,7 +11,7 @@
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-04-20T10:34:17.269Z",
-      "updatedAt": "2026-04-23T10:27:48.638Z"
+      "updatedAt": "2026-04-23T11:33:52.918Z"
     },
     {
       "id": 1776700746939,
@@ -153,5 +153,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-23T11:15:57.848Z"
+  "updatedAt": "2026-04-23T11:33:52.918Z"
 }
