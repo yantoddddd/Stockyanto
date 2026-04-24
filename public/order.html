@@ -26,7 +26,6 @@
         .chip-btn { background: #334155; border: none; padding: 6px 14px; border-radius: 40px; color: white; font-size: 0.7rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; white-space: nowrap; }
         .chip-btn:hover { background: #3b82f6; transform: translateY(-2px); }
         .link-chip { background: #3b82f6; text-decoration: none; }
-        .link-chip:hover { background: #2563eb; }
         .bonus-list { list-style: none; }
         .bonus-list li { color: #e2e8f0; font-size: 0.85rem; padding: 6px 0; display: flex; align-items: center; gap: 8px; }
         .bonus-list li i { color: #f59e0b; font-size: 0.7rem; }
@@ -83,28 +82,8 @@
         let pollingInterval = null;
         
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-        
-        function toast(msg) {
-            const t = document.createElement('div');
-            t.textContent = msg;
-            t.style.position = 'fixed';
-            t.style.bottom = '20px';
-            t.style.left = '50%';
-            t.style.transform = 'translateX(-50%)';
-            t.style.background = '#1e293b';
-            t.style.padding = '8px 16px';
-            t.style.borderRadius = '40px';
-            t.style.fontSize = '0.8rem';
-            t.style.zIndex = '2000';
-            t.style.color = 'white';
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2000);
-        }
-        
-        function copyToClipboard(text) {
-            try { navigator.clipboard.writeText(text); toast('📋 Tersalin!'); } 
-            catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('📋 Tersalin!'); }
-        }
+        function toast(msg) { const t = document.createElement('div'); t.textContent = msg; t.style.position = 'fixed'; t.style.bottom = '20px'; t.style.left = '50%'; t.style.transform = 'translateX(-50%)'; t.style.background = '#1e293b'; t.style.padding = '8px 16px'; t.style.borderRadius = '40px'; t.style.fontSize = '0.8rem'; t.style.zIndex = '2000'; t.style.color = 'white'; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
+        function copyToClipboard(text) { try { navigator.clipboard.writeText(text); toast('📋 Tersalin!'); } catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('📋 Tersalin!'); } }
         
         function formatBonus(content) {
             if (!content) return '';
@@ -121,7 +100,7 @@
             const escapedContent = escapeHtml(content).replace(/"/g, '&quot;');
             
             if (isHtml) {
-                return `<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="item-row"><div class="item-content"></div><div style="display: flex; gap: 8px; flex-wrap: wrap;"><button class="chip-btn preview-btn" data-html="${escapedContent}"><i class="fas fa-eye"></i> Cek</button><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin HTML</button></div></div></div>`;
+                return `<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="item-row"><div class="item-content"></div><div style="display: flex; gap: 8px;"><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin HTML</button></div></div></div>`;
             } else if (isLink) {
                 return `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="item-row"><div class="item-content"><div class="text-content">${escapeHtml(content)}</div></div><div style="display: flex; gap: 8px;"><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Link</button><a href="${escapeHtml(content)}" class="chip-btn link-chip" target="_blank"><i class="fas fa-external-link-alt"></i> Buka</a></div></div></div>`;
             } else {
@@ -131,14 +110,7 @@
         
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('.copy-btn');
-            if (btn && btn.hasAttribute('data-copy')) { copyToClipboard(btn.getAttribute('data-copy')); }
-            const previewBtn = e.target.closest('.preview-btn');
-            if (previewBtn && previewBtn.hasAttribute('data-html')) {
-                const htmlContent = previewBtn.getAttribute('data-html');
-                const win = window.open();
-                win.document.write(htmlContent);
-                win.document.close();
-            }
+            if (btn && btn.hasAttribute('data-copy')) copyToClipboard(btn.getAttribute('data-copy'));
         });
         
         async function cancelOrder() {
@@ -153,7 +125,7 @@
                 if (data.status === 'paid') {
                     document.getElementById('pendingContent').style.display = 'none'; document.getElementById('successContent').style.display = 'block';
                     document.getElementById('productName').innerText = data.productName;
-                    document.getElementById('productCodeContainer').innerHTML = formatItem(data.productCode, data.itemType || (data.productCode.startsWith('http') ? 'link' : 'text'));
+                    document.getElementById('productCodeContainer').innerHTML = formatItem(data.productCode, data.itemType);
                     if (data.bonusContent && data.bonusContent !== '') {
                         document.getElementById('bonusContainer').innerHTML = formatBonus(data.bonusContent);
                         document.getElementById('bonusContainer').style.display = 'block';
