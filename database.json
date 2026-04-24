@@ -31,7 +31,7 @@
       "name": "WEB SUNTIK SOSMED",
       "description": "Web ini adalah web yang sering digunakan para member jb",
       "price": 2000,
-      "stock": 22,
+      "stock": 21,
       "itemType": "link",
       "itemContent": "https://fayupedia.id/",
       "bonusType": "none",
@@ -51,10 +51,11 @@
       "totalAmount": 2000,
       "customerName": "Fanzz",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19f80a5-b76e-43c6-be24-7775d9669fac/image",
       "expiredAt": "2026-04-24T21:13:22+00:00",
-      "createdAt": "2026-04-24T20:58:23.486Z"
+      "createdAt": "2026-04-24T20:58:23.486Z",
+      "paidAt": "2026-04-24T20:59:37+00:00"
     },
     {
       "id": 1777064072167,
@@ -377,5 +378,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T20:58:23.486Z"
+  "updatedAt": "2026-04-24T20:59:39.367Z"
 }
