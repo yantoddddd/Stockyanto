@@ -53,23 +53,6 @@
   ],
   "orders": [
     {
-      "id": 1777011661762,
-      "orderCode": "3e106c53ff19da69d75dafa32f192dae",
-      "qrisId": "a19e46e0-64cd-40f1-bf32-679718fcbf50",
-      "productId": 1777006162594,
-      "productName": "Web suntik sosmed",
-      "productCode": "https://fayupedia.id/",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Asyayayya",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19e46e0-64cd-40f1-bf32-679718fcbf50/image",
-      "expiredAt": "2026-04-24T06:36:00+00:00",
-      "createdAt": "2026-04-24T06:21:01.762Z",
-      "cancelledAt": "2026-04-24T06:21:08.356Z"
-    },
-    {
       "id": 1777007663681,
       "orderCode": "0e10b11389bb35b722ef8dae0d6d20ed",
       "qrisId": "a19e2f0d-a3f5-4137-ba18-2414e8d6a46e",
@@ -222,5 +205,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T06:21:08.356Z"
+  "updatedAt": "2026-04-24T06:21:19.237Z"
 }
