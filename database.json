@@ -51,10 +51,11 @@
       "totalAmount": 2000,
       "customerName": "wawan",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19e6990-34fc-4895-9f09-b82574986550/image",
       "expiredAt": "2026-04-24T08:12:59+00:00",
-      "createdAt": "2026-04-24T07:58:00.400Z"
+      "createdAt": "2026-04-24T07:58:00.400Z",
+      "cancelledAt": "2026-04-24T07:58:08.499Z"
     },
     {
       "id": 1777012839892,
@@ -210,5 +211,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T07:58:00.400Z"
+  "updatedAt": "2026-04-24T07:58:08.499Z"
 }
