@@ -37,18 +37,6 @@
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-04-23T10:27:35.706Z"
-    },
-    {
-      "id": 1777006162594,
-      "name": "Web suntik sosmed",
-      "description": "",
-      "price": 1000,
-      "stock": 0,
-      "itemType": "link",
-      "itemContent": "https://fayupedia.id/",
-      "bonusType": "none",
-      "bonusContent": "",
-      "createdAt": "2026-04-24T04:49:22.594Z"
     }
   ],
   "orders": [
@@ -206,5 +194,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T07:30:55.498Z"
+  "updatedAt": "2026-04-24T07:31:05.081Z"
 }
