@@ -27,9 +27,8 @@
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; transition: 0.3s; flex-wrap: wrap; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; }
         .item:hover { background: #334155; }
-        .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6; }
         .item-info { flex: 1; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
@@ -57,6 +56,7 @@
     </div>
     <div id="adminContent" style="display:none;">
         <div class="card"><h2><i class="fas fa-chart-line"></i> Statistik</h2><div class="stats-grid" id="statsGrid"></div></div>
+        
         <div class="card">
             <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
             <input type="text" id="productName" placeholder="Nama Produk">
@@ -80,13 +80,15 @@
             <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
             <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
         </div>
+        
         <div class="card"><h2><i class="fas fa-boxes"></i> Daftar Produk</h2><div id="productsList"></div></div>
+        
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
             <div class="selection-bar">
                 <button id="selectAllBtn" class="btn-success" style="background:#475569;"><i class="fas fa-check-double"></i> Pilih Semua</button>
                 <button id="deleteSelectedBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih</button>
-                <span id="selectedCount" style="color:#94a3b8; font-size:0.8rem;">0 dipilih</span>
+                <span id="selectedCount" style="color:#94a3b8;">0 dipilih</span>
             </div>
             <div id="ordersList"></div>
             <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
@@ -131,7 +133,8 @@
 <div id="toast" class="toast"></div>
 
 <script>
-let adminKey = '', currentEditId = null;
+let adminKey = '';
+let currentEditId = null;
 let selectedOrders = new Set();
 
 function toast(msg, isError = false) {
@@ -147,12 +150,10 @@ function updateSelectedCount() { document.getElementById('selectedCount').innerT
 async function deleteSelected() {
     if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
     if (confirm(`Hapus ${selectedOrders.size} order yang dipilih?`)) {
-        const token = localStorage.getItem('adminToken');
         const orderIds = Array.from(selectedOrders);
         const res = await fetch('/api/admin/delete-selected-orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
-            body: JSON.stringify({ orderIds })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey, orderIds })
         });
         if (res.ok) {
             toast(`✅ ${selectedOrders.size} order dihapus`);
@@ -180,14 +181,13 @@ function toggleOrderSelect(checkbox) {
 }
 
 async function loadStats() {
-    const token = localStorage.getItem('adminToken');
-    const res = await fetch(`/api/admin/stats?token=${token}`);
+    const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
     const data = await res.json();
     if (data.success) {
         const s = data.stats;
         document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Total Produk</div></div>
-            <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Total Order</div></div>
+            <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Produk</div></div>
+            <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Order</div></div>
             <div class="stat-card"><div class="stat-number">Rp ${s.totalRevenue.toLocaleString()}</div><div class="stat-label">Pendapatan</div></div>
             <div class="stat-card"><div class="stat-number">${s.pendingCount}</div><div class="stat-label">Pending</div></div>
             <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
@@ -196,62 +196,22 @@ async function loadStats() {
     }
 }
 
-// ========== LOGIN DENGAN TOKEN ==========
 async function login() {
     const key = document.getElementById('adminKey').value;
     const errorDiv = document.getElementById('loginError');
     if (!key) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
     errorDiv.style.display = 'none';
     
-    try {
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey: key })
-        });
-        const data = await res.json();
-        if (data.success) {
-            localStorage.setItem('adminToken', data.token);
-            localStorage.setItem('tokenExpiry', data.expiresAt);
-            window.location.href = `/admin?token=${data.token}`;
-        } else {
-            errorDiv.innerText = 'Kunci admin salah!';
-            errorDiv.style.display = 'block';
-        }
-    } catch(e) {
-        errorDiv.innerText = 'Error: ' + e.message;
+    if (key === 'rahasia123') {
+        adminKey = key;
+        document.getElementById('loginCard').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        await loadStats(); await loadProducts(); await loadOrders();
+        toast('Login berhasil');
+    } else {
+        errorDiv.innerText = 'Kunci admin salah!';
         errorDiv.style.display = 'block';
     }
-}
-
-// ========== CEK TOKEN SAAT LOAD ==========
-async function checkToken() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let token = urlParams.get('token');
-    if (!token) {
-        token = localStorage.getItem('adminToken');
-        const expiry = localStorage.getItem('tokenExpiry');
-        if (token && expiry && expiry > Date.now()) {
-            window.location.href = `/admin?token=${token}`;
-            return;
-        }
-    }
-    if (token) {
-        try {
-            const res = await fetch(`/api/admin/verify?token=${token}`);
-            const data = await res.json();
-            if (data.valid) {
-                localStorage.setItem('adminToken', token);
-                document.getElementById('loginCard').style.display = 'none';
-                document.getElementById('adminContent').style.display = 'block';
-                await loadStats(); await loadProducts(); await loadOrders();
-                toast('Login berhasil');
-                return;
-            }
-        } catch(e) {}
-    }
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
 }
 
 function toggleItemFields() {
@@ -288,7 +248,6 @@ function toggleEditBonusFields() {
 }
 
 async function addProduct() {
-    const token = localStorage.getItem('adminToken');
     const itemType = document.getElementById('itemType').value;
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('itemText').value;
@@ -300,8 +259,8 @@ async function addProduct() {
     if (bonusType === 'text') bonusContent = document.getElementById('bonusText').value;
     else if (bonusType === 'link') bonusContent = document.getElementById('bonusLink').value;
     const res = await fetch('/api/admin/product', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
-        body: JSON.stringify({ name: document.getElementById('productName').value, description: document.getElementById('productDesc').value, price: parseInt(document.getElementById('productPrice').value), stock: parseInt(document.getElementById('productStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey, name: document.getElementById('productName').value, description: document.getElementById('productDesc').value, price: parseInt(document.getElementById('productPrice').value), stock: parseInt(document.getElementById('productStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
     });
     if (res.ok) {
         toast('Produk ditambahkan');
@@ -313,8 +272,7 @@ async function addProduct() {
 }
 
 async function loadProducts() {
-    const token = localStorage.getItem('adminToken');
-    const res = await fetch(`/api/admin/products?token=${token}`);
+    const res = await fetch(`/api/admin/products?adminKey=${adminKey}`);
     const data = await res.json();
     const container = document.getElementById('productsList');
     if (data.success && data.products.length) {
@@ -335,10 +293,9 @@ async function loadProducts() {
 }
 
 async function testProduct(productId) {
-    const token = localStorage.getItem('adminToken');
     toast('⏳ Membuat test order...');
     try {
-        const res = await fetch('/api/admin/test-order', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': token }, body: JSON.stringify({ productId }) });
+        const res = await fetch('/api/admin/test-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId, adminKey }) });
         if (res.ok) {
             const html = await res.text();
             const win = window.open();
@@ -350,16 +307,14 @@ async function testProduct(productId) {
 }
 
 async function deleteProduct(id) {
-    const token = localStorage.getItem('adminToken');
     if (confirm('Hapus produk ini?')) {
-        await fetch(`/api/admin/product/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-token': token }, body: JSON.stringify({}) });
+        await fetch(`/api/admin/product/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
         loadProducts(); loadStats();
     }
 }
 
 async function openEditModal(id) {
-    const token = localStorage.getItem('adminToken');
-    const res = await fetch(`/api/admin/product/${id}?token=${token}`);
+    const res = await fetch(`/api/admin/product/${id}?adminKey=${adminKey}`);
     const data = await res.json();
     if (data.success && data.product) {
         const p = data.product;
@@ -383,7 +338,6 @@ async function openEditModal(id) {
 function closeEditModal() { document.getElementById('editModal').style.display = 'none'; currentEditId = null; }
 
 async function saveEditProduct() {
-    const token = localStorage.getItem('adminToken');
     const itemType = document.getElementById('editItemType').value;
     let itemContent = '';
     if (itemType === 'text') itemContent = document.getElementById('editItemText').value;
@@ -395,16 +349,15 @@ async function saveEditProduct() {
     if (bonusType === 'text') bonusContent = document.getElementById('editBonusText').value;
     else if (bonusType === 'link') bonusContent = document.getElementById('editBonusLink').value;
     const res = await fetch(`/api/admin/product/${currentEditId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
-        body: JSON.stringify({ name: document.getElementById('editProductName').value, description: document.getElementById('editProductDesc').value, price: parseInt(document.getElementById('editProductPrice').value), stock: parseInt(document.getElementById('editProductStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey, name: document.getElementById('editProductName').value, description: document.getElementById('editProductDesc').value, price: parseInt(document.getElementById('editProductPrice').value), stock: parseInt(document.getElementById('editProductStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
     });
     if (res.ok) { toast('Produk diupdate'); closeEditModal(); loadProducts(); loadStats(); }
     else { toast('Gagal update', true); }
 }
 
 async function loadOrders() {
-    const token = localStorage.getItem('adminToken');
-    const res = await fetch(`/api/admin/orders?token=${token}`);
+    const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
     const data = await res.json();
     const container = document.getElementById('ordersList');
     if (data.success && data.orders.length) {
@@ -425,9 +378,8 @@ async function loadOrders() {
 }
 
 async function resetOrders() {
-    const token = localStorage.getItem('adminToken');
     if (confirm('⚠️ PERINGATAN: Semua order PENDING dan CANCELLED akan dihapus! Order PAID tetap aman. Lanjutkan?')) {
-        const res = await fetch('/api/admin/reset-orders', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': token }, body: JSON.stringify({}) });
+        const res = await fetch('/api/admin/reset-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
         if (res.ok) {
             const data = await res.json();
             toast(`✅ ${data.deletedCount} order dihapus, ${data.keptCount} order paid tersimpan`);
@@ -437,17 +389,15 @@ async function resetOrders() {
 }
 
 async function backupData() {
-    const token = localStorage.getItem('adminToken');
-    const res = await fetch('/api/admin/backup', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': token }, body: JSON.stringify({}) });
+    const res = await fetch('/api/admin/backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
     if (res.ok) toast('📦 Backup dikirim ke Telegram');
     else toast('Gagal backup', true);
 }
 
 async function sendBroadcast() {
-    const token = localStorage.getItem('adminToken');
     const message = document.getElementById('broadcastMessage').value.trim();
     if (!message) { toast('Pesan broadcast wajib diisi', true); return; }
-    const res = await fetch('/api/admin/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-token': token }, body: JSON.stringify({ message }) });
+    const res = await fetch('/api/admin/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey, message }) });
     const data = await res.json();
     if (data.success) { toast(`📢 Broadcast terkirim ke ${data.sentCount} customer`); document.getElementById('broadcastMessage').value = ''; }
     else { toast('Gagal kirim broadcast', true); }
@@ -460,8 +410,6 @@ document.getElementById('itemType').addEventListener('change', toggleItemFields)
 document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
 document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
 document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
-
-checkToken();
 </script>
 </body>
 </html>
