@@ -10,12 +10,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; padding: 24px 16px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .container { max-width: 1200px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 60px; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.08); }
         .logo h1 { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; display: flex; align-items: center; gap: 8px; }
         .logo p { font-size: 0.7rem; color: #94a3b8; }
         .menu-btn { background: rgba(255,255,255,0.1); border: none; width: 44px; height: 44px; border-radius: 40px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .menu-btn:hover { background: rgba(59,130,246,0.5); }
         .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background: rgba(15,23,42,0.98); backdrop-filter: blur(16px); z-index: 1000; transition: 0.3s ease; padding: 80px 24px 24px; border-left: 1px solid rgba(255,255,255,0.1); }
         .sidebar.open { right: 0; }
         .sidebar .close-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
@@ -36,7 +34,7 @@
         .btn-buy:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
         .btn-buy:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
-        .modal-content { background: #0f172a; border-radius: 32px; padding: 32px; max-width: 400px; width: 90%; border: 1px solid #334155; }
+        .modal-content { background: #0f172a; border-radius: 32px; padding: 32px; max-width: 450px; width: 90%; border: 1px solid #334155; }
         .modal-content h3 { font-size: 1.4rem; font-weight: 600; color: white; margin-bottom: 8px; }
         .modal-price { font-size: 1.5rem; font-weight: 700; color: #60a5fa; margin: 12px 0; }
         input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 28px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.9rem; outline: none; transition: 0.2s; }
@@ -53,17 +51,11 @@
 <body>
 <div class="container">
     <div class="header">
-        <div class="logo">
-            <h1><i class="fas fa-store"></i> Yanto Store</h1>
-            <p>AutoOrder Digital</p>
-        </div>
+        <div class="logo"><h1><i class="fas fa-store"></i> Yanto Store</h1><p>AutoOrder Digital</p></div>
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
-    <div class="products-grid" id="productsGrid">
-        <div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-spinner fa-pulse"></i> Memuat produk...</div>
-    </div>
+    <div class="products-grid" id="productsGrid"><div style="text-align:center; color:#64748b;"><i class="fas fa-spinner fa-pulse"></i> Memuat produk...</div></div>
 </div>
-
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 <div class="sidebar" id="sidebar">
     <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
@@ -80,6 +72,7 @@
         <div id="modalProductDesc" style="color:#94a3b8; font-size:0.8rem; margin:5px 0;"></div>
         <div class="modal-price" id="modalPrice"></div>
         <input type="text" id="customerName" placeholder="Nama lengkap" required>
+        <input type="text" id="voucherCode" placeholder="Kode Voucher (opsional)">
         <button class="btn-primary" id="createOrderBtn"><i class="fas fa-credit-card"></i> Buat Pesanan</button>
         <button class="btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Tutup</button>
         <div id="loadingIndicator" style="display:none; text-align:center; margin-top:15px;"><span class="loading"></span> Membuat pesanan...</div>
@@ -98,7 +91,7 @@
     async function loadProducts() {
         try {
             const res = await fetch('/api/products'); const data = await res.json(); const grid = document.getElementById('productsGrid');
-            if (!data.products || data.products.length === 0) { grid.innerHTML = '<div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; return; }
+            if (!data.products || data.products.length === 0) { grid.innerHTML = '<div style="text-align:center;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; return; }
             grid.innerHTML = data.products.map((p, i) => `<div class="product-card" style="animation-delay: ${i * 0.05}s" onclick='openModal(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
                 <div class="product-name"><i class="fas fa-box"></i> ${escapeHtml(p.name)}</div>
                 <div class="product-desc">${escapeHtml(p.description || '')}</div>
@@ -110,17 +103,19 @@
     }
 
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = `Rp ${product.price.toLocaleString()}`; document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
+    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = `Rp ${product.price.toLocaleString()}`; document.getElementById('customerName').value = ''; document.getElementById('voucherCode').value = ''; document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; currentProduct = null; }
     async function generateQRIS(amount) { const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) }); const data = await response.json(); if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS'); return data.data; }
 
     document.getElementById('createOrderBtn').onclick = async () => {
         const name = document.getElementById('customerName').value.trim(); if (!name) { toast('Nama wajib diisi', true); return; }
+        const voucherCode = document.getElementById('voucherCode').value.trim();
         const btn = document.getElementById('createOrderBtn'); const loading = document.getElementById('loadingIndicator'); btn.style.display = 'none'; loading.style.display = 'block';
         try {
             const totalAmount = currentProduct.price; const qrisData = await generateQRIS(totalAmount);
-            const orderRes = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: currentProduct.id, customerName: name, customerEmail: '-', qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at }) });
+            const orderRes = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: currentProduct.id, customerName: name, customerEmail: '-', qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at, voucherCode: voucherCode }) });
             const orderData = await orderRes.json(); if (!orderData.success) throw new Error(orderData.error);
+            if (orderData.discountAmount > 0) toast(`💰 Hemat Rp ${orderData.discountAmount.toLocaleString()} dengan kode voucher!`);
             window.location.href = `/order/${orderData.orderCode}`;
         } catch (err) { toast(err.message, true); btn.style.display = 'block'; loading.style.display = 'none'; }
     };
