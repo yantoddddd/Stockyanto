@@ -21,18 +21,17 @@
         .section { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 18px; margin-bottom: 16px; }
         .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .item-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .item-content { flex: 1; word-break: break-all; }
-        .text-content { color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; }
-        .chip-btn { background: #334155; border: none; padding: 6px 14px; border-radius: 40px; color: white; font-size: 0.7rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; white-space: nowrap; }
+        .text-content { color: #e2e8f0; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+        .chip-btn { background: #334155; border: none; padding: 6px 14px; border-radius: 40px; color: white; font-size: 0.7rem; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
         .chip-btn:hover { background: #3b82f6; transform: translateY(-2px); }
         .link-chip { background: #3b82f6; text-decoration: none; }
-        .link-chip:hover { background: #2563eb; }
         .bonus-list { list-style: none; }
         .bonus-list li { color: #e2e8f0; font-size: 0.85rem; padding: 6px 0; display: flex; align-items: center; gap: 8px; }
-        .bonus-list li i { color: #f59e0b; font-size: 0.7rem; }
+        .bonus-list li i { color: #f59e0b; }
         .footer-note { text-align: center; color: #475569; font-size: 0.65rem; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-back { background: #334155; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none; margin-top: 10px; }
-        .btn-back:hover { background: #475569; transform: translateY(-2px); }
+        .btn-back, .btn-primary { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none; margin-top: 10px; }
+        .btn-back { background: #334155; }
+        .btn-back:hover, .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.05); }
         .qr-container { text-align: center; }
         .qr-container h2 { color: white; font-size: 1.2rem; margin-top: 12px; }
         .qris-img { width: 100%; max-width: 220px; margin: 20px auto; display: block; background: white; padding: 16px; border-radius: 24px; }
@@ -44,6 +43,10 @@
         .cancel-btn { background: #ef4444; color: white; }
         .cancel-btn:hover { background: #dc2626; transform: translateY(-2px); }
         .expiry-text { text-align: center; color: #64748b; font-size: 0.7rem; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .rating-stars { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+        .star { font-size: 2rem; cursor: pointer; color: #f59e0b; transition: 0.2s; }
+        .star:hover { transform: scale(1.1); }
+        textarea { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid #334155; background: #1e293b; color: white; resize: vertical; margin: 10px 0; }
         @media (max-width: 480px) { .item-row { flex-direction: column; align-items: flex-start; } .chip-btn { align-self: flex-start; } }
     </style>
 </head>
@@ -71,6 +74,20 @@
             <div class="product-name" id="productName"></div>
             <div id="productCodeContainer"></div>
             <div id="bonusContainer" style="display:none;"></div>
+            <div id="reviewSection" style="display:none; margin-top: 20px;">
+                <div class="section">
+                    <div class="section-title"><i class="fas fa-star"></i> Beri Rating & Review</div>
+                    <div class="rating-stars">
+                        <span data-rating="1" class="star">☆</span>
+                        <span data-rating="2" class="star">☆</span>
+                        <span data-rating="3" class="star">☆</span>
+                        <span data-rating="4" class="star">☆</span>
+                        <span data-rating="5" class="star">☆</span>
+                    </div>
+                    <textarea id="reviewComment" rows="3" placeholder="Tulis komentar (opsional)"></textarea>
+                    <button class="btn-primary" id="submitReviewBtn" style="width:100%;"><i class="fas fa-paper-plane"></i> Kirim Review</button>
+                </div>
+            </div>
             <div style="text-align: center; margin-top: 20px;">
                 <a href="/" class="btn-back"><i class="fas fa-home"></i> Kembali ke Beranda</a>
             </div>
@@ -81,69 +98,40 @@
     <script>
         const orderCode = window.location.pathname.split('/').pop();
         let pollingInterval = null;
+        let selectedRating = 0;
         
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-        
-        function toast(msg) {
-            const t = document.createElement('div');
-            t.textContent = msg;
-            t.style.position = 'fixed';
-            t.style.bottom = '20px';
-            t.style.left = '50%';
-            t.style.transform = 'translateX(-50%)';
-            t.style.background = '#1e293b';
-            t.style.padding = '8px 16px';
-            t.style.borderRadius = '40px';
-            t.style.fontSize = '0.8rem';
-            t.style.zIndex = '2000';
-            t.style.color = 'white';
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2000);
-        }
-        
-        function copyToClipboard(text) {
-            try { navigator.clipboard.writeText(text); toast('📋 Tersalin!'); } 
-            catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('📋 Tersalin!'); }
-        }
-        
-        function formatBonus(content) {
-            if (!content) return '';
-            if (content.includes('\n')) {
-                const items = content.split('\n').filter(item => item.trim());
-                return `<div class="section"><div class="section-title"><i class="fas fa-gift"></i> Bonus</div><ul class="bonus-list">${items.map(item => `<li><i class="fas fa-star"></i> ${escapeHtml(item.trim())}</li>`).join('')}</ul></div>`;
-            }
-            return `<div class="section"><div class="section-title"><i class="fas fa-gift"></i> Bonus</div><div class="text-content">${escapeHtml(content)}</div><button class="chip-btn copy-btn" data-copy="${escapeHtml(content).replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Salin Teks</button></div>`;
-        }
-        
+        function toast(msg) { const t = document.createElement('div'); t.textContent = msg; t.style.position = 'fixed'; t.style.bottom = '20px'; t.style.left = '50%'; t.style.transform = 'translateX(-50%)'; t.style.background = '#1e293b'; t.style.padding = '8px 16px'; t.style.borderRadius = '40px'; t.style.fontSize = '0.8rem'; t.style.zIndex = '2000'; t.style.color = 'white'; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
+        function copyToClipboard(text) { try { navigator.clipboard.writeText(text); toast('📋 Tersalin!'); } catch(e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('📋 Tersalin!'); } }
+        function formatBonus(content) { if (!content) return ''; if (content.includes('\n')) { const items = content.split('\n').filter(item => item.trim()); return `<div class="section"><div class="section-title"><i class="fas fa-gift"></i> Bonus</div><ul class="bonus-list">${items.map(item => `<li><i class="fas fa-star"></i> ${escapeHtml(item.trim())}</li>`).join('')}</ul></div>`; } return `<div class="section"><div class="section-title"><i class="fas fa-gift"></i> Bonus</div><div class="text-content">${escapeHtml(content)}</div><button class="chip-btn copy-btn" data-copy="${escapeHtml(content).replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Salin Teks</button></div>`; }
         function formatItem(content, type) {
             const isLink = type === 'link' || (type !== 'html' && content.startsWith('http'));
             const isHtml = type === 'html';
             const escapedContent = escapeHtml(content).replace(/"/g, '&quot;');
-            
-            if (isHtml) {
-                return `<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="item-row"><div class="item-content"></div><div style="display: flex; gap: 8px; flex-wrap: wrap;"><button class="chip-btn preview-btn" data-html="${escapedContent}"><i class="fas fa-eye"></i> Cek</button><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin HTML</button></div></div></div>`;
-            } else if (isLink) {
-                return `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="item-row"><div class="item-content"><div class="text-content">${escapeHtml(content)}</div></div><div style="display: flex; gap: 8px;"><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Link</button><a href="${escapeHtml(content)}" class="chip-btn link-chip" target="_blank"><i class="fas fa-external-link-alt"></i> Buka</a></div></div></div>`;
-            } else {
-                return `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="item-row"><div class="item-content"><div class="text-content">${escapeHtml(content)}</div></div><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Teks</button></div></div>`;
-            }
+            if (isHtml) { return `<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="item-row"><div class="item-content"></div><div style="display: flex; gap: 8px;"><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin HTML</button></div></div></div>`; }
+            if (isLink) { return `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="item-row"><div class="item-content"><div class="text-content">${escapeHtml(content)}</div></div><div style="display: flex; gap: 8px;"><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Link</button><a href="${escapeHtml(content)}" class="chip-btn link-chip" target="_blank"><i class="fas fa-external-link-alt"></i> Buka</a></div></div></div>`; }
+            return `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="item-row"><div class="item-content"><div class="text-content">${escapeHtml(content)}</div></div><button class="chip-btn copy-btn" data-copy="${escapedContent}"><i class="fas fa-copy"></i> Salin Teks</button></div></div>`;
         }
         
         document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.copy-btn');
-            if (btn && btn.hasAttribute('data-copy')) { copyToClipboard(btn.getAttribute('data-copy')); }
-            const previewBtn = e.target.closest('.preview-btn');
-            if (previewBtn && previewBtn.hasAttribute('data-html')) {
-                const htmlContent = previewBtn.getAttribute('data-html');
-                const win = window.open();
-                win.document.write(htmlContent);
-                win.document.close();
+            const btn = e.target.closest('.copy-btn'); if (btn && btn.hasAttribute('data-copy')) copyToClipboard(btn.getAttribute('data-copy'));
+            if (e.target.classList.contains('star')) {
+                selectedRating = parseInt(e.target.getAttribute('data-rating'));
+                document.querySelectorAll('.star').forEach((s, i) => { s.innerHTML = i < selectedRating ? '★' : '☆'; });
             }
         });
         
-        async function cancelOrder() {
-            if (!confirm('Batalkan pesanan ini?')) return;
-            try { const res = await fetch(`/api/cancel-order/${orderCode}`, { method: 'POST' }); const data = await res.json(); if (data.success) { toast('Pesanan dibatalkan'); setTimeout(() => location.reload(), 1500); } else { toast('Gagal batalkan'); } } catch(e) { toast('Error'); }
+        async function cancelOrder() { if (!confirm('Batalkan?')) return; try { const res = await fetch(`/api/cancel-order/${orderCode}`, { method: 'POST' }); if (res.ok) { toast('Pesanan dibatalkan'); setTimeout(() => location.reload(), 1500); } else { toast('Gagal batalkan'); } } catch(e) { toast('Error'); } }
+        
+        async function submitReview() {
+            if (selectedRating === 0) { toast('Pilih rating dulu!', true); return; }
+            const comment = document.getElementById('reviewComment').value;
+            try {
+                const res = await fetch('/api/submit-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderCode, rating: selectedRating, comment }) });
+                const data = await res.json();
+                if (data.success) { toast('Terima kasih atas reviewnya!'); document.getElementById('reviewSection').style.display = 'none'; }
+                else { toast(data.error || 'Gagal', true); }
+            } catch(e) { toast('Error', true); }
         }
         
         async function loadOrder() {
@@ -153,11 +141,9 @@
                 if (data.status === 'paid') {
                     document.getElementById('pendingContent').style.display = 'none'; document.getElementById('successContent').style.display = 'block';
                     document.getElementById('productName').innerText = data.productName;
-                    document.getElementById('productCodeContainer').innerHTML = formatItem(data.productCode, data.itemType || (data.productCode.startsWith('http') ? 'link' : 'text'));
-                    if (data.bonusContent && data.bonusContent !== '') {
-                        document.getElementById('bonusContainer').innerHTML = formatBonus(data.bonusContent);
-                        document.getElementById('bonusContainer').style.display = 'block';
-                    }
+                    document.getElementById('productCodeContainer').innerHTML = formatItem(data.productCode, data.itemType);
+                    if (data.bonusContent && data.bonusContent !== '') { document.getElementById('bonusContainer').innerHTML = formatBonus(data.bonusContent); document.getElementById('bonusContainer').style.display = 'block'; }
+                    if (!data.hasReviewed) { document.getElementById('reviewSection').style.display = 'block'; document.getElementById('submitReviewBtn').onclick = submitReview; }
                 } else {
                     document.getElementById('qrisImage').src = data.qrisImage; document.getElementById('totalAmount').innerText = data.totalAmount.toLocaleString(); document.getElementById('expiryTime').innerText = new Date(data.expiredAt).toLocaleString();
                     startPolling();
@@ -165,17 +151,8 @@
             } catch (err) { console.error(err); }
         }
         
-        function startPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(async () => {
-                try { const res = await fetch(`/api/check-payment/${orderCode}`); const data = await res.json(); if (data.status === 'paid') { clearInterval(pollingInterval); document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Pembayaran BERHASIL!'; setTimeout(() => location.reload(), 1500); } else if (data.status === 'expired') { clearInterval(pollingInterval); document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> QRIS kadaluarsa'; } } catch(e) {}
-            }, 5000);
-        }
-        
-        async function checkStatus() {
-            const statusDiv = document.getElementById('statusText'); statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Mengecek...';
-            try { const res = await fetch(`/api/check-payment/${orderCode}`); const data = await res.json(); if (data.status === 'paid') { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Pembayaran BERHASIL!'; setTimeout(() => location.reload(), 1500); } else if (data.status === 'expired') { statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> QRIS kadaluarsa'; } else { statusDiv.innerHTML = '<i class="fas fa-hourglass-half"></i> Masih menunggu pembayaran'; } } catch(e) { statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Gagal mengecek'; }
-        }
+        function startPolling() { if (pollingInterval) clearInterval(pollingInterval); pollingInterval = setInterval(async () => { try { const res = await fetch(`/api/check-payment/${orderCode}`); const data = await res.json(); if (data.status === 'paid') { clearInterval(pollingInterval); document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Pembayaran BERHASIL!'; setTimeout(() => location.reload(), 1500); } else if (data.status === 'expired') { clearInterval(pollingInterval); document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> QRIS kadaluarsa'; } } catch(e) {} }, 5000); }
+        async function checkStatus() { const statusDiv = document.getElementById('statusText'); statusDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Mengecek...'; try { const res = await fetch(`/api/check-payment/${orderCode}`); const data = await res.json(); if (data.status === 'paid') { statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Pembayaran BERHASIL!'; setTimeout(() => location.reload(), 1500); } else if (data.status === 'expired') { statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> QRIS kadaluarsa'; } else { statusDiv.innerHTML = '<i class="fas fa-hourglass-half"></i> Masih menunggu pembayaran'; } } catch(e) { statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Gagal mengecek'; } }
         
         loadOrder();
     </script>
