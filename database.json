@@ -41,23 +41,6 @@
   ],
   "orders": [
     {
-      "id": 1777037591287,
-      "orderCode": "6833b697a1b0ccc8193832af877b913e",
-      "qrisId": "a19ee16c-6554-451e-9797-a452ffe38f02",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS NO KTP",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Agus sergio",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19ee16c-6554-451e-9797-a452ffe38f02/image",
-      "expiredAt": "2026-04-24T13:48:08+00:00",
-      "createdAt": "2026-04-24T13:33:11.287Z",
-      "cancelledAt": "2026-04-24T13:33:20.047Z"
-    },
-    {
       "id": 1777035639805,
       "orderCode": "9631426a1a0127716d0af21a893e1cc1",
       "qrisId": "a19ed5cc-5515-4e3b-be20-5ae5b8647bcf",
@@ -277,5 +260,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T13:33:20.047Z"
+  "updatedAt": "2026-04-24T13:56:05.904Z"
 }
