@@ -54,10 +54,11 @@
       "voucherCode": null,
       "customerName": "123456",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a19e81ab-8d14-4bd2-ac7d-b6f6b0dbcc9b/image",
       "expiredAt": "2026-04-24T09:20:24+00:00",
-      "createdAt": "2026-04-24T09:05:25.205Z"
+      "createdAt": "2026-04-24T09:05:25.205Z",
+      "cancelledAt": "2026-04-24T09:05:29.596Z"
     },
     {
       "id": 1777012839892,
@@ -215,5 +216,5 @@
   ],
   "reviews": [],
   "vouchers": [],
-  "updatedAt": "2026-04-24T09:05:25.205Z"
+  "updatedAt": "2026-04-24T09:05:29.596Z"
 }
