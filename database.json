@@ -195,18 +195,6 @@
     }
   ],
   "reviews": [],
-  "vouchers": [
-    {
-      "code": "JUMATBERKAH",
-      "discount": 1000,
-      "type": "fixed",
-      "minAmount": 0,
-      "expiredAt": "2026-04-25T00:00:00.000Z",
-      "usageLimit": null,
-      "usedCount": 2,
-      "active": true,
-      "createdAt": "2026-04-24T09:12:49.346Z"
-    }
-  ],
-  "updatedAt": "2026-04-24T09:13:56.979Z"
+  "vouchers": [],
+  "updatedAt": "2026-04-24T09:27:57.413Z"
 }
