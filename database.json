@@ -58,22 +58,6 @@
       "paidAt": "2026-04-24T04:28:00+00:00"
     },
     {
-      "id": 1777002980363,
-      "orderCode": "183adaa17ba0cd787ac9df4c74f046ca",
-      "qrisId": "a19e1322-c44d-4e81-99b7-0d8aa8dee75d",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "tralalelo",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19e1322-c44d-4e81-99b7-0d8aa8dee75d/image",
-      "expiredAt": "2026-04-24T04:11:19+00:00",
-      "createdAt": "2026-04-24T03:56:20.363Z"
-    },
-    {
       "id": 1777000536802,
       "orderCode": "71fe4723252ac9fbf3dfadf38c9ca60f",
       "qrisId": "a19e0492-409e-4fa6-bc3f-a91dd788bc90",
@@ -89,22 +73,6 @@
       "expiredAt": "2026-04-24T03:30:35+00:00",
       "createdAt": "2026-04-24T03:15:36.802Z",
       "paidAt": "2026-04-24T03:17:04+00:00"
-    },
-    {
-      "id": 1776994596589,
-      "orderCode": "f57a14cf835170bef20c270e6af90d46",
-      "qrisId": "a19de129-f1ae-4353-ba11-57954f52ee67",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "Bagus",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19de129-f1ae-4353-ba11-57954f52ee67/image",
-      "expiredAt": "2026-04-24T01:51:35+00:00",
-      "createdAt": "2026-04-24T01:36:36.589Z"
     },
     {
       "id": 1776990773788,
@@ -139,22 +107,6 @@
       "expiredAt": "2026-04-24T00:08:46+00:00",
       "createdAt": "2026-04-23T23:53:47.241Z",
       "paidAt": "2026-04-23T23:54:26+00:00"
-    },
-    {
-      "id": 1776988355383,
-      "orderCode": "c44b8a2aa028182febfc192d47cbdc63",
-      "qrisId": "a19dbbf6-7a94-4ecc-aed2-6d3f6121e133",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "mhmmd ysuff",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19dbbf6-7a94-4ecc-aed2-6d3f6121e133/image",
-      "expiredAt": "2026-04-24T00:07:34+00:00",
-      "createdAt": "2026-04-23T23:52:35.383Z"
     },
     {
       "id": 1776923143255,
@@ -208,5 +160,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T04:28:04.634Z"
+  "updatedAt": "2026-04-24T04:38:03.921Z"
 }
