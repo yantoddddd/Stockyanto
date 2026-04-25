@@ -142,22 +142,6 @@
       "paidAt": "2026-04-24T17:03:35+00:00"
     },
     {
-      "id": 1777049185860,
-      "orderCode": "3ed6573482d3dc365d632370b335ad11",
-      "qrisId": "a19f268a-a1b5-4b03-8944-95644a397088",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS NO KTP",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "ALGEYZA kece",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19f268a-a1b5-4b03-8944-95644a397088/image",
-      "expiredAt": "2026-04-24T17:01:24+00:00",
-      "createdAt": "2026-04-24T16:46:25.860Z"
-    },
-    {
       "id": 1777045055923,
       "orderCode": "63953e37b0d9cd5b92aadc4111f3eb08",
       "qrisId": "a19f0deb-e45d-4823-9562-210b25dd37bc",
@@ -173,38 +157,6 @@
       "expiredAt": "2026-04-24T15:52:34+00:00",
       "createdAt": "2026-04-24T15:37:35.923Z",
       "paidAt": "2026-04-24T15:38:07+00:00"
-    },
-    {
-      "id": 1777035639805,
-      "orderCode": "9631426a1a0127716d0af21a893e1cc1",
-      "qrisId": "a19ed5cc-5515-4e3b-be20-5ae5b8647bcf",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "reyys",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19ed5cc-5515-4e3b-be20-5ae5b8647bcf/image",
-      "expiredAt": "2026-04-24T13:15:38+00:00",
-      "createdAt": "2026-04-24T13:00:39.805Z"
-    },
-    {
-      "id": 1777030504836,
-      "orderCode": "5565d560f3099da52f7e62a420aec84f",
-      "qrisId": "a19eb72b-a3e6-4927-ae21-58a18824e0a6",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "edxnotfounds",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a19eb72b-a3e6-4927-ae21-58a18824e0a6/image",
-      "expiredAt": "2026-04-24T11:49:59+00:00",
-      "createdAt": "2026-04-24T11:35:04.836Z"
     },
     {
       "id": 1777026541368,
@@ -394,5 +346,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-24T23:50:36.232Z"
+  "updatedAt": "2026-04-25T00:01:31.446Z"
 }
