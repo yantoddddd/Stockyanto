@@ -57,10 +57,11 @@
       "price": 1500,
       "stock": 50,
       "itemType": "text",
-      "itemContent": "𝗪𝗔𝗝𝗜𝗕 𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗 𝗦𝗘𝗠𝗨𝗔\n𝖠𝖯𝖪 𝖥𝖨𝖫𝖬: (utama) \nhttps://www.mediafire.com/file/vdtl44kvl0xs7ip/Bee_tv.apk/file\n𝖯𝖤𝖬𝖴𝖳𝖠𝖱: (hanya untuk Vidio)\nhttps://www.mediafire.com/file/6qf11u7bqku6byk/Pemutar_Film.apk/file",
+      "itemContent": "𝗪𝗔𝗝𝗜𝗕 𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗 𝗦𝗘𝗠𝗨𝗔\n\n𝖠𝖯𝖪 𝖥𝖨𝖫𝖬: (utama) \nhttps://www.mediafire.com/file/vdtl44kvl0xs7ip/Bee_tv.apk/file\n𝖯𝖤𝖬𝖴𝖳𝖠𝖱: (hanya untuk Vidio)\nhttps://www.mediafire.com/file/6qf11u7bqku6byk/Pemutar_Film.apk/file",
       "bonusType": "none",
       "bonusContent": "",
-      "createdAt": "2026-04-25T11:46:40.090Z"
+      "createdAt": "2026-04-25T11:46:40.090Z",
+      "updatedAt": "2026-04-25T11:47:08.017Z"
     }
   ],
   "orders": [
@@ -354,5 +355,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-25T11:46:40.091Z"
+  "updatedAt": "2026-04-25T11:47:08.018Z"
 }
