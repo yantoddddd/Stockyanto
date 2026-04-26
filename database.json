@@ -5,7 +5,7 @@
       "name": "WEB QRIS DINAMIS NO KTP",
       "description": "Qris dinamis adalah qris sementara yang cocok digunakan untuk bot/web auto order",
       "price": 1000,
-      "stock": 95,
+      "stock": 94,
       "itemType": "link",
       "itemContent": "https://qrispy.id",
       "bonusType": "none",
@@ -77,10 +77,11 @@
       "totalAmount": 1000,
       "customerName": "ISMAILTALIKI",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a2b102-9d40-46f6-a726-a0abe35436a0/image",
       "expiredAt": "2026-04-26T11:16:05+00:00",
-      "createdAt": "2026-04-26T11:01:06.005Z"
+      "createdAt": "2026-04-26T11:01:06.005Z",
+      "paidAt": "2026-04-26T11:06:06+00:00"
     },
     {
       "id": 1777197192580,
@@ -538,5 +539,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-26T11:01:06.005Z"
+  "updatedAt": "2026-04-26T11:06:09.653Z"
 }
