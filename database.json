@@ -18,7 +18,7 @@
       "name": "APK QRIS NO KTP",
       "description": "Apk ini cocok untuk anak jb dan dapat digunakan untuk kebutuhan lainya",
       "price": 1000,
-      "stock": 91,
+      "stock": 90,
       "itemType": "text",
       "itemContent": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
       "bonusType": "none",
@@ -77,10 +77,11 @@
       "totalAmount": 1000,
       "customerName": "UDELzz🔥",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a2f498-2b46-4514-baea-fb8c063a8d52/image",
       "expiredAt": "2026-04-26T14:25:03+00:00",
-      "createdAt": "2026-04-26T14:10:05.376Z"
+      "createdAt": "2026-04-26T14:10:05.376Z",
+      "paidAt": "2026-04-26T14:11:05+00:00"
     },
     {
       "id": 1777201266005,
@@ -491,5 +492,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-26T14:10:46.208Z"
+  "updatedAt": "2026-04-26T14:11:08.771Z"
 }
