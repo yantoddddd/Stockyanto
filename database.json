@@ -79,22 +79,6 @@
   ],
   "orders": [
     {
-      "id": 1777324830962,
-      "orderCode": "e28bf44a8ad9eaab6a278b57d875d655",
-      "qrisId": "a1a59184-0b50-4b6f-960f-1f1d55c0033c",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS NO KTP",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Hamzz",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a59184-0b50-4b6f-960f-1f1d55c0033c/image",
-      "expiredAt": "2026-04-27T21:35:30+00:00",
-      "createdAt": "2026-04-27T21:20:30.962Z"
-    },
-    {
       "id": 1777323615500,
       "orderCode": "841e10fb6c2af217f10aac2385571781",
       "qrisId": "a1a58a45-2946-46d3-86f5-11e3c20826ab",
@@ -110,22 +94,6 @@
       "expiredAt": "2026-04-27T21:15:14+00:00",
       "createdAt": "2026-04-27T21:00:15.500Z",
       "paidAt": "2026-04-27T21:00:52+00:00"
-    },
-    {
-      "id": 1777323425555,
-      "orderCode": "4a4fc833a32c534fcb331da40c72095f",
-      "qrisId": "a1a58923-8b47-47dc-abdf-6cc9bb3f9705",
-      "productId": 1777109092543,
-      "productName": "WEB NOKOS",
-      "productCode": "1. https://ditznesia.id\n2. https://salulerid.lovable.app/",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "alfajri",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a58923-8b47-47dc-abdf-6cc9bb3f9705/image",
-      "expiredAt": "2026-04-27T21:12:04+00:00",
-      "createdAt": "2026-04-27T20:57:05.555Z"
     },
     {
       "id": 1777322429101,
@@ -145,22 +113,6 @@
       "paidAt": "2026-04-27T20:47:48+00:00"
     },
     {
-      "id": 1777312853731,
-      "orderCode": "b244dd10589b53159c57b205aced9881",
-      "qrisId": "a1a54a1f-fb31-4ed1-90a4-51389a5ac46d",
-      "productId": 1776700746939,
-      "productName": "APK QRIS NO KTP",
-      "productCode": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Alip",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a54a1f-fb31-4ed1-90a4-51389a5ac46d/image",
-      "expiredAt": "2026-04-27T18:15:52+00:00",
-      "createdAt": "2026-04-27T18:00:53.731Z"
-    },
-    {
       "id": 1777308926913,
       "orderCode": "a65f4ac09a00d378982ebb49a5465c35",
       "qrisId": "a1a532b6-dc13-4692-a0f5-b5707ab99c2c",
@@ -178,22 +130,6 @@
       "paidAt": "2026-04-27T16:57:07+00:00"
     },
     {
-      "id": 1777305319811,
-      "orderCode": "a25b0f0f057afbde394194f04866bbca",
-      "qrisId": "a1a51d36-e08c-4837-9869-d16816ea5a20",
-      "productId": 1777117600090,
-      "productName": "APK BIOSKOP/FILM",
-      "productCode": "https://www.mediafire.com/file/vdtl44kvl0xs7ip/Bee_tv.apk/file",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "ferdinan",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a51d36-e08c-4837-9869-d16816ea5a20/image",
-      "expiredAt": "2026-04-27T16:10:18+00:00",
-      "createdAt": "2026-04-27T15:55:19.811Z"
-    },
-    {
       "id": 1777300654100,
       "orderCode": "a684572c8a1f3932440b9d2ea119225b",
       "qrisId": "a1a50168-d40e-426a-8fb1-428840a6d712",
@@ -209,22 +145,6 @@
       "expiredAt": "2026-04-27T14:52:33+00:00",
       "createdAt": "2026-04-27T14:37:34.100Z",
       "paidAt": "2026-04-27T14:38:07+00:00"
-    },
-    {
-      "id": 1777300027726,
-      "orderCode": "f7dfee409627b98eff91496b80a23269",
-      "qrisId": "a1a4fdad-070c-4dcf-bf84-a64372ca0854",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "Rafais",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4fdad-070c-4dcf-bf84-a64372ca0854/image",
-      "expiredAt": "2026-04-27T14:42:06+00:00",
-      "createdAt": "2026-04-27T14:27:07.726Z"
     },
     {
       "id": 1777297844782,
@@ -737,5 +657,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T21:20:30.962Z"
+  "updatedAt": "2026-04-27T22:44:50.300Z"
 }
