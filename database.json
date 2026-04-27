@@ -79,38 +79,6 @@
   ],
   "orders": [
     {
-      "id": 1777295211587,
-      "orderCode": "637811994f089503400ee820c0b82d21",
-      "qrisId": "a1a4e0f5-514f-4dc2-bda2-072b17814f26",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS NO KTP",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Bian",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4e0f5-514f-4dc2-bda2-072b17814f26/image",
-      "expiredAt": "2026-04-27T13:21:48+00:00",
-      "createdAt": "2026-04-27T13:06:51.587Z"
-    },
-    {
-      "id": 1777294555531,
-      "orderCode": "80dd463e4432f6f4f812d0e9d75644b2",
-      "qrisId": "a1a4dd0e-da17-4dee-8ec5-78a157b8db02",
-      "productId": 1777109092543,
-      "productName": "WEB NOKOS",
-      "productCode": "1. https://ditznesia.id\n2. https://salulerid.lovable.app/",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "alfajri",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4dd0e-da17-4dee-8ec5-78a157b8db02/image",
-      "expiredAt": "2026-04-27T13:10:54+00:00",
-      "createdAt": "2026-04-27T12:55:55.531Z"
-    },
-    {
       "id": 1777294001606,
       "orderCode": "672fcd07badb3ef276d5de333be77f7f",
       "qrisId": "a1a4d9c2-0f5e-45fa-8b48-0ddd4e304396",
@@ -145,54 +113,6 @@
       "paidAt": "2026-04-27T12:31:33+00:00"
     },
     {
-      "id": 1777292959389,
-      "orderCode": "3817652783be2df3199fffdefe744f91",
-      "qrisId": "a1a4d38b-70e6-4220-b7e1-fe8ff215ba1e",
-      "productId": 1777109092543,
-      "productName": "WEB NOKOS",
-      "productCode": "1. https://ditznesia.id\n2. https://salulerid.lovable.app/",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Al Fajri",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4d38b-70e6-4220-b7e1-fe8ff215ba1e/image",
-      "expiredAt": "2026-04-27T12:44:18+00:00",
-      "createdAt": "2026-04-27T12:29:19.389Z"
-    },
-    {
-      "id": 1777290525435,
-      "orderCode": "1968566e61bf65c26c43772ebf0b2e7e",
-      "qrisId": "a1a4c508-be94-45e3-a779-85bfa4869ca5",
-      "productId": 1777273635565,
-      "productName": "SCRIPT JPM+PUSH KONTAK",
-      "productCode": "https://autoresbot.com/download/file_1764054674916.zip",
-      "price": 5000,
-      "totalAmount": 5000,
-      "customerName": "Andika",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4c508-be94-45e3-a779-85bfa4869ca5/image",
-      "expiredAt": "2026-04-27T12:03:43+00:00",
-      "createdAt": "2026-04-27T11:48:45.435Z"
-    },
-    {
-      "id": 1777290502340,
-      "orderCode": "80be9408d45ee0f33a55926c874fbfcf",
-      "qrisId": "a1a4c4e6-3213-4c3a-a321-48b46d3d5416",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "Andika",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4c4e6-3213-4c3a-a321-48b46d3d5416/image",
-      "expiredAt": "2026-04-27T12:03:21+00:00",
-      "createdAt": "2026-04-27T11:48:22.341Z"
-    },
-    {
       "id": 1777290252073,
       "orderCode": "623c5791b8e28942b27b06716a646bbc",
       "qrisId": "a1a4c368-7b9e-4c16-806c-eae985471036",
@@ -208,22 +128,6 @@
       "expiredAt": "2026-04-27T11:59:11+00:00",
       "createdAt": "2026-04-27T11:44:12.073Z",
       "paidAt": "2026-04-27T11:45:30+00:00"
-    },
-    {
-      "id": 1777290210525,
-      "orderCode": "07a0d3e869beeef4967beb78afdb1260",
-      "qrisId": "a1a4c329-c336-4e99-9eca-743dcd5564cf",
-      "productId": 1776681257269,
-      "productName": "WEB QRIS DINAMIS NO KTP",
-      "productCode": "https://qrispy.id",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "adam",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4c329-c336-4e99-9eca-743dcd5564cf/image",
-      "expiredAt": "2026-04-27T11:58:30+00:00",
-      "createdAt": "2026-04-27T11:43:30.525Z"
     },
     {
       "id": 1777249525363,
@@ -668,5 +572,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T13:06:51.587Z"
+  "updatedAt": "2026-04-27T13:25:35.875Z"
 }
