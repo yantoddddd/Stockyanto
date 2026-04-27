@@ -89,10 +89,11 @@
       "totalAmount": 5000,
       "customerName": "awd",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4805e-da54-42b8-ba78-15650d296641/image",
       "expiredAt": "2026-04-27T08:51:44+00:00",
-      "createdAt": "2026-04-27T08:36:44.744Z"
+      "createdAt": "2026-04-27T08:36:44.744Z",
+      "cancelledAt": "2026-04-27T08:38:55.937Z"
     },
     {
       "id": 1777249525363,
@@ -537,5 +538,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T08:36:44.744Z"
+  "updatedAt": "2026-04-27T08:38:55.937Z"
 }
