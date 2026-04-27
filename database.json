@@ -43,13 +43,13 @@
       "name": "WEB NOKOS",
       "description": "Web yang jarang diketahui orang jb",
       "price": 1000,
-      "stock": 100,
+      "stock": 86,
       "itemType": "text",
       "itemContent": "1. https://ditznesia.id\n2. https://salulerid.lovable.app/",
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-04-25T09:24:52.543Z",
-      "updatedAt": "2026-04-27T07:04:31.450Z"
+      "updatedAt": "2026-04-27T13:26:12.897Z"
     },
     {
       "id": 1777117600090,
@@ -572,5 +572,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T13:25:35.875Z"
+  "updatedAt": "2026-04-27T13:26:12.898Z"
 }
