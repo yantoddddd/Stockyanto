@@ -69,7 +69,7 @@
       "name": "SCRIPT JPM+PUSH KONTAK",
       "description": "Script resbot jpm 2.0 terbaru",
       "price": 5000,
-      "stock": 5,
+      "stock": 4,
       "itemType": "link",
       "itemContent": "https://autoresbot.com/download/file_1764054674916.zip",
       "bonusType": "none",
@@ -89,10 +89,11 @@
       "totalAmount": 5000,
       "customerName": "alfajri",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a58332-adf0-4a28-bc0e-7dbdd5d7c598/image",
       "expiredAt": "2026-04-27T20:55:28+00:00",
-      "createdAt": "2026-04-27T20:40:29.101Z"
+      "createdAt": "2026-04-27T20:40:29.101Z",
+      "paidAt": "2026-04-27T20:47:48+00:00"
     },
     {
       "id": 1777312853731,
@@ -687,5 +688,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T20:40:29.101Z"
+  "updatedAt": "2026-04-27T20:47:50.721Z"
 }
