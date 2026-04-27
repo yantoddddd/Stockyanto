@@ -89,7 +89,7 @@
       "totalAmount": 2000,
       "customerName": "RAFZZ",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "expired",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a4a1db-8c02-499c-b207-6bd31b164053/image",
       "expiredAt": "2026-04-27T10:25:22+00:00",
       "createdAt": "2026-04-27T10:10:23.343Z"
@@ -537,5 +537,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-27T10:10:23.343Z"
+  "updatedAt": "2026-04-27T11:02:32.856Z"
 }
