@@ -91,23 +91,6 @@
   ],
   "orders": [
     {
-      "id": 1777366284207,
-      "orderCode": "4e0b7508d853792e05392852eacdfa60",
-      "qrisId": "a1a68897-7b6b-49f9-a2e4-647ae091f309",
-      "productId": 1777366244706,
-      "productName": "SCRIPT AUTO JPM × AUTO SWGC",
-      "productCode": "https://www.mediafire.com/file/1eirq84u2nkbm11/AutoJpm+x+AutoSwgc.zip/file",
-      "price": 10000,
-      "totalAmount": 10000,
-      "customerName": "Fnz store",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1a68897-7b6b-49f9-a2e4-647ae091f309/image",
-      "expiredAt": "2026-04-28T09:06:22+00:00",
-      "createdAt": "2026-04-28T08:51:24.207Z",
-      "cancelledAt": "2026-04-28T08:51:29.477Z"
-    },
-    {
       "id": 1777364623041,
       "orderCode": "79b1658c175c1f3b168ff69913b78672",
       "qrisId": "a1a67eb2-6355-418c-9b34-63168fe62add",
@@ -718,5 +701,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-28T08:51:29.477Z"
+  "updatedAt": "2026-04-28T08:51:31.861Z"
 }
