@@ -101,10 +101,11 @@
       "totalAmount": 10000,
       "customerName": "Fnz store",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1a68897-7b6b-49f9-a2e4-647ae091f309/image",
       "expiredAt": "2026-04-28T09:06:22+00:00",
-      "createdAt": "2026-04-28T08:51:24.207Z"
+      "createdAt": "2026-04-28T08:51:24.207Z",
+      "cancelledAt": "2026-04-28T08:51:29.477Z"
     },
     {
       "id": 1777364623041,
@@ -717,5 +718,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-28T08:51:24.207Z"
+  "updatedAt": "2026-04-28T08:51:29.477Z"
 }
