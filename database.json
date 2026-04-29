@@ -56,13 +56,13 @@
       "name": "APK BIOSKOP/FILM",
       "description": "Apk ini dapat menonton semua film, anime, dll",
       "price": 1000,
-      "stock": 49,
+      "stock": 47,
       "itemType": "link",
       "itemContent": "https://www.mediafire.com/folder/6wb9nbue6tvso/APK_BIOSKOP",
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-04-25T11:46:40.090Z",
-      "updatedAt": "2026-04-28T08:45:32.362Z"
+      "updatedAt": "2026-04-29T07:53:26.643Z"
     },
     {
       "id": 1777273635565,
@@ -686,5 +686,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-04-29T07:52:39.144Z"
+  "updatedAt": "2026-04-29T07:53:26.644Z"
 }
