@@ -18,7 +18,7 @@
       "name": "APK QRIS NO KTP",
       "description": "Apk ini cocok untuk anak jb dan dapat digunakan untuk kebutuhan lainya",
       "price": 1000,
-      "stock": 86,
+      "stock": 85,
       "itemType": "text",
       "itemContent": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
       "bonusType": "none",
@@ -115,10 +115,11 @@
       "totalAmount": 1000,
       "customerName": "gasing kelapa",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "paid",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1ad1f9e-cc2d-4e6f-b712-4e504a53a5cf/image",
       "expiredAt": "2026-05-01T15:43:39+00:00",
-      "createdAt": "2026-05-01T15:28:40.348Z"
+      "createdAt": "2026-05-01T15:28:40.348Z",
+      "paidAt": "2026-05-01T15:29:53+00:00"
     },
     {
       "id": 1777647530242,
@@ -817,5 +818,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-05-01T15:28:40.348Z"
+  "updatedAt": "2026-05-01T15:30:07.863Z"
 }
