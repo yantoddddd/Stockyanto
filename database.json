@@ -69,12 +69,13 @@
       "name": "SCRIPT JPM+PUSH KONTAK",
       "description": "Script resbot jpm 2.0 terbaru",
       "price": 5000,
-      "stock": 4,
+      "stock": 64,
       "itemType": "link",
       "itemContent": "https://autoresbot.com/download/file_1764054674916.zip",
       "bonusType": "none",
       "bonusContent": "",
-      "createdAt": "2026-04-27T07:07:15.565Z"
+      "createdAt": "2026-04-27T07:07:15.565Z",
+      "updatedAt": "2026-05-01T10:16:12.730Z"
     },
     {
       "id": 1777366244706,
@@ -737,5 +738,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-05-01T09:47:04.369Z"
+  "updatedAt": "2026-05-01T10:16:12.730Z"
 }
