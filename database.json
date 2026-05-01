@@ -82,12 +82,13 @@
       "name": "SCRIPT AUTO JPM × AUTO SWGC",
       "description": "Script Simple-Bot VIP auto jpm + auto sw grup",
       "price": 10000,
-      "stock": 10,
+      "stock": 56,
       "itemType": "link",
       "itemContent": "https://www.mediafire.com/file/1eirq84u2nkbm11/AutoJpm+x+AutoSwgc.zip/file",
       "bonusType": "none",
       "bonusContent": "",
-      "createdAt": "2026-04-28T08:50:44.706Z"
+      "createdAt": "2026-04-28T08:50:44.706Z",
+      "updatedAt": "2026-05-01T10:16:20.153Z"
     }
   ],
   "orders": [
@@ -738,5 +739,5 @@
       "paidAt": "2026-04-20T16:02:25+00:00"
     }
   ],
-  "updatedAt": "2026-05-01T10:16:12.730Z"
+  "updatedAt": "2026-05-01T10:16:20.153Z"
 }
