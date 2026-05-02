@@ -18,10 +18,10 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
 
-// ========== CACHE DATABASE (5 DETIK) ==========
+// ========== CACHE ==========
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 5000;
+const CACHE_TTL = 10000; // 10 detik
 
 // ========== RATE LIMITER ==========
 const rateLimitMap = new Map();
@@ -49,11 +49,7 @@ async function sendLogToTelegram(logEntry) {
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: `📡 <b>Request Log</b>\n<code>${logEntry}</code>`,
-                parse_mode: 'HTML'
-            })
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: `📡 <b>Request Log</b>\n<code>${logEntry}</code>`, parse_mode: 'HTML' })
         });
     } catch(e) {}
 }
@@ -77,7 +73,7 @@ setInterval(() => {
     }
 }, 5 * 60 * 1000);
 
-// ========== DATABASE FUNCTIONS (WITH CACHE) ==========
+// ========== DATABASE FUNCTIONS ==========
 async function getDB() {
     const now = Date.now();
     if (dbCache && (now - dbCacheTime) < CACHE_TTL) {
@@ -87,7 +83,10 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null };
+        if (!res.ok) {
+            console.error('GitHub API error:', res.status);
+            return { products: [], orders: [], sha: null, adminIP: null };
+        }
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         dbCache = { ...JSON.parse(content), sha: data.sha };
@@ -99,12 +98,13 @@ async function getDB() {
     }
 }
 
-async function setDB(products, orders, oldSha, retryCount = 0) {
+async function setDB(products, orders, oldSha, retryCount) {
+    if (!retryCount) retryCount = 0;
     if (retryCount > 3) throw new Error('GitHub save failed after 3 retries');
     const db = await getDB();
     const content = { 
-        products, 
-        orders, 
+        products: products || db.products || [], 
+        orders: orders || db.orders || [], 
         adminIP: db.adminIP || null,
         updatedAt: new Date().toISOString() 
     };
@@ -116,26 +116,26 @@ async function setDB(products, orders, oldSha, retryCount = 0) {
     });
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        if (errorData.message?.includes('SHA') || errorData.message?.includes('does not match')) {
-            console.log(`⚠️ SHA conflict, retrying... (${retryCount + 1}/3)`);
-            await new Promise(r => setTimeout(r, 300));
+        if (errorData.message && (errorData.message.includes('SHA') || errorData.message.includes('does not match'))) {
+            console.log(`SHA conflict, retrying... (${retryCount + 1}/3)`);
+            await new Promise(r => setTimeout(r, 500));
             const freshDB = await getDB();
             return setDB(products, orders, freshDB.sha, retryCount + 1);
         }
-        throw new Error('GitHub save failed: ' + (errorData.message || res.status));
+        console.error('GitHub save error:', errorData.message || res.status);
+        throw new Error('GitHub save failed');
     }
     const data = await res.json();
-    dbCache = { products, orders, adminIP: db.adminIP, sha: data.content.sha };
+    dbCache = { products: content.products, orders: content.orders, adminIP: content.adminIP, sha: data.content.sha };
     dbCacheTime = Date.now();
     return data.content.sha;
 }
 
 async function setAdminIP(ip) {
     const db = await getDB();
-    db.adminIP = ip;
     const content = { 
-        products: db.products, 
-        orders: db.orders, 
+        products: db.products || [], 
+        orders: db.orders || [], 
         adminIP: ip,
         updatedAt: new Date().toISOString() 
     };
@@ -145,30 +145,13 @@ async function setAdminIP(ip) {
         headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Set admin IP', content: updatedContent, sha: db.sha })
     });
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        if (errorData.message?.includes('SHA') || errorData.message?.includes('does not match')) {
-            const freshDB = await getDB();
-            freshDB.adminIP = ip;
-            const retryContent = { products: freshDB.products, orders: freshDB.orders, adminIP: ip, updatedAt: new Date().toISOString() };
-            const retryUpdatedContent = Buffer.from(JSON.stringify(retryContent, null, 2)).toString('base64');
-            const retryRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: 'Set admin IP (retry)', content: retryUpdatedContent, sha: freshDB.sha })
-            });
-            if (!retryRes.ok) throw new Error('Failed to set admin IP');
-            const retryData = await retryRes.json();
-            dbCache = { products: freshDB.products, orders: freshDB.orders, adminIP: ip, sha: retryData.content.sha };
-            dbCacheTime = Date.now();
-            return true;
-        }
-        throw new Error('Failed to set admin IP');
+    if (res.ok) {
+        const data = await res.json();
+        dbCache = { products: content.products, orders: content.orders, adminIP: ip, sha: data.content.sha };
+        dbCacheTime = Date.now();
+        return true;
     }
-    const data = await res.json();
-    dbCache = { products: db.products, orders: db.orders, adminIP: ip, sha: data.content.sha };
-    dbCacheTime = Date.now();
-    return true;
+    return false;
 }
 
 async function sendTelegramMessage(text) {
@@ -196,13 +179,12 @@ async function autoBackupToTelegram() {
         formData.append('document', new Blob([backupData], { type: 'application/json' }), `backup_${new Date().toISOString().split('T')[0]}.json`);
         formData.append('caption', `📦 Auto Backup\n📅 ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}`);
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
-        console.log('💾 Auto backup terkirim');
+        console.log('Backup terkirim');
     } catch(e) { console.error('Backup error:', e); }
 }
 let lastBackupDate = '';
 setInterval(async () => {
-    const now = new Date();
-    const wib = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const wib = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
     const today = wib.toISOString().split('T')[0];
     if (lastBackupDate !== today && wib.getHours() === 3) {
         lastBackupDate = today;
@@ -214,8 +196,7 @@ setInterval(async () => {
 async function dailyRevenueReport() {
     try {
         const db = await getDB();
-        const now = new Date();
-        const wib = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+        const wib = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
         const todayWIB = wib.toISOString().split('T')[0];
         const todayOrders = db.orders.filter(o => {
             if (!o.paidAt || o.status !== 'paid') return false;
@@ -223,17 +204,12 @@ async function dailyRevenueReport() {
             return paidWIB.toISOString().split('T')[0] === todayWIB;
         });
         const totalRevenue = todayOrders.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0);
-        const productCounts = {};
-        todayOrders.forEach(o => { productCounts[o.productName] = (productCounts[o.productName] || 0) + 1; });
-        let breakdown = '';
-        for (const [n, c] of Object.entries(productCounts)) breakdown += `  • ${n}: ${c}x\n`;
-        await sendTelegramMessage(`📊 <b>LAPORAN HARIAN</b>\n📅 ${todayWIB}\n⏰ 00:00 WIB\n\n💰 <b>Total: Rp ${totalRevenue.toLocaleString()}</b>\n📦 Order: ${todayOrders.length}\n\n📋 <b>Rincian:</b>\n${breakdown || '  Tidak ada'}`);
+        await sendTelegramMessage(`📊 <b>LAPORAN HARIAN</b>\n📅 ${todayWIB}\n💰 <b>Rp ${totalRevenue.toLocaleString()}</b>\n📦 ${todayOrders.length} order`);
     } catch(e) {}
 }
 let lastReportDate = '';
 setInterval(async () => {
-    const now = new Date();
-    const wib = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const wib = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
     const today = wib.toISOString().split('T')[0];
     if (lastReportDate !== today && wib.getHours() === 0) {
         lastReportDate = today;
@@ -246,22 +222,22 @@ async function autoExpireCheck() {
     try {
         const db = await getDB();
         const now = new Date();
-        let expiredCount = 0;
+        let count = 0;
         for (const o of db.orders) {
             if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < now) {
                 o.status = 'expired';
-                expiredCount++;
+                count++;
             }
         }
-        if (expiredCount > 0) {
+        if (count > 0) {
             await setDB(db.products, db.orders, db.sha);
-            console.log(`⏰ Auto expire: ${expiredCount} order expired`);
+            console.log(`Auto expire: ${count} order`);
         }
-    } catch(e) { console.error('Expire check error:', e); }
+    } catch(e) {}
 }
 setInterval(autoExpireCheck, 30 * 1000);
 
-// ========== AUTO DELETE CANCELLED/EXPIRED ==========
+// ========== AUTO DELETE ==========
 async function cleanupOrders() {
     try {
         const db = await getDB();
@@ -274,7 +250,7 @@ async function cleanupOrders() {
         if (deleted > 0) {
             db.orders = kept;
             await setDB(db.products, db.orders, db.sha);
-            console.log(`✅ Cleanup: ${deleted} order dihapus`);
+            console.log(`Cleanup: ${deleted} dihapus`);
         }
     } catch(e) {}
 }
@@ -298,71 +274,51 @@ function sanitize(str) {
 
 // ========== API ENDPOINTS ==========
 
-// Health
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString(), uptime: process.uptime() });
+    res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Ping DB
 app.get('/api/ping-db', async (req, res) => {
     try {
         const start = Date.now();
         const db = await getDB();
-        res.json({ status: 'ok', latency_ms: Date.now() - start, products: db.products?.length || 0, orders: db.orders?.length || 0, hasAdmin: !!db.adminIP });
+        res.json({ status: 'ok', latency_ms: Date.now() - start, products: (db.products || []).length, orders: (db.orders || []).length });
     } catch(e) { res.status(500).json({ status: 'error', message: e.message }); }
 });
 
-// Public stats (no auth)
 app.get('/api/public-stats', async (req, res) => {
     try {
         const db = await getDB();
-        const paid = db.orders.filter(o => o.status === 'paid');
+        const paid = (db.orders || []).filter(o => o.status === 'paid');
         const today = new Date().toISOString().split('T')[0];
         const todayOrders = paid.filter(o => (o.paidAt || o.createdAt).startsWith(today));
-        res.json({
-            success: true,
-            totalProducts: db.products.filter(p => p.stock > 0).length,
-            todayOrders: todayOrders.length,
-            recentOrders: paid.slice(-8).reverse().map(o => ({
-                customerName: o.customerName,
-                productName: o.productName,
-                paidAt: o.paidAt || o.createdAt
-            }))
-        });
+        res.json({ success: true, totalProducts: (db.products || []).filter(p => p.stock > 0).length, todayOrders: todayOrders.length, recentOrders: paid.slice(-8).reverse().map(o => ({ customerName: o.customerName, productName: o.productName })) });
     } catch(e) { res.status(500).json({ success: false }); }
 });
 
-// Check admin IP (public)
 app.get('/api/admin/check-ip', async (req, res) => {
     try {
         const db = await getDB();
-        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.connection?.remoteAddress || 'unknown';
-        res.json({ 
-            isAdmin: db.adminIP === clientIP,
-            hasAdmin: !!db.adminIP,
-            yourIP: clientIP
-        });
+        const clientIP = (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim();
+        res.json({ isAdmin: db.adminIP === clientIP, hasAdmin: !!db.adminIP, yourIP: clientIP });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// Set admin IP
 app.post('/api/admin/set-ip', async (req, res) => {
     const { adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     try {
-        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.connection?.remoteAddress || 'unknown';
+        const clientIP = (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim();
         await setAdminIP(clientIP);
         res.json({ success: true, adminIP: clientIP });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// Reset admin IP
 app.post('/api/admin/reset-ip', async (req, res) => {
     const { adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     try {
         const db = await getDB();
-        db.adminIP = null;
         const content = { products: db.products, orders: db.orders, adminIP: null, updatedAt: new Date().toISOString() };
         const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
         await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
@@ -375,10 +331,9 @@ app.post('/api/admin/reset-ip', async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// Proxy QRIS
 app.post('/api/generate-qris-proxy', async (req, res) => {
     const { amount } = req.body;
-    if (!amount) return res.status(400).json({ status: 'error', message: 'Amount diperlukan' });
+    if (!amount) return res.status(400).json({ error: 'Amount diperlukan' });
     try {
         const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
             method: 'POST',
@@ -386,13 +341,12 @@ app.post('/api/generate-qris-proxy', async (req, res) => {
             body: JSON.stringify({ amount })
         });
         res.json(await response.json());
-    } catch(e) { res.status(500).json({ status: 'error', message: e.message }); }
+    } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// Cancel order
 app.post('/api/cancel-order/:orderId', async (req, res) => {
     const db = await getDB();
-    const order = db.orders.find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId);
+    const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId);
     if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
     if (order.status !== 'pending') return res.status(400).json({ error: 'Order sudah diproses' });
     if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId);
@@ -402,37 +356,34 @@ app.post('/api/cancel-order/:orderId', async (req, res) => {
     res.json({ success: true });
 });
 
-// Test order
 app.post('/api/admin/test-order', async (req, res) => {
     const { productId, adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    const product = db.products.find(p => p.id == productId);
+    const product = (db.products || []).find(p => p.id == productId);
     if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
     function esc(str) { if(!str) return ''; return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
-    let bonusHtml = product.bonusContent ? `<div class="section"><div class="section-title"><i class="fas fa-gift"></i> Bonus</div><div class="text-content">${esc(product.bonusContent)}</div></div>` : '';
+    let bonusHtml = product.bonusContent ? `<div class="section"><div class="section-title">Bonus</div><div class="text-content">${esc(product.bonusContent)}</div></div>` : '';
     let itemHtml = '';
-    const isLink = product.itemType === 'link' || product.itemContent?.startsWith('http');
+    const isLink = product.itemType === 'link' || (product.itemContent || '').startsWith('http');
     const isHtml = product.itemType === 'html';
-    if (isHtml) itemHtml = `<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="text-content">${esc(product.itemContent)}</div><button class="chip-btn copy-btn" onclick="copyToClipboard('${esc(product.itemContent)}')"><i class="fas fa-copy"></i> Salin HTML</button></div>`;
-    else if (isLink) itemHtml = `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="text-content">${esc(product.itemContent)}</div><a href="${esc(product.itemContent)}" class="chip-btn link-chip" target="_blank"><i class="fas fa-external-link-alt"></i> Buka</a><button class="chip-btn copy-btn" onclick="copyToClipboard('${esc(product.itemContent)}')"><i class="fas fa-copy"></i> Salin Link</button></div>`;
-    else itemHtml = `<div class="section"><div class="section-title"><i class="fas fa-box"></i> Barang Utama</div><div class="text-content">${esc(product.itemContent)}</div><button class="chip-btn copy-btn" onclick="copyToClipboard('${esc(product.itemContent)}')"><i class="fas fa-copy"></i> Salin Teks</button></div>`;
-    res.send(`<!DOCTYPE html><html><head><title>Test Order</title><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(135deg,#0f172a,#1e1b4b);font-family:Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}.card{background:rgba(255,255,255,0.1);border-radius:32px;padding:32px;max-width:500px;width:100%}h1{color:#10b981;text-align:center;margin-bottom:20px}.product-name{color:white;text-align:center;margin-bottom:24px}.section{background:rgba(0,0,0,0.3);border-radius:20px;padding:16px;margin-bottom:16px}.section-title{color:#60a5fa;margin-bottom:10px}.text-content{color:#e2e8f0;margin-bottom:10px;word-break:break-all}.chip-btn{background:#334155;border:none;padding:6px 14px;border-radius:40px;color:white;cursor:pointer;margin:4px;display:inline-block}.link-chip{background:#3b82f6;text-decoration:none}.btn-back{background:#334155;border:none;padding:10px 20px;border-radius:40px;color:white;cursor:pointer;text-decoration:none;display:inline-block}.footer-note{text-align:center;color:#475569;margin-top:20px}</style></head><body><div class="card"><h1>✅ TEST ORDER BERHASIL!</h1><div class="product-name">${esc(product.name)}</div>${itemHtml}${bonusHtml}<div style="text-align:center;margin-top:20px"><a href="/" class="btn-back">Kembali</a></div><div class="footer-note">Mode test</div></div><script>function copyToClipboard(t){navigator.clipboard?.writeText(t).then(()=>alert('Tersalin!')).catch(()=>{const n=document.createElement('textarea');n.value=t;document.body.appendChild(n);n.select();document.execCommand('copy');document.body.removeChild(n);alert('Tersalin!')})}</script></body></html>`);
+    if (isHtml) itemHtml = `<div class="section"><div class="section-title">HTML</div><div class="text-content">${esc(product.itemContent)}</div></div>`;
+    else if (isLink) itemHtml = `<div class="section"><div class="section-title">Link</div><a href="${esc(product.itemContent)}" target="_blank">${esc(product.itemContent)}</a></div>`;
+    else itemHtml = `<div class="section"><div class="section-title">Konten</div><div class="text-content">${esc(product.itemContent)}</div></div>`;
+    res.send(`<!DOCTYPE html><html><head><title>Test Order</title><meta charset="UTF-8"><style>body{background:#0f172a;font-family:sans-serif;color:white;padding:20px;text-align:center}h1{color:#10b981}.section{background:#1e293b;padding:14px;border-radius:12px;margin:10px 0;text-align:left}</style></head><body><h1>Test Order</h1><h2>${esc(product.name)}</h2>${itemHtml}${bonusHtml}<p style="color:#64748b;margin-top:20px">Mode test</p></body></html>`);
 });
 
-// Get order
 app.get('/api/get-order/:orderCode', async (req, res) => {
     const db = await getDB();
-    const order = db.orders.find(o => o.orderCode === req.params.orderCode);
+    const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
     if (!order) return res.json({ success: false });
-    const product = db.products.find(p => p.id == order.productId);
-    res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || 'Tidak ada kode', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt });
+    const product = (db.products || []).find(p => p.id == order.productId);
+    res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt });
 });
 
-// Check payment
 app.get('/api/check-payment/:orderCode', async (req, res) => {
     const db = await getDB();
-    const order = db.orders.find(o => o.orderCode === req.params.orderCode);
+    const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
     if (!order) return res.json({ status: 'not_found' });
     if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode });
     if (new Date(order.expiredAt) < new Date()) {
@@ -444,31 +395,29 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
         const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } });
         const data = await response.json();
         if (data.status === 'success' && data.data.status === 'paid') {
-            const product = db.products.find(p => p.id == order.productId);
+            const product = (db.products || []).find(p => p.id == order.productId);
             if (product && product.stock > 0) product.stock -= 1;
             order.status = 'paid';
             order.paidAt = new Date().toISOString();
             await setDB(db.products, db.orders, db.sha);
-            const bonusText = product?.bonusContent ? `\n\n🎁 Bonus:\n${product.bonusContent}` : '';
-            await sendTelegramMessage(`✅ <b>PEMBAYARAN BERHASIL!</b> (via Check)\n\n📦 <b>Produk:</b> ${order.productName}\n👤 <b>Pembeli:</b> ${order.customerName}\n💰 <b>Total:</b> Rp ${(order.totalAmount || order.price).toLocaleString()}\n🆔 <b>Order:</b> ${order.orderCode}\n📅 <b>Waktu:</b> ${new Date().toLocaleString('id-ID')}\n\n🔑 <b>Kode:</b>\n${order.productCode || 'Tidak ada kode'}${bonusText}`);
+            const bonusText = product?.bonusContent ? `\n\nBonus:\n${product.bonusContent}` : '';
+            await sendTelegramMessage(`✅ PEMBAYARAN BERHASIL!\n\nProduk: ${order.productName}\nPembeli: ${order.customerName}\nTotal: Rp ${(order.totalAmount || order.price).toLocaleString()}\nOrder: ${order.orderCode}\n\nKode:\n${order.productCode || ''}${bonusText}`);
             return res.json({ status: 'paid', productCode: order.productCode });
         }
         res.json({ status: 'pending' });
     } catch(e) { res.json({ status: 'pending' }); }
 });
 
-// Products
 app.get('/api/products', async (req, res) => {
     const db = await getDB();
-    res.json({ success: true, products: db.products });
+    res.json({ success: true, products: db.products || [] });
 });
 
-// Create order
 app.post('/api/create-order', async (req, res) => {
     const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body;
     if (!productId || !customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
     const db = await getDB();
-    const product = db.products.find(p => p.id == productId);
+    const product = (db.products || []).find(p => p.id == productId);
     if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' });
     if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
     const orderCode = crypto.randomBytes(16).toString('hex');
@@ -484,51 +433,42 @@ app.post('/api/create-order', async (req, res) => {
     res.json({ success: true, orderCode });
 });
 
-// ========== ADMIN ENDPOINTS ==========
-
-// Stats
+// ========== ADMIN ==========
 app.get('/api/admin/stats', async (req, res) => {
-    const { adminKey } = req.query;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.query.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    const paid = db.orders.filter(o => o.status === 'paid');
+    const paid = (db.orders || []).filter(o => o.status === 'paid');
     res.json({ success: true, stats: {
-        totalProducts: db.products.length, totalOrders: db.orders.length,
+        totalProducts: (db.products || []).length,
+        totalOrders: (db.orders || []).length,
         totalRevenue: paid.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0),
-        pendingCount: db.orders.filter(o => o.status === 'pending').length,
-        expiredCount: db.orders.filter(o => o.status === 'expired').length,
-        cancelledCount: db.orders.filter(o => o.status === 'cancelled').length,
+        pendingCount: (db.orders || []).filter(o => o.status === 'pending').length,
+        expiredCount: (db.orders || []).filter(o => o.status === 'expired').length,
+        cancelledCount: (db.orders || []).filter(o => o.status === 'cancelled').length,
         paidCount: paid.length
     }});
 });
 
-// Products list
 app.get('/api/admin/products', async (req, res) => {
-    const { adminKey } = req.query;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.query.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    res.json({ success: true, products: db.products });
+    res.json({ success: true, products: db.products || [] });
 });
 
-// Orders list
 app.get('/api/admin/orders', async (req, res) => {
-    const { adminKey } = req.query;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.query.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    res.json({ success: true, orders: db.orders });
+    res.json({ success: true, orders: db.orders || [] });
 });
 
-// Single product
 app.get('/api/admin/product/:id', async (req, res) => {
-    const { adminKey } = req.query;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.query.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    const product = db.products.find(p => p.id == req.params.id);
+    const product = (db.products || []).find(p => p.id == req.params.id);
     if (!product) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true, product });
 });
 
-// Add product
 app.post('/api/admin/product', async (req, res) => {
     const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent, adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -539,45 +479,70 @@ app.post('/api/admin/product', async (req, res) => {
     res.json({ success: true });
 });
 
-// Update product
 app.put('/api/admin/product/:id', async (req, res) => {
     const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent, adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid data' });
     const db = await getDB();
-    const idx = db.products.findIndex(p => p.id == req.params.id);
+    const idx = (db.products || []).findIndex(p => p.id == req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Not found' });
     db.products[idx] = { ...db.products[idx], name, description: description || '', price: parseInt(price), stock: parseInt(stock) || 1, itemType: itemType || 'text', itemContent, bonusType: bonusType || 'none', bonusContent: bonusContent || '', updatedAt: new Date().toISOString() };
     await setDB(db.products, db.orders, db.sha);
     res.json({ success: true });
 });
 
-// Delete product
 app.delete('/api/admin/product/:id', async (req, res) => {
-    const { adminKey } = req.body;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    db.products = db.products.filter(p => p.id != req.params.id);
+    db.products = (db.products || []).filter(p => p.id != req.params.id);
     await setDB(db.products, db.orders, db.sha);
     res.json({ success: true });
 });
 
-// Reset orders
 app.post('/api/admin/reset-orders', async (req, res) => {
-    const { adminKey } = req.body;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
-    const paid = db.orders.filter(o => o.status === 'paid');
-    const deleted = db.orders.length - paid.length;
+    const paid = (db.orders || []).filter(o => o.status === 'paid');
+    const deleted = (db.orders || []).length - paid.length;
     db.orders = paid;
     await setDB(db.products, db.orders, db.sha);
     res.json({ success: true, deletedCount: deleted, keptCount: paid.length });
 });
 
-// Delete selected orders
 app.post('/api/admin/delete-selected-orders', async (req, res) => {
     const { adminKey, orderIds } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-    if (!orderIds?.length) return res.status(400).json({ error: 'Tidak ada order dipilih' });
+    if (!orderIds || !orderIds.length) return res.status(400).json({ error: 'Tidak ada order dipilih' });
     const db = await getDB();
-    db.orders = db.orders.filter(o => !order
+    db.orders = (db.orders || []).filter(o => !orderIds.includes(o.id.toString()));
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true, deletedCount: orderIds.length });
+});
+
+app.post('/api/admin/backup', async (req, res) => {
+    if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    const db = await getDB();
+    const backupData = JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP }, null, 2);
+    const formData = new FormData();
+    formData.append('chat_id', TELEGRAM_CHAT_ID);
+    formData.append('document', new Blob([backupData], { type: 'application/json' }), `backup_${Date.now()}.json`);
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
+    res.json({ success: true });
+});
+
+app.post('/api/admin/broadcast', async (req, res) => {
+    const { adminKey, message } = req.body;
+    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    if (!message) return res.status(400).json({ error: 'Pesan wajib diisi' });
+    const db = await getDB();
+    const unique = [...new Map((db.orders || []).map(o => [o.customerName, o.customerEmail])).entries()];
+    const sent = unique.filter(([_, email]) => email && email !== '-').length;
+    await sendTelegramMessage(`📢 BROADCAST\n\n${message}\n\n📨 Terkirim ke ${sent} customer.`);
+    res.json({ success: true, sentCount: sent });
+});
+
+app.get('/order/:code', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/order.html'));
+});
+
+module.exports = app;
