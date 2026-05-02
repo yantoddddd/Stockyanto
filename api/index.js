@@ -296,7 +296,23 @@ app.get('/api/public-stats', async (req, res) => {
         const paid = (db.orders || []).filter(o => o.status === 'paid');
         const today = new Date().toISOString().split('T')[0];
         const todayOrders = paid.filter(o => (o.paidAt || o.createdAt).startsWith(today));
-        res.json({ success: true, totalProducts: (db.products || []).filter(p => p.stock > 0).length, todayOrders: todayOrders.length, recentOrders: paid.slice(-8).reverse().map(o => ({ customerName: o.customerName, productName: o.productName })) });
+        
+        // Hitung terjual per produk
+        const soldMap = {};
+        paid.forEach(o => {
+            soldMap[o.productId] = (soldMap[o.productId] || 0) + 1;
+        });
+        
+        res.json({
+            success: true,
+            totalProducts: (db.products || []).filter(p => p.stock > 0).length,
+            todayOrders: todayOrders.length,
+            soldMap: soldMap,
+            recentOrders: paid.slice(-8).reverse().map(o => ({
+                customerName: o.customerName,
+                productName: o.productName
+            }))
+        });
     } catch(e) { res.status(500).json({ success: false }); }
 });
 
