@@ -25,8 +25,8 @@ const CACHE_TTL = 5000;
 
 // ========== RATE LIMITER ==========
 const rateLimitMap = new Map();
-const RATE_WINDOW = 60000; // 1 menit
-const RATE_MAX = 30; // max 30 request per menit per IP
+const RATE_WINDOW = 60000;
+const RATE_MAX = 30;
 
 function rateLimit(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
@@ -42,7 +42,7 @@ function rateLimit(req, res, next) {
 }
 app.use(rateLimit);
 
-// ========== LOGGING REQUEST + KIRIM KE TELEGRAM ==========
+// ========== LOGGING ==========
 const logBuffer = [];
 async function sendLogToTelegram(logEntry) {
     try {
@@ -70,7 +70,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Kirim log setiap 5 menit kalau ada buffer
 setInterval(() => {
     if (logBuffer.length > 0) {
         sendLogToTelegram(logBuffer.join('\n')).catch(() => {});
@@ -88,7 +87,7 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null };
+        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         dbCache = { ...JSON.parse(content), sha: data.sha };
@@ -96,13 +95,19 @@ async function getDB() {
         return { ...dbCache, sha: data.sha };
     } catch (err) {
         console.error('GetDB error:', err);
-        return { products: [], orders: [], sha: null };
+        return { products: [], orders: [], sha: null, adminIP: null };
     }
 }
 
 async function setDB(products, orders, oldSha, retryCount = 0) {
     if (retryCount > 3) throw new Error('GitHub save failed after 3 retries');
-    const content = { products, orders, updatedAt: new Date().toISOString() };
+    const db = await getDB();
+    const content = { 
+        products, 
+        orders, 
+        adminIP: db.adminIP || null,
+        updatedAt: new Date().toISOString() 
+    };
     const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT',
@@ -120,9 +125,50 @@ async function setDB(products, orders, oldSha, retryCount = 0) {
         throw new Error('GitHub save failed: ' + (errorData.message || res.status));
     }
     const data = await res.json();
-    dbCache = { products, orders, sha: data.content.sha };
+    dbCache = { products, orders, adminIP: db.adminIP, sha: data.content.sha };
     dbCacheTime = Date.now();
     return data.content.sha;
+}
+
+async function setAdminIP(ip) {
+    const db = await getDB();
+    db.adminIP = ip;
+    const content = { 
+        products: db.products, 
+        orders: db.orders, 
+        adminIP: ip,
+        updatedAt: new Date().toISOString() 
+    };
+    const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Set admin IP', content: updatedContent, sha: db.sha })
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (errorData.message?.includes('SHA') || errorData.message?.includes('does not match')) {
+            const freshDB = await getDB();
+            freshDB.adminIP = ip;
+            const retryContent = { products: freshDB.products, orders: freshDB.orders, adminIP: ip, updatedAt: new Date().toISOString() };
+            const retryUpdatedContent = Buffer.from(JSON.stringify(retryContent, null, 2)).toString('base64');
+            const retryRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'Set admin IP (retry)', content: retryUpdatedContent, sha: freshDB.sha })
+            });
+            if (!retryRes.ok) throw new Error('Failed to set admin IP');
+            const retryData = await retryRes.json();
+            dbCache = { products: freshDB.products, orders: freshDB.orders, adminIP: ip, sha: retryData.content.sha };
+            dbCacheTime = Date.now();
+            return true;
+        }
+        throw new Error('Failed to set admin IP');
+    }
+    const data = await res.json();
+    dbCache = { products: db.products, orders: db.orders, adminIP: ip, sha: data.content.sha };
+    dbCacheTime = Date.now();
+    return true;
 }
 
 async function sendTelegramMessage(text) {
@@ -144,7 +190,7 @@ setInterval(async () => {
 async function autoBackupToTelegram() {
     try {
         const db = await getDB();
-        const backupData = JSON.stringify({ products: db.products, orders: db.orders, updatedAt: db.updatedAt }, null, 2);
+        const backupData = JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP, updatedAt: db.updatedAt }, null, 2);
         const formData = new FormData();
         formData.append('chat_id', TELEGRAM_CHAT_ID);
         formData.append('document', new Blob([backupData], { type: 'application/json' }), `backup_${new Date().toISOString().split('T')[0]}.json`);
@@ -195,7 +241,7 @@ setInterval(async () => {
     }
 }, 5 * 60 * 1000);
 
-// ========== AUTO EXPIRE CHECK (TIAP 30 DETIK) ==========
+// ========== AUTO EXPIRE CHECK ==========
 async function autoExpireCheck() {
     try {
         const db = await getDB();
@@ -245,28 +291,88 @@ async function cancelQRISInQrispy(qrisId) {
     } catch(e) { return false; }
 }
 
+function sanitize(str) {
+    if (!str) return '';
+    return String(str).replace(/[<>"'&]/g, m => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[m]);
+}
+
 // ========== API ENDPOINTS ==========
 
+// Health
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString(), uptime: process.uptime() });
 });
 
-// PING DATABASE
+// Ping DB
 app.get('/api/ping-db', async (req, res) => {
     try {
         const start = Date.now();
         const db = await getDB();
-        const latency = Date.now() - start;
+        res.json({ status: 'ok', latency_ms: Date.now() - start, products: db.products?.length || 0, orders: db.orders?.length || 0, hasAdmin: !!db.adminIP });
+    } catch(e) { res.status(500).json({ status: 'error', message: e.message }); }
+});
+
+// Public stats (no auth)
+app.get('/api/public-stats', async (req, res) => {
+    try {
+        const db = await getDB();
+        const paid = db.orders.filter(o => o.status === 'paid');
+        const today = new Date().toISOString().split('T')[0];
+        const todayOrders = paid.filter(o => (o.paidAt || o.createdAt).startsWith(today));
         res.json({
-            status: 'ok',
-            latency_ms: latency,
-            products: db.products?.length || 0,
-            orders: db.orders?.length || 0,
-            cached: (Date.now() - dbCacheTime) < CACHE_TTL
+            success: true,
+            totalProducts: db.products.filter(p => p.stock > 0).length,
+            todayOrders: todayOrders.length,
+            recentOrders: paid.slice(-8).reverse().map(o => ({
+                customerName: o.customerName,
+                productName: o.productName,
+                paidAt: o.paidAt || o.createdAt
+            }))
         });
-    } catch(e) {
-        res.status(500).json({ status: 'error', message: e.message });
-    }
+    } catch(e) { res.status(500).json({ success: false }); }
+});
+
+// Check admin IP (public)
+app.get('/api/admin/check-ip', async (req, res) => {
+    try {
+        const db = await getDB();
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.connection?.remoteAddress || 'unknown';
+        res.json({ 
+            isAdmin: db.adminIP === clientIP,
+            hasAdmin: !!db.adminIP,
+            yourIP: clientIP
+        });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Set admin IP
+app.post('/api/admin/set-ip', async (req, res) => {
+    const { adminKey } = req.body;
+    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.connection?.remoteAddress || 'unknown';
+        await setAdminIP(clientIP);
+        res.json({ success: true, adminIP: clientIP });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Reset admin IP
+app.post('/api/admin/reset-ip', async (req, res) => {
+    const { adminKey } = req.body;
+    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const db = await getDB();
+        db.adminIP = null;
+        const content = { products: db.products, orders: db.orders, adminIP: null, updatedAt: new Date().toISOString() };
+        const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+        await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Reset admin IP', content: updatedContent, sha: db.sha })
+        });
+        dbCache = null;
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // Proxy QRIS
@@ -351,7 +457,7 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
     } catch(e) { res.json({ status: 'pending' }); }
 });
 
-// Get products
+// Products
 app.get('/api/products', async (req, res) => {
     const db = await getDB();
     res.json({ success: true, products: db.products });
@@ -367,39 +473,28 @@ app.post('/api/create-order', async (req, res) => {
     if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
     const orderCode = crypto.randomBytes(16).toString('hex');
     const newOrder = {
-        id: Date.now(),
-        orderCode, qrisId, productId: product.id,
-        productName: product.name,
-        productCode: product.itemContent,
-        price: product.price,
-        totalAmount: totalAmount || product.price,
-        customerName: sanitize(customerName),
-        customerEmail: sanitize(customerEmail || '-'),
-        status: 'pending',
-        qrisImage, expiredAt,
-        createdAt: new Date().toISOString()
+        id: Date.now(), orderCode, qrisId, productId: product.id,
+        productName: product.name, productCode: product.itemContent,
+        price: product.price, totalAmount: totalAmount || product.price,
+        customerName: sanitize(customerName), customerEmail: sanitize(customerEmail || '-'),
+        status: 'pending', qrisImage, expiredAt, createdAt: new Date().toISOString()
     };
     db.orders.unshift(newOrder);
     await setDB(db.products, db.orders, db.sha);
     res.json({ success: true, orderCode });
 });
 
-function sanitize(str) {
-    if (!str) return '';
-    return String(str).replace(/[<>"'&]/g, m => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[m]);
-}
+// ========== ADMIN ENDPOINTS ==========
 
-// Admin stats
+// Stats
 app.get('/api/admin/stats', async (req, res) => {
     const { adminKey } = req.query;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
     const paid = db.orders.filter(o => o.status === 'paid');
-    const revenue = paid.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0);
     res.json({ success: true, stats: {
-        totalProducts: db.products.length,
-        totalOrders: db.orders.length,
-        totalRevenue: revenue,
+        totalProducts: db.products.length, totalOrders: db.orders.length,
+        totalRevenue: paid.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0),
         pendingCount: db.orders.filter(o => o.status === 'pending').length,
         expiredCount: db.orders.filter(o => o.status === 'expired').length,
         cancelledCount: db.orders.filter(o => o.status === 'cancelled').length,
@@ -407,7 +502,7 @@ app.get('/api/admin/stats', async (req, res) => {
     }});
 });
 
-// Admin products
+// Products list
 app.get('/api/admin/products', async (req, res) => {
     const { adminKey } = req.query;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -415,7 +510,7 @@ app.get('/api/admin/products', async (req, res) => {
     res.json({ success: true, products: db.products });
 });
 
-// Admin orders
+// Orders list
 app.get('/api/admin/orders', async (req, res) => {
     const { adminKey } = req.query;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -423,17 +518,17 @@ app.get('/api/admin/orders', async (req, res) => {
     res.json({ success: true, orders: db.orders });
 });
 
-// Admin single product
+// Single product
 app.get('/api/admin/product/:id', async (req, res) => {
     const { adminKey } = req.query;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
     const product = db.products.find(p => p.id == req.params.id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (!product) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true, product });
 });
 
-// Admin add product
+// Add product
 app.post('/api/admin/product', async (req, res) => {
     const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent, adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -444,7 +539,7 @@ app.post('/api/admin/product', async (req, res) => {
     res.json({ success: true });
 });
 
-// Admin update product
+// Update product
 app.put('/api/admin/product/:id', async (req, res) => {
     const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent, adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -457,7 +552,7 @@ app.put('/api/admin/product/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Admin delete product
+// Delete product
 app.delete('/api/admin/product/:id', async (req, res) => {
     const { adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -467,7 +562,7 @@ app.delete('/api/admin/product/:id', async (req, res) => {
     res.json({ success: true });
 });
 
-// Admin reset orders
+// Reset orders
 app.post('/api/admin/reset-orders', async (req, res) => {
     const { adminKey } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
@@ -479,46 +574,10 @@ app.post('/api/admin/reset-orders', async (req, res) => {
     res.json({ success: true, deletedCount: deleted, keptCount: paid.length });
 });
 
-// Admin delete selected
+// Delete selected orders
 app.post('/api/admin/delete-selected-orders', async (req, res) => {
     const { adminKey, orderIds } = req.body;
     if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     if (!orderIds?.length) return res.status(400).json({ error: 'Tidak ada order dipilih' });
     const db = await getDB();
-    db.orders = db.orders.filter(o => !orderIds.includes(o.id.toString()));
-    await setDB(db.products, db.orders, db.sha);
-    res.json({ success: true, deletedCount: orderIds.length });
-});
-
-// Admin backup
-app.post('/api/admin/backup', async (req, res) => {
-    const { adminKey } = req.body;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-    const db = await getDB();
-    const backupData = JSON.stringify({ products: db.products, orders: db.orders }, null, 2);
-    const formData = new FormData();
-    formData.append('chat_id', TELEGRAM_CHAT_ID);
-    formData.append('document', new Blob([backupData], { type: 'application/json' }), `backup_${Date.now()}.json`);
-    formData.append('caption', `📦 Manual Backup\n📅 ${new Date().toLocaleString('id-ID')}`);
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
-    res.json({ success: true });
-});
-
-// Admin broadcast
-app.post('/api/admin/broadcast', async (req, res) => {
-    const { adminKey, message } = req.body;
-    if (adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
-    if (!message) return res.status(400).json({ error: 'Pesan wajib diisi' });
-    const db = await getDB();
-    const unique = [...new Map(db.orders.map(o => [o.customerName, o.customerEmail])).entries()];
-    const sent = unique.filter(([_, email]) => email && email !== '-').length;
-    await sendTelegramMessage(`📢 <b>BROADCAST</b>\n\n${message}\n\n📨 Terkirim ke ${sent} customer.`);
-    res.json({ success: true, sentCount: sent });
-});
-
-// Halaman order
-app.get('/order/:code', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/order.html'));
-});
-
-module.exports = app;
+    db.orders = db.orders.filter(o => !order
