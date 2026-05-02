@@ -32,6 +32,10 @@
       "dest": "public/admin.html"
     },
     {
+      "src": "/ketentuan",
+      "dest": "public/ketentuan.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "public/index.html"
     }
