@@ -10,6 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; padding: 24px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideOut { to { opacity: 0; transform: translateX(100px); } }
         .container { max-width: 1000px; margin: 0 auto; }
         .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 28px; margin-bottom: 28px; border: 1px solid rgba(255,255,255,0.08); }
         h1, h2 { color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
@@ -29,7 +30,8 @@
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; animation: fadeIn 0.3s ease; }
+        .item.removing { animation: slideOut 0.3s ease forwards; }
         .item:hover { background: #334155; }
         .item-info { flex: 1; min-width: 150px; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
@@ -59,6 +61,14 @@
         .load-more-wrap { text-align: center; margin-top: 12px; }
         .btn-load-more { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; border-radius: 30px; color: white; cursor: pointer; font-size: 0.8rem; }
 
+        /* PREVIEW MODAL */
+        .preview-content { text-align: left; }
+        .preview-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+        .preview-section .preview-label { font-size: 0.7rem; color: #60a5fa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .preview-section .preview-text { color: #e2e8f0; font-size: 0.8rem; word-break: break-all; }
+
+        /* MAINTENANCE BADGE */
+        .maint-badge { background: rgba(239,68,68,0.2); color: #fca5a5; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; }
         @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
     </style>
 </head>
@@ -74,7 +84,7 @@
 
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
-            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span></div>
+            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span> <span class="maint-badge hidden" id="maintBadge">MAINTENANCE</span></div>
             <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
@@ -135,6 +145,25 @@
                 <div class="stats-grid" id="statsGrid"></div>
             </div>
             <div class="card">
+                <h2><i class="fas fa-qrcode"></i> QRIS Generator</h2>
+                <input type="number" id="qrisAmount" placeholder="Jumlah (Rp)">
+                <button onclick="generateQRIS()" class="btn-success" style="width:100%;justify-content:center;"><i class="fas fa-qrcode"></i> Generate QRIS</button>
+                <div id="qrisResult" style="margin-top:12px;text-align:center;"></div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-plug"></i> Ping Test</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button onclick="pingTest('github')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button>
+                    <button onclick="pingTest('qrispy')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button>
+                    <button onclick="pingTest('telegram')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Telegram</button>
+                </div>
+                <div id="pingResult" style="margin-top:10px;font-size:0.75rem;color:#94a3b8;text-align:center;"></div>
+            </div>
+            <div class="card">
+                <h2><i class="fas fa-tools"></i> Maintenance Mode</h2>
+                <button id="maintToggleBtn" onclick="toggleMaintenance()" class="btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-power-off"></i> Aktifkan Maintenance</button>
+            </div>
+            <div class="card">
                 <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
                 <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
                 <button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
@@ -170,17 +199,32 @@
     </div>
 </div>
 
+<!-- PREVIEW MODAL -->
+<div id="previewModal" class="modal">
+    <div class="modal-content preview-content">
+        <h3><i class="fas fa-eye"></i> Preview: <span id="previewName"></span></h3>
+        <div id="previewBody"></div>
+        <button onclick="document.getElementById('previewModal').style.display='none'" style="background:#475569;width:100%;justify-content:center;margin-top:12px;"><i class="fas fa-times"></i> Tutup</button>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
+
+<!-- AUDIO -->
+<audio id="chachingSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
 
 <script>
 let adminPassword = '';
 let currentEditId = null;
-let selectedOrders = new Set();
 let autoRefreshInterval = null;
 let autoRefreshOn = false;
 let currentIP = '';
 let allOrders = [], allProducts = [];
 let orderDisplay = 10, productDisplay = 10;
+let lastOrderCount = 0;
+let maintenanceMode = false;
 
 function toast(msg, isError) {
     var t = document.getElementById('toast');
@@ -253,7 +297,16 @@ async function loadOrders() {
     try {
         var res = await fetch('/api/admin/orders?adminKey='+adminPassword);
         var data = await res.json();
-        if (data.success) { allOrders = data.orders||[]; renderOrders(); }
+        if (data.success) { 
+            var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length;
+            if (lastOrderCount > 0 && newCount > lastOrderCount) {
+                // 🎵 SUARA CHA-CHING
+                try { document.getElementById('chachingSound').play(); } catch(e) {}
+                toast('🔔 Order baru masuk!', false);
+            }
+            lastOrderCount = newCount;
+            allOrders = data.orders||[]; renderOrders(); 
+        }
     } catch(e) {}
 }
 function renderOrders() {
@@ -262,7 +315,7 @@ function renderOrders() {
     if (toShow.length) {
         c.innerHTML = toShow.map(function(o) {
             var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
-            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
+            return '<div class="item" id="order-'+o.id+'"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
         }).join('');
     } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
     document.getElementById('ordersLoadMore').style.display = (orderDisplay < allOrders.length) ? 'block' : 'none';
@@ -283,7 +336,7 @@ function renderProducts() {
     var c = document.getElementById('productsList');
     if (toShow.length) {
         c.innerHTML = toShow.map(function(p) {
-            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="testProduct('+p.id+')"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
+            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-success" onclick="testProduct('+p.id+')"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
         }).join('');
     } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; }
     document.getElementById('productsLoadMore').style.display = (productDisplay < allProducts.length) ? 'block' : 'none';
@@ -309,6 +362,93 @@ async function loadStats() {
     } catch(e) {}
 }
 
+// ========== PREVIEW PRODUK (FITUR 9) ==========
+async function previewProduct(pid) {
+    var product = allProducts.find(function(p){ return p.id == pid; });
+    if (!product) return;
+    document.getElementById('previewName').textContent = product.name;
+    var body = '';
+    if (product.itemType === 'html') {
+        body = '<div class="preview-section"><div class="preview-label">HTML Content</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
+    } else if (product.itemType === 'link' || (product.itemContent||'').startsWith('http')) {
+        body = '<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(product.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(product.itemContent)+'</a></div></div>';
+    } else {
+        body = '<div class="preview-section"><div class="preview-label">Konten Teks</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
+    }
+    if (product.bonusContent) {
+        body += '<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>';
+    }
+    body += '<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>';
+    document.getElementById('previewBody').innerHTML = body;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+
+// ========== ANIMASI HAPUS ORDER (FITUR 6) ==========
+async function deleteProduct(id) {
+    if (!confirm('Hapus produk ini?')) return;
+    var el = document.getElementById('order-'+id);
+    if (el) { el.classList.add('removing'); await new Promise(function(r){ setTimeout(r, 300); }); }
+    await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
+    productDisplay = 10; loadProducts(); loadStats();
+    toast('🗑️ Produk dihapus');
+}
+
+// ========== QRIS GENERATOR (FITUR 33) ==========
+async function generateQRIS() {
+    var amount = parseInt(document.getElementById('qrisAmount').value);
+    if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
+    try {
+        var res = await fetch('/api/generate-qris-proxy', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ amount: amount }) });
+        var data = await res.json();
+        if (data.status === 'success') {
+            document.getElementById('qrisResult').innerHTML = '<img src="'+data.data.qris_image_url+'" style="max-width:180px;border-radius:16px;margin:0 auto;display:block;"><p style="color:#10b981;margin-top:6px;">✅ QRIS Rp '+amount.toLocaleString()+'</p>';
+        } else { toast('Gagal generate', true); }
+    } catch(e) { toast('Error', true); }
+}
+
+// ========== PING TEST (FITUR 35) ==========
+async function pingTest(target) {
+    var result = document.getElementById('pingResult');
+    result.innerHTML = '⏳ Testing...';
+    var start = Date.now();
+    try {
+        var url = target==='github' ? 'https://api.github.com' : target==='qrispy' ? 'https://api.qrispy.id' : 'https://api.telegram.org';
+        var res = await fetch(url);
+        var latency = Date.now() - start;
+        result.innerHTML = '✅ <b>'+target.toUpperCase()+'</b>: <span style="color:#10b981;">'+latency+'ms</span> (HTTP '+res.status+')';
+    } catch(e) {
+        result.innerHTML = '❌ <b>'+target.toUpperCase()+'</b>: <span style="color:#ef4444;">GAGAL</span>';
+    }
+}
+
+// ========== MAINTENANCE MODE (FITUR 38) ==========
+function toggleMaintenance() {
+    maintenanceMode = !maintenanceMode;
+    var btn = document.getElementById('maintToggleBtn');
+    var badge = document.getElementById('maintBadge');
+    if (maintenanceMode) {
+        btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+        btn.classList.add('active');
+        badge.classList.remove('hidden');
+        localStorage.setItem('yto_maintenance', '1');
+        toast('🔧 Maintenance mode AKTIF');
+    } else {
+        btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
+        btn.classList.remove('active');
+        badge.classList.add('hidden');
+        localStorage.removeItem('yto_maintenance');
+        toast('✅ Maintenance mode NONAKTIF');
+    }
+}
+// Cek localStorage pas load
+if (localStorage.getItem('yto_maintenance') === '1') {
+    maintenanceMode = true;
+    document.getElementById('maintBadge').classList.remove('hidden');
+    document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+    document.getElementById('maintToggleBtn').classList.add('active');
+}
+
+// ========== PRODUCT CRUD ==========
 async function addProduct() {
     var it = document.getElementById('itemType').value;
     var ic = ''; if (it==='text') ic=document.getElementById('itemText').value; else if (it==='link') ic=document.getElementById('itemLink').value; else if (it==='html') ic=document.getElementById('itemHtml').value;
@@ -323,7 +463,6 @@ async function testProduct(pid) {
     var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey: adminPassword }) });
     if (res.ok) { var h = await res.text(); var w = window.open(); w.document.write(h); w.document.close(); }
 }
-async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); productDisplay=10; loadProducts(); loadStats(); } }
 async function openEditModal(id) {
     var res = await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword);
     var data = await res.json();
