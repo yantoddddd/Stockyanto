@@ -9,11 +9,11 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ========== KONFIGURASI ==========
-const ADMIN_KEY = process.env.ADMIN_KEY || 'nisaimut';
-const QRISPY_TOKEN = process.env.QRISPY_TOKEN || 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
+const ADMIN_KEY = process.env.ADMIN_KEY;
+const QRISPY_TOKEN = process.env.QRISPY_TOKEN;
 const QRISPY_API_URL = 'https://api.qrispy.id';
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '8182530431';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
@@ -21,7 +21,7 @@ const GITHUB_PATH = 'database.json';
 // ========== CACHE ==========
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 10000; // 10 detik
+const CACHE_TTL = 10000;
 
 // ========== RATE LIMITER ==========
 const rateLimitMap = new Map();
@@ -46,6 +46,7 @@ app.use(rateLimit);
 const logBuffer = [];
 async function sendLogToTelegram(logEntry) {
     try {
+        if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -122,7 +123,6 @@ async function setDB(products, orders, oldSha, retryCount) {
             const freshDB = await getDB();
             return setDB(products, orders, freshDB.sha, retryCount + 1);
         }
-        console.error('GitHub save error:', errorData.message || res.status);
         throw new Error('GitHub save failed');
     }
     const data = await res.json();
@@ -156,6 +156,7 @@ async function setAdminIP(ip) {
 
 async function sendTelegramMessage(text) {
     try {
+        if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -171,6 +172,7 @@ setInterval(async () => {
 
 // ========== AUTO BACKUP JAM 3 WIB ==========
 async function autoBackupToTelegram() {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     try {
         const db = await getDB();
         const backupData = JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP, updatedAt: db.updatedAt }, null, 2);
@@ -194,6 +196,7 @@ setInterval(async () => {
 
 // ========== AUTO REPORT JAM 00:00 WIB ==========
 async function dailyRevenueReport() {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     try {
         const db = await getDB();
         const wib = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
@@ -258,6 +261,7 @@ setInterval(cleanupOrders, 30 * 1000);
 
 // ========== CANCEL QRIS ==========
 async function cancelQRISInQrispy(qrisId) {
+    if (!QRISPY_TOKEN) return false;
     try {
         const res = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/cancel`, {
             method: 'POST',
@@ -334,6 +338,7 @@ app.post('/api/admin/reset-ip', async (req, res) => {
 app.post('/api/generate-qris-proxy', async (req, res) => {
     const { amount } = req.body;
     if (!amount) return res.status(400).json({ error: 'Amount diperlukan' });
+    if (!QRISPY_TOKEN) return res.status(500).json({ error: 'QRISPY_TOKEN belum diset' });
     try {
         const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, {
             method: 'POST',
@@ -391,6 +396,7 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
         await setDB(db.products, db.orders, db.sha);
         return res.json({ status: 'expired' });
     }
+    if (!QRISPY_TOKEN) return res.json({ status: 'pending' });
     try {
         const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } });
         const data = await response.json();
@@ -523,6 +529,7 @@ app.post('/api/admin/backup', async (req, res) => {
     if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' });
     const db = await getDB();
     const backupData = JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP }, null, 2);
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return res.json({ success: true, note: 'Telegram not configured' });
     const formData = new FormData();
     formData.append('chat_id', TELEGRAM_CHAT_ID);
     formData.append('document', new Blob([backupData], { type: 'application/json' }), `backup_${Date.now()}.json`);
