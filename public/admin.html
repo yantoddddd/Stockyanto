@@ -56,7 +56,6 @@
 <body>
 <div class="container">
 
-    <!-- LOGIN CARD -->
     <div class="card" id="loginCard">
         <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin">
@@ -64,7 +63,6 @@
         <div id="loginError"></div>
     </div>
 
-    <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
             <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span></div>
@@ -143,7 +141,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-let adminKey = '';
+let adminPassword = '';
 let currentEditId = null;
 let selectedOrders = new Set();
 let autoRefreshInterval = null;
@@ -158,10 +156,7 @@ function toast(msg, isError) {
     setTimeout(function() { t.style.opacity = '0'; }, 3000);
 }
 
-function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
-}
+function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
 
 async function getMyIP() {
     try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; }
@@ -169,47 +164,29 @@ async function getMyIP() {
 }
 
 function goToUnauthorized() { window.location.href = '/unauthorized'; }
+function showLoginForm() { document.getElementById('loginCard').style.display = 'block'; document.getElementById('adminContent').style.display = 'none'; }
+function showAdminPanel() { document.getElementById('loginCard').style.display = 'none'; document.getElementById('adminContent').style.display = 'block'; document.getElementById('currentIP').textContent = currentIP || '-'; document.getElementById('ipStatus').textContent = 'Admin'; document.getElementById('ipStatus').style.color = '#10b981'; loadStats(); loadProducts(); loadOrders(); }
 
-// ========== AUTO LOGIN CHECK ==========
+// ========== AUTO LOGIN ==========
 async function checkAutoLogin() {
     currentIP = await getMyIP();
     if (!currentIP) { showLoginForm(); return; }
     document.getElementById('currentIP').textContent = currentIP;
-
     try {
         var res = await fetch('/api/admin/check-ip');
         var data = await res.json();
-        if (data.isAdmin) { adminKey = ''; showAdminPanel(); return; }
-        if (!data.hasAdmin) { showLoginForm('Belum diatur', '#f59e0b'); return; }
+        if (data.isAdmin) { adminPassword = ''; showAdminPanel(); return; }
+        if (!data.hasAdmin) { showLoginForm(); return; }
         goToUnauthorized();
     } catch(e) { showLoginForm(); }
 }
 
-function showLoginForm(statusText, statusColor) {
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
-    if (statusText) {
-        document.getElementById('ipStatus').textContent = statusText;
-        document.getElementById('ipStatus').style.color = statusColor || '#f59e0b';
-    }
-}
-
-function showAdminPanel() {
-    document.getElementById('loginCard').style.display = 'none';
-    document.getElementById('adminContent').style.display = 'block';
-    document.getElementById('currentIP').textContent = currentIP || '-';
-    document.getElementById('ipStatus').textContent = 'Admin';
-    document.getElementById('ipStatus').style.color = '#10b981';
-    loadStats(); loadProducts(); loadOrders();
-}
-
-// ========== LOGIN (VALIDASI VIA BACKEND) ==========
+// ========== LOGIN ==========
 async function doLogin() {
     var password = document.getElementById('adminKeyInput').value;
     var errorDiv = document.getElementById('loginError');
     if (!password) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
     errorDiv.style.display = 'none';
-
     try {
         var res = await fetch('/api/admin/set-ip', {
             method: 'POST',
@@ -217,60 +194,39 @@ async function doLogin() {
             body: JSON.stringify({ adminKey: password })
         });
         if (res.ok) {
-            adminKey = password;
+            adminPassword = password;
             showAdminPanel();
             toast('Login berhasil! IP disimpan sebagai Admin.');
         } else {
             errorDiv.innerText = 'Kunci admin salah!';
             errorDiv.style.display = 'block';
         }
-    } catch(e) {
-        errorDiv.innerText = 'Gagal terhubung ke server';
-        errorDiv.style.display = 'block';
-    }
+    } catch(e) { errorDiv.innerText = 'Gagal terhubung'; errorDiv.style.display = 'block'; }
 }
 
-function doLogout() {
-    adminKey = '';
-    showLoginForm('Bukan Admin', '#ef4444');
-    document.getElementById('adminKeyInput').value = '';
-    if (autoRefreshOn) toggleAutoRefresh();
-    toast('Logout berhasil.');
-}
+function doLogout() { adminPassword = ''; showLoginForm(); document.getElementById('adminKeyInput').value = ''; if (autoRefreshOn) toggleAutoRefresh(); toast('Logout berhasil.'); }
 
 async function doResetIP() {
-    if (!confirm('Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan jadi Admin baru.')) return;
-    try {
-        await fetch('/api/admin/reset-ip', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey: adminKey })
-        });
-    } catch(e) {}
-    adminKey = '';
-    showLoginForm('Belum diatur', '#f59e0b');
-    document.getElementById('adminKeyInput').value = '';
-    if (autoRefreshOn) toggleAutoRefresh();
-    toast('IP Admin direset.');
+    if (!confirm('Reset kunci IP Admin?')) return;
+    try { await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); } catch(e) {}
+    adminPassword = ''; showLoginForm(); document.getElementById('adminKeyInput').value = ''; if (autoRefreshOn) toggleAutoRefresh(); toast('IP Admin direset.');
 }
 
-// ========== AUTO REFRESH ==========
 function toggleAutoRefresh() {
     autoRefreshOn = !autoRefreshOn;
     var btn = document.getElementById('autoRefreshBtn');
-    if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000); toast('Auto refresh ON'); }
-    else { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); autoRefreshInterval = null; toast('Auto refresh OFF'); }
+    if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000); }
+    else { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
 }
 
-function refreshAll() { loadStats(); loadProducts(); loadOrders(); toast('Data diperbarui'); }
+function refreshAll() { loadStats(); loadProducts(); loadOrders(); }
 function updateSelectedCount() { document.getElementById('selectedCount').innerText = selectedOrders.size + ' dipilih'; }
 
 async function deleteSelected() {
-    if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
+    if (selectedOrders.size === 0) return;
     if (!confirm('Hapus ' + selectedOrders.size + ' order?')) return;
-    var res = await fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, orderIds: Array.from(selectedOrders) }) });
-    if (res.ok) { toast('✅ ' + selectedOrders.size + ' order dihapus'); selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
-    else { toast('Gagal', true); }
+    var res = await fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, orderIds: Array.from(selectedOrders) }) });
+    if (res.ok) { selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
 }
 
 function selectAllOrders() {
@@ -284,7 +240,7 @@ function toggleOrderSelect(cb) { if (cb.checked) selectedOrders.add(cb.value); e
 
 async function loadStats() {
     try {
-        var res = await fetch('/api/admin/stats?adminKey=' + adminKey);
+        var res = await fetch('/api/admin/stats?adminKey=' + adminPassword);
         var data = await res.json();
         if (data.success) {
             var s = data.stats;
@@ -300,7 +256,7 @@ async function loadStats() {
 }
 
 async function loadProducts() {
-    var res = await fetch('/api/admin/products?adminKey=' + adminKey);
+    var res = await fetch('/api/admin/products?adminKey=' + adminPassword);
     var data = await res.json();
     var c = document.getElementById('productsList');
     if (data.success && data.products.length) {
@@ -312,7 +268,7 @@ async function loadProducts() {
 
 async function loadOrders() {
     try {
-        var res = await fetch('/api/admin/orders?adminKey=' + adminKey);
+        var res = await fetch('/api/admin/orders?adminKey=' + adminPassword);
         var data = await res.json();
         var c = document.getElementById('ordersList');
         if (data.success && data.orders.length) {
@@ -333,24 +289,23 @@ async function addProduct() {
     if (!ic) { toast('Konten wajib diisi', true); return; }
     var bt = document.getElementById('bonusType').value;
     var bc = ''; if (bt==='text') bc=document.getElementById('bonusText').value; else if (bt==='link') bc=document.getElementById('bonusLink').value;
-    var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+    var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
     if (res.ok) { toast('Produk ditambahkan'); document.getElementById('productName').value=''; document.getElementById('productDesc').value=''; document.getElementById('productPrice').value=''; document.getElementById('productStock').value=''; document.getElementById('itemText').value=''; document.getElementById('itemLink').value=''; document.getElementById('itemHtml').value=''; document.getElementById('bonusText').value=''; document.getElementById('bonusLink').value=''; loadProducts(); loadStats(); }
     else { toast('Gagal', true); }
 }
 
 async function testProduct(pid) {
-    toast('Membuat test order...');
     try {
-        var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey }) });
+        var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey: adminPassword }) });
         if (res.ok) { var h = await res.text(); var w = window.open(); w.document.write(h); w.document.close(); toast('✅ Berhasil!'); }
         else { toast('❌ Gagal', true); }
     } catch(e) { toast('❌ Error', true); }
 }
 
-async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) }); loadProducts(); loadStats(); } }
+async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); loadProducts(); loadStats(); } }
 
 async function openEditModal(id) {
-    var res = await fetch('/api/admin/product/'+id+'?adminKey='+adminKey);
+    var res = await fetch('/api/admin/product/'+id+'?adminKey=' + adminPassword);
     var data = await res.json();
     if (data.success && data.product) {
         var p = data.product; currentEditId = p.id;
@@ -371,29 +326,27 @@ async function saveEditProduct() {
     if (!ic) { toast('Konten wajib diisi', true); return; }
     var bt = document.getElementById('editBonusType').value;
     var bc = ''; if (bt==='text') bc=document.getElementById('editBonusText').value; else if (bt==='link') bc=document.getElementById('editBonusLink').value;
-    var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+    var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
     if (res.ok) { toast('Diupdate'); closeEditModal(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
 }
 
 async function resetOrders() {
-    if (!confirm('Hapus semua Pending & Cancelled? Paid aman.')) return;
-    var res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
-    if (res.ok) { var d = await res.json(); toast('✅ '+d.deletedCount+' dihapus, '+d.keptCount+' paid'); loadOrders(); loadStats(); }
-    else { toast('Gagal', true); }
+    if (!confirm('Hapus semua Pending & Cancelled?')) return;
+    var res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
+    if (res.ok) { var d = await res.json(); toast('✅ '+d.deletedCount+' dihapus'); loadOrders(); loadStats(); }
 }
 
 async function backupData() {
-    var res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
+    var res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
     if (res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true);
 }
 
 async function sendBroadcast() {
     var msg = document.getElementById('broadcastMessage').value.trim();
-    if (!msg) { toast('Pesan wajib diisi', true); return; }
-    var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, message:msg }) });
+    if (!msg) return;
+    var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, message:msg }) });
     var d = await res.json();
     if (d.success) { toast('📢 Terkirim ke '+d.sentCount+' customer'); document.getElementById('broadcastMessage').value=''; }
-    else { toast('Gagal', true); }
 }
 
 function toggleItemFields() {
