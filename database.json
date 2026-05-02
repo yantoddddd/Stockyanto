@@ -101,6 +101,18 @@
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-05-01T10:31:02.022Z"
+    },
+    {
+      "id": 1777725778793,
+      "name": "Bokep",
+      "description": "Bokep",
+      "price": 11121,
+      "stock": 1,
+      "itemType": "text",
+      "itemContent": "Awokawok",
+      "bonusType": "none",
+      "bonusContent": "",
+      "createdAt": "2026-05-02T12:42:58.794Z"
     }
   ],
   "orders": [
@@ -803,5 +815,5 @@
     }
   ],
   "adminIP": "182.8.225.217",
-  "updatedAt": "2026-05-02T12:05:52.834Z"
+  "updatedAt": "2026-05-02T12:42:58.794Z"
 }
