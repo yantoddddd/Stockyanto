@@ -169,7 +169,6 @@ let currentIP = '';
 const STORAGE_IP = 'yanto_admin_ip';
 const STORAGE_SESSION = 'yanto_admin_session';
 
-// ========== TOAST ==========
 function toast(msg, isError = false) {
     const t = document.getElementById('toast');
     t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
@@ -187,23 +186,12 @@ async function getMyIP() {
     } catch(e) { return null; }
 }
 
-function getSavedAdminIP() {
-    return localStorage.getItem(STORAGE_IP);
-}
-
-function saveAdminIP(ip) {
-    localStorage.setItem(STORAGE_IP, ip);
-}
-
-function clearAdminIP() {
-    localStorage.removeItem(STORAGE_IP);
-}
+function getSavedAdminIP() { return localStorage.getItem(STORAGE_IP); }
+function saveAdminIP(ip) { localStorage.setItem(STORAGE_IP, ip); }
+function clearAdminIP() { localStorage.removeItem(STORAGE_IP); }
 
 function saveSession() {
-    localStorage.setItem(STORAGE_SESSION, JSON.stringify({
-        ip: currentIP,
-        time: Date.now()
-    }));
+    localStorage.setItem(STORAGE_SESSION, JSON.stringify({ ip: currentIP, time: Date.now() }));
 }
 
 function checkSession() {
@@ -211,7 +199,6 @@ function checkSession() {
     if (!saved) return false;
     try {
         const session = JSON.parse(saved);
-        // Session berlaku 30 hari
         if (Date.now() - session.time < 30 * 24 * 60 * 60 * 1000) {
             return session.ip === currentIP;
         }
@@ -219,18 +206,25 @@ function checkSession() {
     return false;
 }
 
-function clearSession() {
-    localStorage.removeItem(STORAGE_SESSION);
+function clearSession() { localStorage.removeItem(STORAGE_SESSION); }
+
+// ========== REDIRECT KE UNAUTHORIZED ==========
+function redirectUnauthorized() {
+    window.location.href = '/unauthorized';
 }
 
 // ========== LOGIN / LOGOUT ==========
 async function tryAutoLogin() {
     currentIP = await getMyIP();
-    document.getElementById('currentIP').textContent = currentIP || 'Tidak terdeteksi';
+    if (!currentIP) {
+        document.getElementById('loginCard').style.display = 'block';
+        return;
+    }
     
+    document.getElementById('currentIP').textContent = currentIP;
     const savedIP = getSavedAdminIP();
     
-    // Kasus 1: Belum ada IP tersimpan → tampilkan form login
+    // Kasus 1: Belum ada IP Admin → tampilkan form login
     if (!savedIP) {
         document.getElementById('loginCard').style.display = 'block';
         document.getElementById('adminContent').style.display = 'none';
@@ -239,28 +233,23 @@ async function tryAutoLogin() {
         return;
     }
     
-    // Kasus 2: IP cocok DAN session masih ada → auto login
+    // Kasus 2: IP lo cocok DAN session ada → auto login
     if (currentIP === savedIP && checkSession()) {
         adminKey = 'nisaimut';
         showAdminPanel();
-        toast('Auto-login! IP Admin terdeteksi.');
         return;
     }
     
-    // Kasus 3: IP cocok tapi session expired → auto login + buat session baru
+    // Kasus 3: IP lo cocok tapi session expired → auto login + buat session baru
     if (currentIP === savedIP) {
         adminKey = 'nisaimut';
         saveSession();
         showAdminPanel();
-        toast('Auto-login! IP Admin terdeteksi.');
         return;
     }
     
-    // Kasus 4: IP TIDAK cocok → tampilkan form login
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
-    document.getElementById('ipStatus').textContent = 'Bukan Admin';
-    document.getElementById('ipStatus').style.color = '#ef4444';
+    // Kasus 4: IP TIDAK cocok → redirect ke unauthorized
+    redirectUnauthorized();
 }
 
 function login() {
@@ -271,7 +260,6 @@ function login() {
     
     if (key === 'nisaimut') {
         adminKey = key;
-        // Simpan IP lo sebagai admin (pertama kali)
         saveAdminIP(currentIP);
         saveSession();
         showAdminPanel();
@@ -297,13 +285,11 @@ function logout() {
     document.getElementById('adminContent').style.display = 'none';
     document.getElementById('adminKey').value = '';
     if (autoRefreshOn) toggleAutoRefresh();
-    document.getElementById('ipStatus').textContent = 'Bukan Admin';
-    document.getElementById('ipStatus').style.color = '#ef4444';
-    toast('Logout berhasil. Session dihapus.');
+    toast('Logout berhasil.');
 }
 
 function resetIPLock() {
-    if (confirm('⚠️ Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan disimpan sebagai Admin baru.\n\nHanya lakukan ini kalau lo ganti jaringan/ISP.')) {
+    if (confirm('⚠️ Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan disimpan sebagai Admin baru.')) {
         clearAdminIP();
         clearSession();
         document.getElementById('loginCard').style.display = 'block';
@@ -331,22 +317,15 @@ function toggleAutoRefresh() {
     }
 }
 
-function refreshAll() {
-    loadStats(); loadProducts(); loadOrders();
-    toast('Data diperbarui');
-}
+function refreshAll() { loadStats(); loadProducts(); loadOrders(); toast('Data diperbarui'); }
 
-// ========== SELECTION ==========
 function updateSelectedCount() { document.getElementById('selectedCount').innerText = `${selectedOrders.size} dipilih`; }
 
 async function deleteSelected() {
     if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
     if (confirm(`Hapus ${selectedOrders.size} order yang dipilih?`)) {
         const orderIds = Array.from(selectedOrders);
-        const res = await fetch('/api/admin/delete-selected-orders', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey, orderIds })
-        });
+        const res = await fetch('/api/admin/delete-selected-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey, orderIds }) });
         if (res.ok) { toast(`✅ ${selectedOrders.size} order dihapus`); selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
         else { toast('Gagal hapus', true); }
     }
@@ -364,7 +343,6 @@ function toggleOrderSelect(checkbox) {
     updateSelectedCount();
 }
 
-// ========== LOAD DATA ==========
 async function loadStats() {
     try {
         const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
@@ -379,7 +357,7 @@ async function loadStats() {
                 <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
                 <div class="stat-card"><div class="stat-number">${s.expiredCount + s.cancelledCount}</div><div class="stat-label">Expired/Cancel</div></div>`;
         }
-    } catch(e) { console.error(e); }
+    } catch(e) {}
 }
 
 async function loadProducts() {
@@ -418,10 +396,9 @@ async function loadOrders() {
             document.getElementById('selectAllBtn').onclick = () => selectAllOrders();
             document.getElementById('deleteSelectedBtn').onclick = () => deleteSelected();
         } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
-    } catch(e) { console.error(e); }
+    } catch(e) {}
 }
 
-// ========== PRODUCT ACTIONS ==========
 async function addProduct() {
     const itemType = document.getElementById('itemType').value;
     let itemContent = '';
@@ -483,7 +460,7 @@ async function saveEditProduct() {
 }
 
 async function resetOrders() {
-    if (confirm('⚠️ PERINGATAN: Semua order PENDING dan CANCELLED akan dihapus! Order PAID tetap aman. Lanjutkan?')) {
+    if (confirm('⚠️ Semua order PENDING dan CANCELLED akan dihapus! Order PAID tetap aman. Lanjutkan?')) {
         const res = await fetch('/api/admin/reset-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) });
         if (res.ok) { const data = await res.json(); toast(`✅ ${data.deletedCount} order dihapus, ${data.keptCount} order paid tersimpan`); loadOrders(); loadStats(); }
         else { toast('Gagal reset order', true); }
@@ -506,7 +483,6 @@ async function sendBroadcast() {
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
-// ========== ITEM FIELDS ==========
 function toggleItemFields() {
     const type = document.getElementById('itemType').value;
     document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden');
