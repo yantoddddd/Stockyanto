@@ -130,7 +130,7 @@
     <div class="header">
         <div class="logo">
             <h1><i class="fas fa-store"></i> Yanto Store</h1>
-            <p>AutoOrder Digital</p>
+            <p>Auto Order Digital</p>
         </div>
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
@@ -240,7 +240,7 @@
 
             // Ambil order untuk hitung penjualan & testimoni
             try {
-                var orderRes = await fetch('/api/admin/orders?adminKey=rahasia123');
+                var orderRes = await fetch('/api/admin/orders?adminKey=nisaimut');
                 var orderData = await orderRes.json();
                 if (orderData.success && orderData.orders) {
                     orderData.orders.forEach(function(o) {
