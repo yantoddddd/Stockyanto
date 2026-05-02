@@ -11,7 +11,7 @@
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; padding: 24px 16px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .container { max-width: 1200px; margin: 0 auto; }
-        
+
         /* HEADER */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 60px; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.08); }
         .logo h1 { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; display: flex; align-items: center; gap: 8px; }
@@ -30,7 +30,7 @@
         .sidebar-stat { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 14px; margin-bottom: 8px; }
         .sidebar-stat .stat-num { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
         .sidebar-stat .stat-label { font-size: 0.7rem; color: #64748b; }
-        
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
         .overlay.show { display: block; }
 
@@ -50,6 +50,7 @@
         .product-card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; cursor: pointer; animation: fadeIn 0.4s ease; animation-fill-mode: both; position: relative; }
         .product-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.1); border-color: rgba(59,130,246,0.3); }
         .product-badge { position: absolute; top: 14px; right: 14px; background: rgba(59,130,246,0.2); color: #60a5fa; padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; }
+        .product-badge.hot { background: rgba(239,68,68,0.2); color: #fca5a5; }
         .product-name { font-size: 1.3rem; font-weight: 600; color: white; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
         .product-desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 16px; line-height: 1.4; }
         .product-price { font-size: 1.8rem; font-weight: 700; color: #60a5fa; margin: 12px 0; }
@@ -57,7 +58,7 @@
         .btn-buy { background: linear-gradient(95deg, #2563eb, #1d4ed8); border: none; width: 100%; padding: 12px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-buy:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
         .btn-buy:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
-        
+
         /* MODAL */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
         .modal-content { background: #0f172a; border-radius: 32px; padding: 32px; max-width: 400px; width: 90%; border: 1px solid #334155; }
@@ -72,7 +73,7 @@
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; z-index: 1200; color: white; display: flex; align-items: center; gap: 8px; }
         .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
+
         @media (max-width: 640px) {
             .products-grid { grid-template-columns: 1fr; }
         }
@@ -158,32 +159,32 @@
             var res = await fetch('/api/products');
             var data = await res.json();
             var grid = document.getElementById('productsGrid');
-            
+
             if (!data.products || data.products.length === 0) {
                 grid.innerHTML = '<div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
                 return;
             }
 
-            // Ambil data order buat hitung terjual
+            // Ambil data order untuk hitung penjualan & testimoni
             var soldMap = {};
             try {
                 var orderRes = await fetch('/api/admin/orders?adminKey=rahasia123');
                 var orderData = await orderRes.json();
                 if (orderData.success && orderData.orders) {
-                    // Hitung per produk
+                    // Hitung jumlah terjual per produk (hanya yang status paid)
                     orderData.orders.forEach(function(o) {
                         if (o.status === 'paid') {
                             soldMap[o.productId] = (soldMap[o.productId] || 0) + 1;
                         }
                     });
-                    // Update sidebar
+                    // Update sidebar: order hari ini
                     var today = new Date().toISOString().split('T')[0];
                     var todayOrders = orderData.orders.filter(function(o) {
                         return o.status === 'paid' && (o.paidAt || o.createdAt).startsWith(today);
                     });
                     document.getElementById('menuTodayOrders').innerText = todayOrders.length + ' order';
-                    
-                    // Testimoni
+
+                    // Testimoni: 8 pembeli terakhir (dari yang paling baru)
                     var paidOrders = orderData.orders.filter(function(o) { return o.status === 'paid'; }).slice(-8).reverse();
                     if (paidOrders.length > 0) {
                         document.getElementById('testimoniBar').style.display = 'block';
@@ -194,14 +195,25 @@
                 }
             } catch(e) {}
 
+            // Update jumlah produk tersedia di sidebar
             document.getElementById('menuProducts').innerText = data.products.filter(function(p) { return p.stock > 0; }).length;
 
+            // === UBAHAN 1: Urutkan produk dari yang paling laris ===
+            data.products.sort(function(a, b) {
+                return (soldMap[b.id] || 0) - (soldMap[a.id] || 0);
+            });
+
+            // Render produk
             grid.innerHTML = data.products.map(function(p, i) {
                 var sold = soldMap[p.id] || 0;
                 var badgeHtml = '';
-                if (sold >= 10) badgeHtml = '<span class="product-badge" style="background:rgba(239,68,68,0.2);color:#fca5a5;">Laris</span>';
-                else if (sold >= 3) badgeHtml = '<span class="product-badge">Terjual ' + sold + '</span>';
-                
+                // === UBAHAN 2: Tampilkan badge walau hanya terjual 1 ===
+                if (sold >= 10) {
+                    badgeHtml = '<span class="product-badge hot">Laris (Terjual ' + sold + ')</span>';
+                } else if (sold > 0) {
+                    badgeHtml = '<span class="product-badge">Terjual ' + sold + '</span>';
+                }
+
                 return '<div class="product-card" style="animation-delay: ' + (i * 0.05) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' +
                     badgeHtml +
                     '<div class="product-name"><i class="fas fa-box"></i> ' + escapeHtml(p.name) + '</div>' +
@@ -216,7 +228,7 @@
 
     function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = 'Rp ' + product.price.toLocaleString(); document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; currentProduct = null; }
-    
+
     async function generateQRIS(amount) { var response = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount }) }); var data = await response.json(); if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS'); return data.data; }
 
     document.getElementById('createOrderBtn').onclick = async function() {
