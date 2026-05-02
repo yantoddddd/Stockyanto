@@ -20,6 +20,7 @@
         input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
         button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
         button:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        button.active { background: #10b981; }
         .btn-danger { background: #b91c1c; }
         .btn-warning { background: #f59e0b; }
         .btn-success { background: #10b981; }
@@ -27,9 +28,9 @@
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .item:hover { background: #334155; }
-        .item-info { flex: 1; }
+        .item-info { flex: 1; min-width: 150px; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
         .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -43,7 +44,8 @@
         .broadcast-area { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
         textarea { resize: vertical; }
         .selection-bar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-checkbox { order: 0; } .item-info { order: 1; width: 100%; } .item-actions { order: 2; width: 100%; justify-content: flex-end; } }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
     </style>
 </head>
 <body>
@@ -85,6 +87,10 @@
         
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
+            <div class="toolbar">
+                <button class="btn-success" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
+                <button class="btn-warning" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh Data</button>
+            </div>
             <div class="selection-bar">
                 <button id="selectAllBtn" class="btn-success" style="background:#475569;"><i class="fas fa-check-double"></i> Pilih Semua</button>
                 <button id="deleteSelectedBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih</button>
@@ -136,6 +142,8 @@
 let adminKey = '';
 let currentEditId = null;
 let selectedOrders = new Set();
+let autoRefreshInterval = null;
+let autoRefreshOn = false;
 
 function toast(msg, isError = false) {
     const t = document.getElementById('toast');
@@ -181,32 +189,34 @@ function toggleOrderSelect(checkbox) {
 }
 
 async function loadStats() {
-    const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
-    const data = await res.json();
-    if (data.success) {
-        const s = data.stats;
-        document.getElementById('statsGrid').innerHTML = `
-            <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Produk</div></div>
-            <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Order</div></div>
-            <div class="stat-card"><div class="stat-number">Rp ${s.totalRevenue.toLocaleString()}</div><div class="stat-label">Pendapatan</div></div>
-            <div class="stat-card"><div class="stat-number">${s.pendingCount}</div><div class="stat-label">Pending</div></div>
-            <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
-            <div class="stat-card"><div class="stat-number">${s.expiredCount + s.cancelledCount}</div><div class="stat-label">Expired/Cancel</div></div>
-        `;
-    }
+    try {
+        const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
+        const data = await res.json();
+        if (data.success) {
+            const s = data.stats;
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Produk</div></div>
+                <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Order</div></div>
+                <div class="stat-card"><div class="stat-number">Rp ${s.totalRevenue.toLocaleString()}</div><div class="stat-label">Pendapatan</div></div>
+                <div class="stat-card"><div class="stat-number">${s.pendingCount}</div><div class="stat-label">Pending</div></div>
+                <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
+                <div class="stat-card"><div class="stat-number">${s.expiredCount + s.cancelledCount}</div><div class="stat-label">Expired/Cancel</div></div>
+            `;
+        }
+    } catch(e) { console.error(e); }
 }
 
-async function login() {
+function login() {
     const key = document.getElementById('adminKey').value;
     const errorDiv = document.getElementById('loginError');
     if (!key) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
     errorDiv.style.display = 'none';
     
-    if (key === 'rahasia123') {
+    if (key === 'nisaimut') {
         adminKey = key;
         document.getElementById('loginCard').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
-        await loadStats(); await loadProducts(); await loadOrders();
+        loadStats(); loadProducts(); loadOrders();
         toast('Login berhasil');
     } else {
         errorDiv.innerText = 'Kunci admin salah!';
@@ -260,7 +270,7 @@ async function addProduct() {
     else if (bonusType === 'link') bonusContent = document.getElementById('bonusLink').value;
     const res = await fetch('/api/admin/product', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey, name: document.getElementById('productName').value, description: document.getElementById('productDesc').value, price: parseInt(document.getElementById('productPrice').value), stock: parseInt(document.getElementById('productStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
+        body: JSON.stringify({ adminKey, name: document.getElementById('productName').value, description: document.getElementById('productDesc').value, price: parseInt(document.getElementById('productPrice').value), stock: parseInt(document.getElementById('productStock').value) || 1, itemType, itemContent, bonusType, bonusContent })
     });
     if (res.ok) {
         toast('Produk ditambahkan');
@@ -357,24 +367,26 @@ async function saveEditProduct() {
 }
 
 async function loadOrders() {
-    const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
-    const data = await res.json();
-    const container = document.getElementById('ordersList');
-    if (data.success && data.orders.length) {
-        container.innerHTML = data.orders.map(o => `
-            <div class="item">
-                <input type="checkbox" class="order-checkbox" value="${o.id}" onchange="toggleOrderSelect(this)">
-                <div class="item-info">
-                    <div class="item-name">${escapeHtml(o.productName)}</div>
-                    <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : (o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled'))}</div>
-                    <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()} | ID: ${o.id}</div>
+    try {
+        const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
+        const data = await res.json();
+        const container = document.getElementById('ordersList');
+        if (data.success && data.orders.length) {
+            container.innerHTML = data.orders.map(o => `
+                <div class="item">
+                    <input type="checkbox" class="order-checkbox" value="${o.id}" onchange="toggleOrderSelect(this)">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(o.productName)}</div>
+                        <div class="item-detail">${escapeHtml(o.customerName)} | Status: ${o.status === 'paid' ? '✅ Lunas' : (o.status === 'pending' ? '⏳ Pending' : (o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled'))}</div>
+                        <div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()} | ID: ${o.id}</div>
+                    </div>
                 </div>
-            </div>
-        `).join('');
-        selectedOrders.clear(); updateSelectedCount();
-        document.getElementById('selectAllBtn').onclick = () => selectAllOrders();
-        document.getElementById('deleteSelectedBtn').onclick = () => deleteSelected();
-    } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
+            `).join('');
+            selectedOrders.clear(); updateSelectedCount();
+            document.getElementById('selectAllBtn').onclick = () => selectAllOrders();
+            document.getElementById('deleteSelectedBtn').onclick = () => deleteSelected();
+        } else { container.innerHTML = '<div style="text-align:center; color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
+    } catch(e) { console.error(e); }
 }
 
 async function resetOrders() {
@@ -401,6 +413,27 @@ async function sendBroadcast() {
     const data = await res.json();
     if (data.success) { toast(`📢 Broadcast terkirim ke ${data.sentCount} customer`); document.getElementById('broadcastMessage').value = ''; }
     else { toast('Gagal kirim broadcast', true); }
+}
+
+function toggleAutoRefresh() {
+    autoRefreshOn = !autoRefreshOn;
+    const btn = document.getElementById('autoRefreshBtn');
+    if (autoRefreshOn) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)';
+        autoRefreshInterval = setInterval(() => { loadStats(); loadOrders(); }, 30000);
+        toast('Auto refresh ON (30 detik)');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF';
+        clearInterval(autoRefreshInterval);
+        toast('Auto refresh OFF');
+    }
+}
+
+function refreshAll() {
+    loadStats(); loadProducts(); loadOrders();
+    toast('Data diperbarui');
 }
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
