@@ -32,6 +32,10 @@
       "dest": "public/admin.html"
     },
     {
+      "src": "/unauthorized",
+      "dest": "public/unauthorized.html"
+    },
+    {
       "src": "/ketentuan",
       "dest": "public/ketentuan.html"
     },
