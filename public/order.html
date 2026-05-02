@@ -11,30 +11,29 @@
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
-        @keyframes countPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes urgentPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 32px; max-width: 500px; width: 100%; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 25px 45px rgba(0,0,0,0.3); }
         .logo { text-align: center; margin-bottom: 4px; }
         .logo h2 { font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; }
         .logo .sub { font-size: 0.65rem; color: #64748b; margin-bottom: 16px; }
-        
+
         /* COUNTDOWN */
-        .countdown-wrap { text-align: center; margin-bottom: 10px; }
-        .countdown-label { font-size: 0.7rem; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .countdown-timer { font-size: 2rem; font-weight: 700; color: #f59e0b; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .countdown-timer.urgent { color: #ef4444; animation: countPulse 1s infinite; }
-        .countdown-timer .cd-unit { background: rgba(245,158,11,0.1); padding: 8px 12px; border-radius: 12px; min-width: 50px; text-align: center; }
+        .countdown-wrap { text-align: center; margin-bottom: 8px; }
+        .countdown-label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .countdown-timer { font-size: 2rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .countdown-timer.urgent { color: #ef4444; animation: urgentPulse 1s infinite; }
+        .countdown-timer .cd-unit { background: rgba(59,130,246,0.1); padding: 8px 12px; border-radius: 12px; min-width: 50px; text-align: center; }
         .countdown-timer.urgent .cd-unit { background: rgba(239,68,68,0.1); }
-        .countdown-timer .cd-sep { font-size: 1.5rem; color: #64748b; }
+        .countdown-timer .cd-sep { font-size: 1.5rem; color: #475569; }
         .countdown-timer .cd-label { font-size: 0.55rem; color: #64748b; display: block; margin-top: 2px; }
-        
+
         /* PROGRESS BAR */
         .progress-wrap { margin-bottom: 20px; }
         .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: #f59e0b; transition: width 1s linear; border-radius: 4px; }
+        .progress-fill { height: 100%; background: #3b82f6; transition: width 1s linear; border-radius: 4px; }
         .progress-fill.urgent { background: #ef4444; }
 
         .expiry-text { text-align: center; color: #64748b; font-size: 0.7rem; margin-bottom: 16px; }
-        .expiry-text i { margin-right: 4px; }
 
         /* QRIS */
         .qr-container { text-align: center; }
@@ -42,8 +41,8 @@
         .qr-container h3 { color: white; font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
         .qris-img { width: 100%; max-width: 220px; margin: 16px auto; display: block; background: white; padding: 14px; border-radius: 20px; }
         .total-amount { font-size: 1.8rem; font-weight: 700; color: #60a5fa; text-align: center; margin: 12px 0; }
-        .status-text { text-align: center; color: #f59e0b; margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; }
-        
+        .status-text { text-align: center; color: #94a3b8; margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; }
+
         .cancel-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 12px 24px; border-radius: 40px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .cancel-btn:hover { background: rgba(239,68,68,0.2); }
 
@@ -69,8 +68,8 @@
         /* EXPIRED */
         .expired-icon { font-size: 3.5rem; text-align: center; color: #ef4444; margin-bottom: 12px; }
 
-        @media (max-width: 480px) { 
-            .item-row { flex-direction: column; align-items: flex-start; } 
+        @media (max-width: 480px) {
+            .item-row { flex-direction: column; align-items: flex-start; }
             .chip-btn { align-self: flex-start; }
             .countdown-timer { font-size: 1.5rem; }
         }
@@ -85,7 +84,7 @@
                 <h2><i class="fas fa-store"></i> Yanto Store</h2>
                 <div class="sub">Pesanan Kamu</div>
             </div>
-            
+
             <!-- COUNTDOWN MUNDUR -->
             <div class="countdown-wrap">
                 <div class="countdown-label">Sisa Waktu Pembayaran</div>
@@ -146,7 +145,6 @@
         let countdownInterval = null;
         let pollingInterval = null;
         let expiredAt = null;
-        let totalSeconds = 0;
 
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
         function toast(msg) { const t = document.createElement('div'); t.textContent = msg; t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:8px 16px;border-radius:40px;font-size:0.8rem;z-index:2000;color:white;'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2000); }
@@ -165,7 +163,6 @@
             var isLink = type === 'link' || (type !== 'html' && content && content.startsWith('http'));
             var isHtml = type === 'html';
             var escapedContent = escapeHtml(content).replace(/"/g, '&quot;');
-
             if (isHtml) {
                 return '<div class="section"><div class="section-title"><i class="fas fa-code"></i> Barang Utama (HTML)</div><div class="item-row"><div class="item-content"><div class="text-content">' + escapeHtml(content) + '</div></div><button class="chip-btn copy-btn" data-copy="' + escapedContent + '"><i class="fas fa-copy"></i> Salin HTML</button></div></div>';
             } else if (isLink) {
@@ -175,13 +172,11 @@
             }
         }
 
-        // Event delegation untuk tombol copy
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.copy-btn');
             if (btn && btn.hasAttribute('data-copy')) copyToClipboard(btn.getAttribute('data-copy'));
         });
 
-        // COUNTDOWN MUNDUR
         function startCountdown(expiryStr) {
             expiredAt = new Date(expiryStr).getTime();
             updateCountdown();
@@ -191,31 +186,21 @@
         function updateCountdown() {
             var now = Date.now();
             var diff = expiredAt - now;
-            
             if (diff <= 0) {
                 clearInterval(countdownInterval);
                 document.getElementById('cdMin').textContent = '00';
                 document.getElementById('cdSec').textContent = '00';
                 document.getElementById('progressFill').style.width = '0%';
-                // Auto expired
                 showExpired('QRIS Kadaluarsa', 'Waktu pembayaran sudah habis, Bre. Buat pesanan baru aja.');
                 return;
             }
-            
             var minutes = Math.floor(diff / 60000);
             var seconds = Math.floor((diff % 60000) / 1000);
-            totalSeconds = Math.floor(diff / 1000);
-            
-            // Update angka
             document.getElementById('cdMin').textContent = String(minutes).padStart(2, '0');
             document.getElementById('cdSec').textContent = String(seconds).padStart(2, '0');
-            
-            // Hitung progress (asumsi total awal 15 menit = 900 detik)
-            var totalDuration = 15 * 60; // 15 menit
+            var totalDuration = 15 * 60;
             var progressPercent = (diff / (totalDuration * 1000)) * 100;
             document.getElementById('progressFill').style.width = Math.min(progressPercent, 100) + '%';
-            
-            // Urgent kalau kurang dari 2 menit
             var timer = document.getElementById('countdownTimer');
             var fill = document.getElementById('progressFill');
             if (diff < 120000) {
@@ -235,7 +220,6 @@
             document.getElementById('expiredContent').style.display = 'block';
             document.getElementById('expiredTitle').textContent = title;
             document.getElementById('expiredMsg').textContent = msg;
-            // Auto redirect ke home setelah 3 detik
             setTimeout(function() { window.location.href = '/'; }, 3000);
         }
 
@@ -256,14 +240,11 @@
             try {
                 var res = await fetch('/api/get-order/' + orderCode);
                 var data = await res.json();
-                
                 if (!data.success) {
                     document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Order Tidak Ditemukan</h1><a href="/" style="color:#60a5fa;">Kembali ke Beranda</a></div>';
                     return;
                 }
-
                 if (data.status === 'paid') {
-                    // Tampilkan sukses
                     clearInterval(countdownInterval);
                     clearInterval(pollingInterval);
                     document.getElementById('pendingContent').style.display = 'none';
@@ -276,28 +257,19 @@
                     }
                     return;
                 }
-
                 if (data.status === 'cancelled') {
                     showExpired('Pesanan Dibatalkan', 'Pesanan ini udah dibatalkan sebelumnya.');
                     return;
                 }
-
                 if (data.status === 'expired') {
                     showExpired('QRIS Kadaluarsa', 'Waktu pembayaran udah habis, Bre.');
                     return;
                 }
-
-                // Status pending - tampilkan QRIS + countdown
                 document.getElementById('qrisImage').src = data.qrisImage;
                 document.getElementById('totalAmount').textContent = (data.totalAmount || 0).toLocaleString();
                 document.getElementById('expiryTime').textContent = new Date(data.expiredAt).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                
-                // Mulai countdown
                 startCountdown(data.expiredAt);
-                
-                // Mulai polling
                 startPolling();
-
             } catch(err) { console.error(err); }
         }
 
@@ -307,7 +279,6 @@
                 try {
                     var res = await fetch('/api/check-payment/' + orderCode);
                     var data = await res.json();
-                    
                     if (data.status === 'paid') {
                         clearInterval(pollingInterval);
                         clearInterval(countdownInterval);
