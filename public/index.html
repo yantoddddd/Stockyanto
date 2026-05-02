@@ -111,48 +111,37 @@
         .site-footer a { color: #64748b; text-decoration: none; margin: 0 8px; }
         .site-footer a:hover { color: #60a5fa; }
 
-        @media (max-width: 640px) {
-            .products-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
 <div id="splashScreen">
     <div class="splash-logo"><i class="fas fa-store"></i></div>
     <div class="splash-title">Yanto Store</div>
-    <div class="splash-sub">Auto Order Digital</div>
+    <div class="splash-sub">AutoOrder Digital</div>
     <div class="splash-loader"></div>
 </div>
 
 <div class="container">
     <div class="header">
-        <div class="logo">
-            <h1><i class="fas fa-store"></i> Yanto Store</h1>
-            <p>Auto Order Digital</p>
-        </div>
+        <div class="logo"><h1><i class="fas fa-store"></i> Yanto Store</h1><p>AutoOrder Digital</p></div>
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
 
-    <!-- SEARCH & FILTER -->
     <div class="search-filter-wrap" id="searchFilterWrap" style="display:none;">
-        <div class="search-row">
-            <input type="text" class="search-input" id="searchInput" placeholder="Cari produk... (nama, deskripsi)" oninput="renderProducts()">
-        </div>
+        <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="renderProducts()"></div>
         <div class="filter-scroll" id="filterScroll"></div>
         <div class="results-info" id="resultsInfo"></div>
     </div>
 
-    <!-- TESTIMONI -->
     <div class="testimoni-bar" id="testimoniBar" style="display:none;">
         <div class="t-title"><i class="fas fa-star" style="color:#f59e0b;"></i> Pembeli Terbaru</div>
         <div class="t-scroll" id="testimoniScroll"></div>
     </div>
 
-    <!-- PRODUCT GRID -->
     <div class="products-grid" id="productsGrid">
-        <div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-spinner fa-pulse"></i> Memuat produk...</div>
+        <div style="text-align:center;color:#64748b;grid-column:1/-1;"><i class="fas fa-spinner fa-pulse"></i> Memuat produk...</div>
     </div>
     <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
         <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
@@ -164,25 +153,14 @@
     </div>
 </div>
 
-<!-- OVERLAY -->
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
     <div class="sidebar-title">Status Toko</div>
-    <div class="sidebar-stat">
-        <div class="stat-num" id="menuProducts">-</div>
-        <div class="stat-label">Produk Tersedia</div>
-    </div>
-    <div class="sidebar-stat">
-        <div class="stat-num" id="menuTodayOrders">-</div>
-        <div class="stat-label">Order Hari Ini</div>
-    </div>
-    <div id="sidebarLiveOrder" style="display:none;">
-        <div class="sidebar-title">Order Terbaru</div>
-        <div id="sidebarLiveList"></div>
-    </div>
+    <div class="sidebar-stat"><div class="stat-num" id="menuProducts">-</div><div class="stat-label">Produk Tersedia</div></div>
+    <div class="sidebar-stat"><div class="stat-num" id="menuTodayOrders">-</div><div class="stat-label">Order Hari Ini</div></div>
+    <div id="sidebarLiveOrder" style="display:none;"><div class="sidebar-title">Order Terbaru</div><div id="sidebarLiveList"></div></div>
     <div class="sidebar-title">Menu</div>
     <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
     <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
@@ -192,23 +170,20 @@
     <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
 </div>
 
-<!-- MODAL -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalProductName"></h3>
-        <div id="modalProductDesc" style="color:#94a3b8; font-size:0.8rem; margin:5px 0;"></div>
+        <div id="modalProductDesc" style="color:#94a3b8;font-size:0.8rem;margin:5px 0;"></div>
         <div class="modal-price" id="modalPrice"></div>
         <input type="text" id="customerName" placeholder="Nama lengkap" required>
         <button class="btn-primary" id="createOrderBtn"><i class="fas fa-credit-card"></i> Buat Pesanan</button>
         <button class="btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Tutup</button>
-        <div id="loadingIndicator" style="display:none; text-align:center; margin-top:15px; color:#94a3b8;"><span class="loading-spinner"></span> Membuat pesanan...</div>
+        <div id="loadingIndicator" style="display:none;text-align:center;margin-top:15px;color:#94a3b8;"><span class="loading-spinner"></span> Membuat pesanan...</div>
     </div>
 </div>
 <div id="toast" class="toast"></div>
 
 <script>
-    const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-    const QRISPY_API_URL = 'https://api.qrispy.id';
     let currentProduct = null;
     let allProducts = [];
     let soldMap = {};
@@ -216,15 +191,12 @@
     let displayCount = 6;
     let categories = [];
 
-    // Splash screen
     window.addEventListener('load', function() {
-        setTimeout(function() {
-            document.getElementById('splashScreen').classList.add('hidden');
-        }, 1200);
+        setTimeout(function() { document.getElementById('splashScreen').classList.add('hidden'); }, 1200);
     });
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-    function toast(msg, isError) { const t = document.getElementById('toast'); t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
+    function toast(msg, isError) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
     function lacakOrder() { var code = prompt('Masukkan kode order kamu:'); if (code && code.trim()) { window.location.href = '/order/' + code.trim(); } toggleMenu(); }
 
@@ -238,36 +210,27 @@
             }
             allProducts = data.products;
 
-            // Ambil order untuk hitung penjualan & testimoni
             try {
-                var orderRes = await fetch('/api/admin/orders?adminKey=nisaimut');
+                var orderRes = await fetch('/api/public-stats');
                 var orderData = await orderRes.json();
-                if (orderData.success && orderData.orders) {
-                    orderData.orders.forEach(function(o) {
-                        if (o.status === 'paid') { soldMap[o.productId] = (soldMap[o.productId] || 0) + 1; }
-                    });
-                    var today = new Date().toISOString().split('T')[0];
-                    var todayOrders = orderData.orders.filter(function(o) { return o.status === 'paid' && (o.paidAt || o.createdAt).startsWith(today); });
-                    document.getElementById('menuTodayOrders').innerText = todayOrders.length + ' order';
-                    var paidOrders = orderData.orders.filter(function(o) { return o.status === 'paid'; }).slice(-8).reverse();
-                    if (paidOrders.length > 0) {
+                if (orderData.success) {
+                    document.getElementById('menuTodayOrders').innerText = orderData.todayOrders + ' order';
+                    if (orderData.recentOrders && orderData.recentOrders.length > 0) {
                         document.getElementById('testimoniBar').style.display = 'block';
-                        document.getElementById('testimoniScroll').innerHTML = paidOrders.map(function(o) {
+                        document.getElementById('testimoniScroll').innerHTML = orderData.recentOrders.map(function(o) {
                             return '<div class="t-card"><div class="t-name">' + escapeHtml(o.customerName) + '</div><div class="t-time">Baru saja</div><div class="t-msg">Membeli ' + escapeHtml(o.productName) + '</div></div>';
                         }).join('');
-                    }
-                    // Live order di sidebar
-                    var latest = paidOrders.slice(0, 3);
-                    if (latest.length > 0) {
-                        document.getElementById('sidebarLiveOrder').style.display = 'block';
-                        document.getElementById('sidebarLiveList').innerHTML = latest.map(function(o) {
-                            return '<div class="sidebar-live-order">' + escapeHtml(o.customerName) + ' baru beli <b>' + escapeHtml(o.productName) + '</b></div>';
-                        }).join('');
+                        var latest = orderData.recentOrders.slice(0, 3);
+                        if (latest.length > 0) {
+                            document.getElementById('sidebarLiveOrder').style.display = 'block';
+                            document.getElementById('sidebarLiveList').innerHTML = latest.map(function(o) {
+                                return '<div class="sidebar-live-order">' + escapeHtml(o.customerName) + ' baru beli <b>' + escapeHtml(o.productName) + '</b></div>';
+                            }).join('');
+                        }
                     }
                 }
             } catch(e) {}
 
-            // Kategori otomatis dari data produk
             var catSet = new Set();
             allProducts.forEach(function(p) {
                 var name = p.name.toLowerCase();
@@ -279,8 +242,6 @@
                 else catSet.add('Lainnya');
             });
             categories = ['all'].concat(Array.from(catSet));
-
-            // Render filter chips
             document.getElementById('filterScroll').innerHTML = categories.map(function(cat) {
                 return '<span class="filter-chip' + (cat === 'all' ? ' active' : '') + '" onclick="setFilter(\'' + cat + '\')">' + (cat === 'all' ? 'Semua' : cat) + '</span>';
             }).join('');
@@ -292,13 +253,7 @@
         } catch(e) { toast('Gagal load produk', true); }
     }
 
-    function setFilter(cat) {
-        currentFilter = cat;
-        displayCount = 6;
-        document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-        event.target.classList.add('active');
-        renderProducts();
-    }
+    function setFilter(cat) { currentFilter = cat; displayCount = 6; document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); }); event.target.classList.add('active'); renderProducts(); }
 
     function getFilteredProducts() {
         var query = (document.getElementById('searchInput').value || '').toLowerCase();
@@ -316,7 +271,6 @@
             })();
             return matchSearch && matchFilter;
         });
-        // Urutkan paling laris
         filtered.sort(function(a, b) { return (soldMap[b.id] || 0) - (soldMap[a.id] || 0); });
         return filtered;
     }
@@ -325,7 +279,6 @@
         var filtered = getFilteredProducts();
         var toShow = filtered.slice(0, displayCount);
         var grid = document.getElementById('productsGrid');
-
         if (toShow.length === 0) {
             grid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>Produk tidak ditemukan</p></div>';
         } else {
@@ -334,41 +287,22 @@
                 var badgeHtml = '';
                 if (sold >= 10) badgeHtml = '<span class="product-badge hot">Laris (Terjual ' + sold + ')</span>';
                 else if (sold > 0) badgeHtml = '<span class="product-badge">Terjual ' + sold + '</span>';
-                return '<div class="product-card" style="animation-delay: ' + (i * 0.03) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' +
-                    badgeHtml +
-                    '<div class="product-name"><i class="fas fa-box"></i> ' + escapeHtml(p.name) + '</div>' +
-                    '<div class="product-desc">' + escapeHtml(p.description || '') + '</div>' +
-                    '<div class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</div>' +
-                    '<div class="product-stock"><i class="fas fa-database"></i> Stok: ' + p.stock + '</div>' +
-                    '<div class="btn-buy">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis') + '</div>' +
-                '</div>';
+                return '<div class="product-card" style="animation-delay:' + (i * 0.03) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' + badgeHtml + '<div class="product-name"><i class="fas fa-box"></i> ' + escapeHtml(p.name) + '</div><div class="product-desc">' + escapeHtml(p.description || '') + '</div><div class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</div><div class="product-stock"><i class="fas fa-database"></i> Stok: ' + p.stock + '</div><div class="btn-buy">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis') + '</div></div>';
             }).join('');
         }
-
         document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk';
         document.getElementById('loadMoreWrap').style.display = (displayCount < filtered.length) ? 'block' : 'none';
     }
 
-    function loadMore() {
-        displayCount += 6;
-        renderProducts();
-    }
+    function loadMore() { displayCount += 6; renderProducts(); }
 
-    function openModal(product) {
-        if (product.stock <= 0) { toast('Stok habis!', true); return; }
-        currentProduct = product;
-        document.getElementById('modalProductName').innerText = product.name;
-        document.getElementById('modalProductDesc').innerText = product.description || '';
-        document.getElementById('modalPrice').innerHTML = 'Rp ' + product.price.toLocaleString();
-        document.getElementById('customerName').value = '';
-        document.getElementById('modal').style.display = 'flex';
-    }
+    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = 'Rp ' + product.price.toLocaleString(); document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; currentProduct = null; }
 
     async function generateQRIS(amount) {
-        var response = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
+        var response = await fetch('/api/generate-qris-proxy', {
             method: 'POST',
-            headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: amount })
         });
         var data = await response.json();
