@@ -11,23 +11,45 @@
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; padding: 24px 16px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .container { max-width: 1200px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 60px; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.08); }
+        
+        /* HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 60px; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.08); }
         .logo h1 { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; display: flex; align-items: center; gap: 8px; }
         .logo p { font-size: 0.7rem; color: #94a3b8; }
         .menu-btn { background: rgba(255,255,255,0.1); border: none; width: 44px; height: 44px; border-radius: 40px; color: white; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .menu-btn:hover { background: rgba(59,130,246,0.5); }
-        .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background: rgba(15,23,42,0.98); backdrop-filter: blur(16px); z-index: 1000; transition: 0.3s ease; padding: 80px 24px 24px; border-left: 1px solid rgba(255,255,255,0.1); }
+
+        /* SIDEBAR */
+        .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background: rgba(15,23,42,0.98); backdrop-filter: blur(16px); z-index: 1000; transition: 0.3s ease; padding: 80px 24px 24px; border-left: 1px solid rgba(255,255,255,0.1); overflow-y: auto; }
         .sidebar.open { right: 0; }
         .sidebar .close-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
-        .sidebar .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; color: white; text-decoration: none; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .sidebar-title { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; }
+        .sidebar .menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; color: white; text-decoration: none; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s; cursor: pointer; background: none; border-left: none; border-right: none; width: 100%; text-align: left; }
         .sidebar .menu-item:hover { color: #60a5fa; padding-left: 8px; }
         .sidebar .menu-item i { width: 24px; }
-        .sidebar-title { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 10px; }
+        .sidebar-stat { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 14px; margin-bottom: 8px; }
+        .sidebar-stat .stat-num { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .sidebar-stat .stat-label { font-size: 0.7rem; color: #64748b; }
+        
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
         .overlay.show { display: block; }
+
+        /* TESTIMONI */
+        .testimoni-bar { margin-bottom: 24px; }
+        .testimoni-bar .t-title { font-size: 0.75rem; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .t-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+        .t-scroll::-webkit-scrollbar { height: 3px; }
+        .t-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .t-card { min-width: 200px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; flex-shrink: 0; }
+        .t-card .t-name { font-size: 0.75rem; font-weight: 600; color: white; margin-bottom: 2px; }
+        .t-card .t-time { font-size: 0.6rem; color: #64748b; margin-bottom: 4px; }
+        .t-card .t-msg { font-size: 0.7rem; color: #94a3b8; }
+
+        /* PRODUCT GRID */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-        .product-card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; cursor: pointer; animation: fadeIn 0.4s ease; animation-fill-mode: both; }
+        .product-card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); transition: 0.3s; cursor: pointer; animation: fadeIn 0.4s ease; animation-fill-mode: both; position: relative; }
         .product-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.1); border-color: rgba(59,130,246,0.3); }
+        .product-badge { position: absolute; top: 14px; right: 14px; background: rgba(59,130,246,0.2); color: #60a5fa; padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; }
         .product-name { font-size: 1.3rem; font-weight: 600; color: white; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
         .product-desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 16px; line-height: 1.4; }
         .product-price { font-size: 1.8rem; font-weight: 700; color: #60a5fa; margin: 12px 0; }
@@ -35,6 +57,8 @@
         .btn-buy { background: linear-gradient(95deg, #2563eb, #1d4ed8); border: none; width: 100%; padding: 12px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-buy:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
         .btn-buy:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
+        
+        /* MODAL */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
         .modal-content { background: #0f172a; border-radius: 32px; padding: 32px; max-width: 400px; width: 90%; border: 1px solid #334155; }
         .modal-content h3 { font-size: 1.4rem; font-weight: 600; color: white; margin-bottom: 8px; }
@@ -48,6 +72,10 @@
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; z-index: 1200; color: white; display: flex; align-items: center; gap: 8px; }
         .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 640px) {
+            .products-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -59,21 +87,43 @@
         </div>
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
+
+    <!-- TESTIMONI BAR -->
+    <div class="testimoni-bar" id="testimoniBar" style="display:none;">
+        <div class="t-title"><i class="fas fa-star" style="color:#f59e0b;"></i> Pembeli Terbaru</div>
+        <div class="t-scroll" id="testimoniScroll"></div>
+    </div>
+
+    <!-- PRODUCT GRID -->
     <div class="products-grid" id="productsGrid">
         <div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-spinner fa-pulse"></i> Memuat produk...</div>
     </div>
 </div>
 
+<!-- OVERLAY -->
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-    <div class="sidebar-title">MENU</div>
+    <div class="sidebar-title">Status Toko</div>
+    <div class="sidebar-stat">
+        <div class="stat-num" id="menuProducts">-</div>
+        <div class="stat-label">Produk Tersedia</div>
+    </div>
+    <div class="sidebar-stat">
+        <div class="stat-num" id="menuTodayOrders">-</div>
+        <div class="stat-label">Order Hari Ini</div>
+    </div>
+    <div class="sidebar-title">Menu</div>
+    <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
     <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
-    <div class="sidebar-title">BANTUAN</div>
+    <div class="sidebar-title">Bantuan</div>
     <a href="https://t.me/Yantoidiotbruh" target="_blank" class="menu-item"><i class="fab fa-telegram-plane"></i> Telegram</a>
     <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
 </div>
 
+<!-- MODAL -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalProductName"></h3>
@@ -93,37 +143,93 @@
     let currentProduct = null;
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-    function toast(msg, isError = false) { const t = document.getElementById('toast'); t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); }
+    function toast(msg, isError) { const t = document.getElementById('toast'); t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
+
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
+
+    function lacakOrder() {
+        var code = prompt('Masukkan kode order kamu:');
+        if (code && code.trim()) { window.location.href = '/order/' + code.trim(); }
+        toggleMenu();
+    }
 
     async function loadProducts() {
         try {
-            const res = await fetch('/api/products'); const data = await res.json(); const grid = document.getElementById('productsGrid');
-            if (!data.products || data.products.length === 0) { grid.innerHTML = '<div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; return; }
-            grid.innerHTML = data.products.map((p, i) => `<div class="product-card" style="animation-delay: ${i * 0.05}s" onclick='openModal(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
-                <div class="product-name"><i class="fas fa-box"></i> ${escapeHtml(p.name)}</div>
-                <div class="product-desc">${escapeHtml(p.description || '')}</div>
-                <div class="product-price">Rp ${(p.price || 0).toLocaleString()}</div>
-                <div class="product-stock"><i class="fas fa-database"></i> Stok: ${p.stock}</div>
-                <div class="btn-buy">${p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis'}</div>
-            </div>`).join('');
+            var res = await fetch('/api/products');
+            var data = await res.json();
+            var grid = document.getElementById('productsGrid');
+            
+            if (!data.products || data.products.length === 0) {
+                grid.innerHTML = '<div style="text-align:center; color:#64748b; grid-column:1/-1;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
+                return;
+            }
+
+            // Ambil data order buat hitung terjual
+            var soldMap = {};
+            try {
+                var orderRes = await fetch('/api/admin/orders?adminKey=rahasia123');
+                var orderData = await orderRes.json();
+                if (orderData.success && orderData.orders) {
+                    // Hitung per produk
+                    orderData.orders.forEach(function(o) {
+                        if (o.status === 'paid') {
+                            soldMap[o.productId] = (soldMap[o.productId] || 0) + 1;
+                        }
+                    });
+                    // Update sidebar
+                    var today = new Date().toISOString().split('T')[0];
+                    var todayOrders = orderData.orders.filter(function(o) {
+                        return o.status === 'paid' && (o.paidAt || o.createdAt).startsWith(today);
+                    });
+                    document.getElementById('menuTodayOrders').innerText = todayOrders.length + ' order';
+                    
+                    // Testimoni
+                    var paidOrders = orderData.orders.filter(function(o) { return o.status === 'paid'; }).slice(-8).reverse();
+                    if (paidOrders.length > 0) {
+                        document.getElementById('testimoniBar').style.display = 'block';
+                        document.getElementById('testimoniScroll').innerHTML = paidOrders.map(function(o) {
+                            return '<div class="t-card"><div class="t-name">' + escapeHtml(o.customerName) + '</div><div class="t-time">Baru saja</div><div class="t-msg">Membeli ' + escapeHtml(o.productName) + '</div></div>';
+                        }).join('');
+                    }
+                }
+            } catch(e) {}
+
+            document.getElementById('menuProducts').innerText = data.products.filter(function(p) { return p.stock > 0; }).length;
+
+            grid.innerHTML = data.products.map(function(p, i) {
+                var sold = soldMap[p.id] || 0;
+                var badgeHtml = '';
+                if (sold >= 10) badgeHtml = '<span class="product-badge" style="background:rgba(239,68,68,0.2);color:#fca5a5;">Laris</span>';
+                else if (sold >= 3) badgeHtml = '<span class="product-badge">Terjual ' + sold + '</span>';
+                
+                return '<div class="product-card" style="animation-delay: ' + (i * 0.05) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' +
+                    badgeHtml +
+                    '<div class="product-name"><i class="fas fa-box"></i> ' + escapeHtml(p.name) + '</div>' +
+                    '<div class="product-desc">' + escapeHtml(p.description || '') + '</div>' +
+                    '<div class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</div>' +
+                    '<div class="product-stock"><i class="fas fa-database"></i> Stok: ' + p.stock + '</div>' +
+                    '<div class="btn-buy">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis') + '</div>' +
+                '</div>';
+            }).join('');
         } catch(e) { toast('Gagal load produk', true); }
     }
 
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = `Rp ${product.price.toLocaleString()}`; document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
+    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = 'Rp ' + product.price.toLocaleString(); document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; currentProduct = null; }
-    async function generateQRIS(amount) { const response = await fetch(`${QRISPY_API_URL}/api/payment/qris/generate`, { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) }); const data = await response.json(); if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS'); return data.data; }
+    
+    async function generateQRIS(amount) { var response = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount }) }); var data = await response.json(); if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS'); return data.data; }
 
-    document.getElementById('createOrderBtn').onclick = async () => {
-        const name = document.getElementById('customerName').value.trim(); if (!name) { toast('Nama wajib diisi', true); return; }
-        const btn = document.getElementById('createOrderBtn'); const loading = document.getElementById('loadingIndicator'); btn.style.display = 'none'; loading.style.display = 'block';
+    document.getElementById('createOrderBtn').onclick = async function() {
+        var name = document.getElementById('customerName').value.trim(); if (!name) { toast('Nama wajib diisi', true); return; }
+        var btn = document.getElementById('createOrderBtn'); var loading = document.getElementById('loadingIndicator'); btn.style.display = 'none'; loading.style.display = 'block';
         try {
-            const totalAmount = currentProduct.price; const qrisData = await generateQRIS(totalAmount);
-            const orderRes = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: currentProduct.id, customerName: name, customerEmail: '-', qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at }) });
-            const orderData = await orderRes.json(); if (!orderData.success) throw new Error(orderData.error);
-            window.location.href = `/order/${orderData.orderCode}`;
+            var totalAmount = currentProduct.price; var qrisData = await generateQRIS(totalAmount);
+            var orderRes = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: currentProduct.id, customerName: name, customerEmail: '-', qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at }) });
+            var orderData = await orderRes.json(); if (!orderData.success) throw new Error(orderData.error);
+            window.location.href = '/order/' + orderData.orderCode;
         } catch (err) { toast(err.message, true); btn.style.display = 'block'; loading.style.display = 'none'; }
     };
+
     loadProducts();
 </script>
 </body>
