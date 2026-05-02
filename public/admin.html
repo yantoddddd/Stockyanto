@@ -7,135 +7,213 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; padding: 24px; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 28px; margin-bottom: 28px; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.3s; }
-        .card:hover { transform: translateY(-4px); }
-        h1, h2 { color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
-        h1 { font-size: 1.5rem; }
-        h2 { font-size: 1.2rem; border-left: 3px solid #3b82f6; padding-left: 16px; }
-        input, textarea, select { width: 100%; padding: 12px 16px; margin: 10px 0; border-radius: 28px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; }
-        input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
-        button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
-        button:hover { transform: translateY(-2px); filter: brightness(1.05); }
-        button.active { background: #10b981; }
-        .btn-danger { background: #b91c1c; }
-        .btn-warning { background: #f59e0b; }
-        .btn-success { background: #10b981; }
-        .btn-outline { background: transparent; border: 1px solid #475569; color: white; }
-        .btn-outline:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
-        .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
-        .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
-        .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; }
-        .item:hover { background: #334155; }
-        .item-info { flex: 1; min-width: 150px; }
-        .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
-        .item-detail { font-size: 0.7rem; color: #94a3b8; }
-        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
-        .hidden { display: none; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
-        .modal-content { background: #0f172a; border-radius: 32px; padding: 28px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
-        .modal-content h3 { color: white; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .modal-buttons button { flex: 1; justify-content: center; }
-        .broadcast-area { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        textarea { resize: vertical; }
-        .selection-bar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-        .toolbar { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-        .top-bar .info { color: #64748b; font-size: 0.7rem; }
-        #loginError { color: #ef4444; margin-top: 10px; text-align: center; display: none; }
-        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+        body { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family:'Inter', sans-serif; padding:16px; animation:fadeIn 0.5s ease; padding-bottom:100px; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
+        @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+        .container { max-width:900px; margin:0 auto; }
+
+        /* TOP BAR */
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+        .top-bar .info { color:#64748b; font-size:0.65rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .top-bar .info .dot { width:7px; height:7px; background:#10b981; border-radius:50%; }
+        .btn-icon { background:transparent; border:1px solid #475569; color:#94a3b8; padding:6px 10px; border-radius:20px; cursor:pointer; font-size:0.7rem; display:flex; align-items:center; gap:4px; }
+
+        /* TABS */
+        .tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; }
+        .tab { padding:8px 16px; border-radius:20px; border:1px solid #334155; background:transparent; color:#94a3b8; font-size:0.75rem; cursor:pointer; white-space:nowrap; transition:0.2s; display:flex; align-items:center; gap:6px; }
+        .tab.active { background:#3b82f6; border-color:#3b82f6; color:white; }
+        .tab .badge { background:rgba(255,255,255,0.2); padding:1px 6px; border-radius:10px; font-size:0.6rem; }
+
+        /* PANELS */
+        .panel { display:none; }
+        .panel.active { display:block; }
+
+        /* CARDS */
+        .card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:24px; padding:20px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.08); }
+        .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; cursor:pointer; }
+        .card-header h2 { color:white; font-size:0.95rem; display:flex; align-items:center; gap:8px; }
+        .card-header i.fa-chevron-down { transition:0.3s; color:#64748b; }
+        .card-header.open i.fa-chevron-down { transform:rotate(180deg); }
+        .card-body { display:none; }
+        .card-body.open { display:block; }
+
+        /* STATS */
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; }
+        .stat-card { background:rgba(0,0,0,0.3); border-radius:16px; padding:14px; text-align:center; }
+        .stat-number { font-size:1.3rem; font-weight:800; color:#60a5fa; }
+        .stat-label { font-size:0.6rem; color:#94a3b8; margin-top:2px; }
+
+        /* ITEMS */
+        .item { background:#1e293b; padding:12px; border-radius:14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; transition:0.2s; position:relative; overflow:hidden; }
+        .item:active { background:#334155; }
+        .item-info { flex:1; min-width:120px; }
+        .item-name { font-weight:600; color:white; font-size:0.8rem; margin-bottom:2px; }
+        .item-detail { font-size:0.65rem; color:#94a3b8; }
+        .item-actions { display:flex; gap:6px; }
+        .btn-sm { padding:5px 10px; border-radius:14px; border:none; cursor:pointer; font-size:0.65rem; display:flex; align-items:center; gap:4px; color:white; }
+        .btn-sm.blue { background:#3b82f6; }
+        .btn-sm.green { background:#10b981; }
+        .btn-sm.red { background:#b91c1c; }
+
+        /* ORDER SEARCH */
+        .search-mini { display:flex; gap:8px; margin-bottom:10px; }
+        .search-mini input { flex:1; padding:8px 14px; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.75rem; outline:none; }
+        .search-mini select { padding:8px 10px; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.7rem; outline:none; }
+
+        /* ORDER ITEM SWIPE */
+        .order-item { transition:transform 0.2s; touch-action:pan-y; }
+        .order-item .delete-zone { position:absolute; right:0; top:0; height:100%; width:60px; background:#b91c1c; display:flex; align-items:center; justify-content:center; border-radius:0 14px 14px 0; color:white; font-size:1rem; }
+        .order-item.swiped { transform:translateX(-60px); }
+
+        /* PAGE */
+        .page-nav { display:flex; gap:6px; justify-content:center; margin-top:10px; }
+        .page-btn { padding:5px 10px; border-radius:12px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.7rem; cursor:pointer; }
+        .page-btn.active { background:#3b82f6; border-color:#3b82f6; }
+
+        /* FAB */
+        .fab { position:fixed; bottom:24px; right:24px; width:50px; height:50px; border-radius:50%; background:#3b82f6; color:white; border:none; font-size:1.3rem; cursor:pointer; box-shadow:0 6px 20px rgba(59,130,246,0.4); z-index:900; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+        .fab:active { transform:scale(0.9); }
+
+        /* BOTTOM SHEET */
+        .sheet-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:none; }
+        .sheet-overlay.show { display:block; }
+        .sheet { position:fixed; bottom:0; left:0; width:100%; max-height:85vh; background:#0f172a; border-radius:24px 24px 0 0; z-index:1001; padding:20px; overflow-y:auto; animation:slideUp 0.3s ease; border:1px solid #334155; border-bottom:none; display:none; }
+        .sheet.show { display:block; }
+        .sheet h3 { color:white; font-size:1rem; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .sheet input, .sheet textarea, .sheet select { width:100%; padding:10px; margin:8px 0; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.8rem; outline:none; }
+        .sheet .btn-full { width:100%; padding:12px; border-radius:20px; border:none; font-weight:600; cursor:pointer; margin-top:8px; }
+
+        /* TOAST */
+        .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:20px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1100; white-space:nowrap; }
+
+        /* LOGIN */
+        #loginCard { text-align:center; }
+        #loginCard input { width:100%; padding:14px; margin:12px 0; border-radius:28px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.9rem; outline:none; text-align:center; }
+        #loginError { color:#ef4444; font-size:0.8rem; display:none; }
+
+        @media (max-width:640px) {
+            .item-actions { width:100%; justify-content:flex-end; }
+            .stats-grid { grid-template-columns:repeat(3,1fr); }
+        }
     </style>
 </head>
 <body>
 <div class="container">
 
+    <!-- LOGIN -->
     <div class="card" id="loginCard">
-        <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
+        <h1 style="color:white;font-size:1.2rem;"><i class="fas fa-user-shield"></i> Admin Panel</h1>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin">
-        <button onclick="doLogin()"><i class="fas fa-key"></i> Login</button>
+        <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:28px;background:#3b82f6;color:white;border:none;font-weight:600;cursor:pointer;"><i class="fas fa-key"></i> Login</button>
         <div id="loginError"></div>
     </div>
 
+    <!-- ADMIN -->
     <div id="adminContent" style="display:none;">
+
+        <!-- TOP BAR -->
         <div class="top-bar">
-            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span></div>
-            <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
-            <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <div class="info"><span class="dot"></span> <span id="currentIP">-</span> | <span id="ipStatus" style="color:#10b981;">Admin</span></div>
+            <div style="display:flex;gap:6px;">
+                <button class="btn-icon" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
+                <button class="btn-icon" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
         </div>
 
-        <div class="card"><h2><i class="fas fa-chart-line"></i> Statistik</h2><div class="stats-grid" id="statsGrid"></div></div>
-        
-        <div class="card">
-            <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
-            <input type="text" id="productName" placeholder="Nama Produk">
-            <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
-            <input type="number" id="productPrice" placeholder="Harga">
-            <input type="number" id="productStock" placeholder="Stok">
-            <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-            <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div>
-            <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-            <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
-            <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-            <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-            <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
-            <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('stats')"><i class="fas fa-chart-line"></i> Statistik</button>
+            <button class="tab" onclick="switchTab('products')"><i class="fas fa-boxes"></i> Produk <span class="badge" id="prodCount">0</span></button>
+            <button class="tab" onclick="switchTab('orders')"><i class="fas fa-history"></i> Order <span class="badge" id="orderCount">0</span></button>
+            <button class="tab" onclick="switchTab('broadcast')"><i class="fas fa-bullhorn"></i> Broadcast</button>
         </div>
-        
-        <div class="card"><h2><i class="fas fa-boxes"></i> Daftar Produk</h2><div id="productsList"></div></div>
-        
-        <div class="card">
-            <h2><i class="fas fa-history"></i> Riwayat Order</h2>
-            <div class="toolbar">
-                <button class="btn-success" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
-                <button class="btn-warning" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
+
+        <!-- STATS PANEL -->
+        <div class="panel active" id="panel-stats">
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+
+        <!-- PRODUCTS PANEL -->
+        <div class="panel" id="panel-products">
+            <div class="card">
+                <div class="card-header open" onclick="document.getElementById('addProductForm').classList.toggle('open'); this.classList.toggle('open');">
+                    <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="card-body open" id="addProductForm">
+                    <input type="text" id="productName" placeholder="Nama Produk">
+                    <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
+                    <input type="number" id="productPrice" placeholder="Harga">
+                    <input type="number" id="productStock" placeholder="Stok">
+                    <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
+                    <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Konten teks"></textarea></div>
+                    <div id="itemLinkField" style="display:none;"><input type="url" id="itemLink" placeholder="https://..."></div>
+                    <div id="itemHtmlField" style="display:none;"><textarea id="itemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
+                    <select id="bonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+                    <div id="bonusTextField" style="display:none;"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+                    <div id="bonusLinkField" style="display:none;"><input type="url" id="bonusLink" placeholder="https://..."></div>
+                    <button onclick="addProduct()" class="btn-full" style="background:#3b82f6;color:white;"><i class="fas fa-save"></i> Simpan</button>
+                </div>
             </div>
-            <div class="selection-bar">
-                <button id="selectAllBtn" class="btn-success" style="background:#475569;"><i class="fas fa-check-double"></i> Pilih Semua</button>
-                <button id="deleteSelectedBtn" class="btn-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih</button>
-                <span id="selectedCount" style="color:#94a3b8;">0 dipilih</span>
+            <div id="productsList"></div>
+        </div>
+
+        <!-- ORDERS PANEL -->
+        <div class="panel" id="panel-orders">
+            <div style="display:flex;gap:8px;margin-bottom:10px;">
+                <button class="btn-sm green" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
+                <button class="btn-sm blue" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
+                <button class="btn-sm red" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset</button>
+            </div>
+            <div class="search-mini">
+                <input type="text" id="orderSearch" placeholder="Cari order..." oninput="renderOrderPage()">
+                <select id="orderFilter" onchange="renderOrderPage()">
+                    <option value="all">Semua</option>
+                    <option value="paid">Lunas</option>
+                    <option value="pending">Pending</option>
+                    <option value="expired">Expired</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
             </div>
             <div id="ordersList"></div>
-            <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
-                <button class="btn-warning" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Pending</button>
-                <button class="btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup</button>
-            </div>
-            <div class="broadcast-area">
-                <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
-                <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
-                <button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
+            <div class="page-nav" id="orderPagination"></div>
+        </div>
+
+        <!-- BROADCAST PANEL -->
+        <div class="panel" id="panel-broadcast">
+            <div class="card">
+                <h2 style="color:white;font-size:0.9rem;margin-bottom:10px;"><i class="fas fa-bullhorn"></i> Kirim Broadcast</h2>
+                <textarea id="broadcastMessage" rows="4" placeholder="Tulis pesan broadcast..."></textarea>
+                <button onclick="sendBroadcast()" class="btn-full" style="background:#10b981;color:white;margin-top:8px;"><i class="fas fa-paper-plane"></i> Kirim</button>
+                <button onclick="backupData()" class="btn-full" style="background:#3b82f6;color:white;margin-top:6px;"><i class="fas fa-database"></i> Backup Database</button>
             </div>
         </div>
-    </div>
 
+    </div>
 </div>
 
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <h3><i class="fas fa-edit"></i> Edit Produk</h3>
-        <input type="hidden" id="editProductId">
-        <input type="text" id="editProductName" placeholder="Nama Produk">
-        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
-        <input type="number" id="editProductPrice" placeholder="Harga">
-        <input type="number" id="editProductStock" placeholder="Stok">
-        <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div>
-        <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
-        <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-        <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-        <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
-        <div class="modal-buttons">
-            <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
-            <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
-        </div>
-    </div>
+<!-- FAB -->
+<button class="fab" id="fabAdd" style="display:none;" onclick="switchTab('products');document.getElementById('addProductForm').classList.add('open');document.getElementById('productName').focus();"><i class="fas fa-plus"></i></button>
+
+<!-- BOTTOM SHEET EDIT -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="editSheet">
+    <h3><i class="fas fa-edit"></i> Edit Produk</h3>
+    <input type="hidden" id="editProductId">
+    <input type="text" id="editProductName" placeholder="Nama Produk">
+    <textarea id="editProductDesc" rows="2" placeholder="Deskripsi"></textarea>
+    <input type="number" id="editProductPrice" placeholder="Harga">
+    <input type="number" id="editProductStock" placeholder="Stok">
+    <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
+    <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Konten teks"></textarea></div>
+    <div id="editItemLinkField" style="display:none;"><input type="url" id="editItemLink" placeholder="https://..."></div>
+    <div id="editItemHtmlField" style="display:none;"><textarea id="editItemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
+    <select id="editBonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+    <div id="editBonusTextField" style="display:none;"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+    <div id="editBonusLinkField" style="display:none;"><input type="url" id="editBonusLink" placeholder="https://..."></div>
+    <button onclick="saveEditProduct()" class="btn-full" style="background:#10b981;color:white;"><i class="fas fa-save"></i> Simpan</button>
+    <button onclick="closeSheet()" class="btn-full" style="background:#475569;color:white;"><i class="fas fa-times"></i> Batal</button>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -143,29 +221,51 @@
 <script>
 let adminPassword = '';
 let currentEditId = null;
-let selectedOrders = new Set();
 let autoRefreshInterval = null;
 let autoRefreshOn = false;
 let currentIP = '';
+let allOrders = [];
+let orderPage = 1;
+const ORDER_PER_PAGE = 10;
 
 function toast(msg, isError) {
     var t = document.getElementById('toast');
-    t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
+    t.innerHTML = msg;
     t.style.background = isError ? '#b91c1c' : '#1e293b';
     t.style.opacity = '1';
-    setTimeout(function() { t.style.opacity = '0'; }, 3000);
+    setTimeout(function() { t.style.opacity = '0'; }, 2000);
 }
 
-function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
-
-async function getMyIP() {
-    try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; }
-    catch(e) { return null; }
-}
-
+function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m==='&'?'&amp;':m==='<'?'&lt;':m=='>'?'&gt;'; }); }
+async function getMyIP() { try { var r = await fetch('https://api.ipify.org?format=json'); return (await r.json()).ip; } catch(e) { return null; } }
 function goToUnauthorized() { window.location.href = '/unauthorized'; }
-function showLoginForm() { document.getElementById('loginCard').style.display = 'block'; document.getElementById('adminContent').style.display = 'none'; }
-function showAdminPanel() { document.getElementById('loginCard').style.display = 'none'; document.getElementById('adminContent').style.display = 'block'; document.getElementById('currentIP').textContent = currentIP || '-'; document.getElementById('ipStatus').textContent = 'Admin'; document.getElementById('ipStatus').style.color = '#10b981'; loadStats(); loadProducts(); loadOrders(); }
+function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; document.getElementById('fabAdd').style.display='none'; }
+function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('fabAdd').style.display='flex'; document.getElementById('currentIP').textContent=currentIP||'-'; loadStats(); loadProducts(); loadOrders(); switchTab('stats'); }
+
+// ========== SWIPE DELETE ==========
+let touchStartX = 0;
+document.addEventListener('touchstart', function(e) { if (e.target.closest('.order-item')) touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', function(e) {
+    var item = e.target.closest('.order-item');
+    if (!item) return;
+    var diff = touchStartX - (e.changedTouches[0]?.clientX || touchStartX);
+    if (diff > 60) {
+        item.style.transform = 'translateX(-60px)';
+        var id = item.getAttribute('data-id');
+        if (confirm('Hapus order #' + id + '?')) {
+            fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, orderIds: [id] }) })
+                .then(function() { loadOrders(); loadStats(); });
+        } else { item.style.transform = ''; }
+    } else { item.style.transform = ''; }
+});
+
+// ========== TABS ==========
+function switchTab(tabName) {
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.getElementById('panel-'+tabName).classList.add('active');
+    event.target.closest('.tab').classList.add('active');
+}
 
 // ========== AUTO LOGIN ==========
 async function checkAutoLogin() {
@@ -181,108 +281,91 @@ async function checkAutoLogin() {
     } catch(e) { showLoginForm(); }
 }
 
-// ========== LOGIN ==========
 async function doLogin() {
-    var password = document.getElementById('adminKeyInput').value;
-    var errorDiv = document.getElementById('loginError');
-    if (!password) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
-    errorDiv.style.display = 'none';
+    var pwd = document.getElementById('adminKeyInput').value;
+    if (!pwd) return;
     try {
-        var res = await fetch('/api/admin/set-ip', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey: password })
-        });
-        if (res.ok) {
-            adminPassword = password;
-            showAdminPanel();
-            toast('Login berhasil! IP disimpan sebagai Admin.');
-        } else {
-            errorDiv.innerText = 'Kunci admin salah!';
-            errorDiv.style.display = 'block';
-        }
-    } catch(e) { errorDiv.innerText = 'Gagal terhubung'; errorDiv.style.display = 'block'; }
+        var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: pwd }) });
+        if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); }
+        else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; }
+    } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; }
 }
 
-function doLogout() { adminPassword = ''; showLoginForm(); document.getElementById('adminKeyInput').value = ''; if (autoRefreshOn) toggleAutoRefresh(); toast('Logout berhasil.'); }
-
-async function doResetIP() {
-    if (!confirm('Reset kunci IP Admin?')) return;
-    try { await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); } catch(e) {}
-    adminPassword = ''; showLoginForm(); document.getElementById('adminKeyInput').value = ''; if (autoRefreshOn) toggleAutoRefresh(); toast('IP Admin direset.');
-}
+function doLogout() { adminPassword=''; showLoginForm(); if(autoRefreshOn) toggleAutoRefresh(); }
+async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); doLogout(); toast('IP direset'); }
 
 function toggleAutoRefresh() {
     autoRefreshOn = !autoRefreshOn;
     var btn = document.getElementById('autoRefreshBtn');
-    if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000); }
-    else { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+    if (autoRefreshOn) { btn.innerHTML='<i class="fas fa-sync-alt fa-spin"></i> ON'; btn.style.background='#10b981'; autoRefreshInterval=setInterval(function(){ loadStats(); loadOrders(); }, 30000); }
+    else { btn.innerHTML='<i class="fas fa-sync-alt"></i> OFF'; btn.style.background=''; clearInterval(autoRefreshInterval); }
 }
+function refreshAll() { loadStats(); loadProducts(); loadOrders(); toast('Refreshed'); }
 
-function refreshAll() { loadStats(); loadProducts(); loadOrders(); }
-function updateSelectedCount() { document.getElementById('selectedCount').innerText = selectedOrders.size + ' dipilih'; }
-
-async function deleteSelected() {
-    if (selectedOrders.size === 0) return;
-    if (!confirm('Hapus ' + selectedOrders.size + ' order?')) return;
-    var res = await fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, orderIds: Array.from(selectedOrders) }) });
-    if (res.ok) { selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
-}
-
-function selectAllOrders() {
-    var cbs = document.querySelectorAll('.order-checkbox');
-    var allSel = Array.from(cbs).every(function(cb) { return cb.checked; });
-    cbs.forEach(function(cb) { cb.checked = !allSel; if (!allSel) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); });
-    updateSelectedCount();
-}
-
-function toggleOrderSelect(cb) { if (cb.checked) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); updateSelectedCount(); }
-
+// ========== LOAD DATA ==========
 async function loadStats() {
     try {
-        var res = await fetch('/api/admin/stats?adminKey=' + adminPassword);
+        var res = await fetch('/api/admin/stats?adminKey='+adminPassword);
         var data = await res.json();
         if (data.success) {
             var s = data.stats;
             document.getElementById('statsGrid').innerHTML =
-                '<div class="stat-card"><div class="stat-number">' + s.totalProducts + '</div><div class="stat-label">Produk</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + s.totalOrders + '</div><div class="stat-label">Order</div></div>' +
-                '<div class="stat-card"><div class="stat-number">Rp ' + s.totalRevenue.toLocaleString() + '</div><div class="stat-label">Pendapatan</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + s.pendingCount + '</div><div class="stat-label">Pending</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + s.paidCount + '</div><div class="stat-label">Paid</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + (s.expiredCount + s.cancelledCount) + '</div><div class="stat-label">Expired/Cancel</div></div>';
+                '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div>'+
+                '<div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div>'+
+                '<div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Revenue</div></div>'+
+                '<div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div>'+
+                '<div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div>'+
+                '<div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Exp/Cancel</div></div>';
         }
     } catch(e) {}
 }
 
 async function loadProducts() {
-    var res = await fetch('/api/admin/products?adminKey=' + adminPassword);
+    var res = await fetch('/api/admin/products?adminKey='+adminPassword);
     var data = await res.json();
     var c = document.getElementById('productsList');
+    document.getElementById('prodCount').textContent = (data.products||[]).length;
     if (data.success && data.products.length) {
         c.innerHTML = data.products.map(function(p) {
-            return '<div class="item"><div class="item-info"><div class="item-name">' + escapeHtml(p.name) + '</div><div class="item-detail">Rp ' + p.price.toLocaleString() + ' | Stok: ' + p.stock + ' | Tipe: ' + p.itemType + '</div></div><div class="item-actions"><button class="btn-success" onclick="testProduct(' + p.id + ')"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal(' + p.id + ')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct(' + p.id + ')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
+            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="testProduct('+p.id+')"><i class="fas fa-flask"></i></button><button class="btn-sm green" onclick="openEditSheet('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>';
         }).join('');
-    } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; }
+    } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Belum ada produk</div>'; }
 }
 
 async function loadOrders() {
-    try {
-        var res = await fetch('/api/admin/orders?adminKey=' + adminPassword);
-        var data = await res.json();
-        var c = document.getElementById('ordersList');
-        if (data.success && data.orders.length) {
-            c.innerHTML = data.orders.map(function(o) {
-                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
-                return '<div class="item"><input type="checkbox" class="order-checkbox" value="' + o.id + '" onchange="toggleOrderSelect(this)"><div class="item-info"><div class="item-name">' + escapeHtml(o.productName) + '</div><div class="item-detail">' + escapeHtml(o.customerName) + ' | ' + st + '</div><div class="item-detail" style="font-size:0.6rem;">' + new Date(o.createdAt).toLocaleString() + ' | ID: ' + o.id + '</div></div></div>';
-            }).join('');
-            selectedOrders.clear(); updateSelectedCount();
-            document.getElementById('selectAllBtn').onclick = selectAllOrders;
-            document.getElementById('deleteSelectedBtn').onclick = deleteSelected;
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
-    } catch(e) {}
+    var res = await fetch('/api/admin/orders?adminKey='+adminPassword);
+    var data = await res.json();
+    if (data.success) { allOrders = data.orders||[]; document.getElementById('orderCount').textContent = allOrders.length; renderOrderPage(); }
 }
 
+function renderOrderPage() {
+    var query = (document.getElementById('orderSearch').value||'').toLowerCase();
+    var filter = document.getElementById('orderFilter').value;
+    var filtered = allOrders.filter(function(o) {
+        var matchSearch = !query || o.customerName.toLowerCase().includes(query) || o.productName.toLowerCase().includes(query) || (o.orderCode||'').includes(query);
+        var matchFilter = filter==='all' || o.status===filter;
+        return matchSearch && matchFilter;
+    });
+    var totalPages = Math.ceil(filtered.length / ORDER_PER_PAGE) || 1;
+    if (orderPage > totalPages) orderPage = totalPages;
+    var start = (orderPage-1) * ORDER_PER_PAGE;
+    var pageOrders = filtered.slice(start, start + ORDER_PER_PAGE);
+    var c = document.getElementById('ordersList');
+    if (pageOrders.length) {
+        c.innerHTML = pageOrders.map(function(o) {
+            var st = o.status==='paid'?'✅':o.status==='pending'?'⏳':o.status==='expired'?'❌':'🗑️';
+            return '<div class="item order-item" data-id="'+o.id+'"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+' '+o.status+'</div><div class="item-detail" style="font-size:0.55rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>';
+        }).join('');
+    } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Tidak ada order</div>'; }
+    var pag = document.getElementById('orderPagination');
+    if (totalPages > 1) {
+        var html = '';
+        for (var i=1; i<=totalPages; i++) { html += '<button class="page-btn'+(i===orderPage?' active':'')+'" onclick="orderPage='+i+';renderOrderPage();">'+i+'</button>'; }
+        pag.innerHTML = html;
+    } else { pag.innerHTML = ''; }
+}
+
+// ========== PRODUCT CRUD ==========
 async function addProduct() {
     var it = document.getElementById('itemType').value;
     var ic = ''; if (it==='text') ic=document.getElementById('itemText').value; else if (it==='link') ic=document.getElementById('itemLink').value; else if (it==='html') ic=document.getElementById('itemHtml').value;
@@ -290,36 +373,34 @@ async function addProduct() {
     var bt = document.getElementById('bonusType').value;
     var bc = ''; if (bt==='text') bc=document.getElementById('bonusText').value; else if (bt==='link') bc=document.getElementById('bonusLink').value;
     var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
-    if (res.ok) { toast('Produk ditambahkan'); document.getElementById('productName').value=''; document.getElementById('productDesc').value=''; document.getElementById('productPrice').value=''; document.getElementById('productStock').value=''; document.getElementById('itemText').value=''; document.getElementById('itemLink').value=''; document.getElementById('itemHtml').value=''; document.getElementById('bonusText').value=''; document.getElementById('bonusLink').value=''; loadProducts(); loadStats(); }
+    if (res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id) { document.getElementById(id).value=''; }); loadProducts(); loadStats(); }
     else { toast('Gagal', true); }
 }
 
 async function testProduct(pid) {
-    try {
-        var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey: adminPassword }) });
-        if (res.ok) { var h = await res.text(); var w = window.open(); w.document.write(h); w.document.close(); toast('✅ Berhasil!'); }
-        else { toast('❌ Gagal', true); }
-    } catch(e) { toast('❌ Error', true); }
+    var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey: adminPassword }) });
+    if (res.ok) { var h = await res.text(); var w = window.open(); w.document.write(h); w.document.close(); }
 }
 
 async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); loadProducts(); loadStats(); } }
 
-async function openEditModal(id) {
-    var res = await fetch('/api/admin/product/'+id+'?adminKey=' + adminPassword);
-    var data = await res.json();
-    if (data.success && data.product) {
-        var p = data.product; currentEditId = p.id;
-        document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock;
-        document.getElementById('editItemType').value=p.itemType||'text';
-        if (p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if (p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent;
-        document.getElementById('editBonusType').value=p.bonusType||'none';
-        if (p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if (p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||'';
-        toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex';
-    }
+// ========== EDIT SHEET ==========
+function openEditSheet(id) {
+    fetch('/api/admin/product/'+id+'?adminKey='+adminPassword).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success && data.product) {
+            var p = data.product; currentEditId = p.id;
+            document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock;
+            document.getElementById('editItemType').value=p.itemType||'text';
+            if (p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if (p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent;
+            document.getElementById('editBonusType').value=p.bonusType||'none';
+            if (p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if (p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||'';
+            toggleEditFields();
+            document.getElementById('sheetOverlay').classList.add('show');
+            document.getElementById('editSheet').classList.add('show');
+        }
+    });
 }
-
-function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
-
+function closeSheet() { document.getElementById('sheetOverlay').classList.remove('show'); document.getElementById('editSheet').classList.remove('show'); currentEditId=null; }
 async function saveEditProduct() {
     var it = document.getElementById('editItemType').value;
     var ic = ''; if (it==='text') ic=document.getElementById('editItemText').value; else if (it==='link') ic=document.getElementById('editItemLink').value; else if (it==='html') ic=document.getElementById('editItemHtml').value;
@@ -327,8 +408,33 @@ async function saveEditProduct() {
     var bt = document.getElementById('editBonusType').value;
     var bc = ''; if (bt==='text') bc=document.getElementById('editBonusText').value; else if (bt==='link') bc=document.getElementById('editBonusLink').value;
     var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
-    if (res.ok) { toast('Diupdate'); closeEditModal(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
+    if (res.ok) { toast('✅ Diupdate'); closeSheet(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
 }
+
+function toggleEditFields() {
+    var t = document.getElementById('editItemType').value;
+    ['editItemTextField','editItemLinkField','editItemHtmlField'].forEach(function(id) { document.getElementById(id).style.display='none'; });
+    if (t==='text') document.getElementById('editItemTextField').style.display='block'; else if (t==='link') document.getElementById('editItemLinkField').style.display='block'; else if (t==='html') document.getElementById('editItemHtmlField').style.display='block';
+    var bt = document.getElementById('editBonusType').value;
+    ['editBonusTextField','editBonusLinkField'].forEach(function(id) { document.getElementById(id).style.display='none'; });
+    if (bt==='text') document.getElementById('editBonusTextField').style.display='block'; else if (bt==='link') document.getElementById('editBonusLinkField').style.display='block';
+}
+document.getElementById('editItemType').addEventListener('change', toggleEditFields);
+document.getElementById('editBonusType').addEventListener('change', toggleEditFields);
+
+// ========== ITEM TYPE TOGGLE ==========
+function toggleItemFields() {
+    var t = document.getElementById('itemType').value;
+    ['itemTextField','itemLinkField','itemHtmlField'].forEach(function(id) { document.getElementById(id).style.display='none'; });
+    if (t==='text') document.getElementById('itemTextField').style.display='block'; else if (t==='link') document.getElementById('itemLinkField').style.display='block'; else if (t==='html') document.getElementById('itemHtmlField').style.display='block';
+}
+function toggleBonusFields() {
+    var t = document.getElementById('bonusType').value;
+    ['bonusTextField','bonusLinkField'].forEach(function(id) { document.getElementById(id).style.display='none'; });
+    if (t==='text') document.getElementById('bonusTextField').style.display='block'; else if (t==='link') document.getElementById('bonusLinkField').style.display='block';
+}
+document.getElementById('itemType').addEventListener('change', toggleItemFields);
+document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
 
 async function resetOrders() {
     if (!confirm('Hapus semua Pending & Cancelled?')) return;
@@ -344,37 +450,10 @@ async function backupData() {
 async function sendBroadcast() {
     var msg = document.getElementById('broadcastMessage').value.trim();
     if (!msg) return;
-    var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, message:msg }) });
+    var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, message: msg }) });
     var d = await res.json();
-    if (d.success) { toast('📢 Terkirim ke '+d.sentCount+' customer'); document.getElementById('broadcastMessage').value=''; }
+    if (d.success) { toast('📢 Terkirim ke '+d.sentCount); document.getElementById('broadcastMessage').value=''; }
 }
-
-function toggleItemFields() {
-    var t = document.getElementById('itemType').value;
-    document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden');
-    if (t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('itemHtmlField').classList.remove('hidden');
-}
-function toggleBonusFields() {
-    var t = document.getElementById('bonusType').value;
-    document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden');
-    if (t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('bonusLinkField').classList.remove('hidden');
-}
-function toggleEditItemFields() {
-    var t = document.getElementById('editItemType').value;
-    document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden');
-    if (t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden');
-}
-function toggleEditBonusFields() {
-    var t = document.getElementById('editBonusType').value;
-    document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden');
-    if (t==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editBonusLinkField').classList.remove('hidden');
-}
-
-toggleItemFields(); toggleBonusFields();
-document.getElementById('itemType').addEventListener('change', toggleItemFields);
-document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
-document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
-document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 
 checkAutoLogin();
 </script>
