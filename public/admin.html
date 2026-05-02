@@ -67,10 +67,7 @@
     <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
-            <div class="info">
-                <i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | 
-                <span id="ipStatus">-</span>
-            </div>
+            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span></div>
             <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
@@ -121,7 +118,6 @@
 
 </div>
 
-<!-- EDIT MODAL -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-edit"></i> Edit Produk</h3>
@@ -147,7 +143,6 @@
 <div id="toast" class="toast"></div>
 
 <script>
-// ========== GLOBAL STATE ==========
 let adminKey = '';
 let currentEditId = null;
 let selectedOrders = new Set();
@@ -155,9 +150,6 @@ let autoRefreshInterval = null;
 let autoRefreshOn = false;
 let currentIP = '';
 
-const ADMIN_PASSWORD = 'nisaimut';
-
-// ========== TOAST ==========
 function toast(msg, isError) {
     var t = document.getElementById('toast');
     t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
@@ -171,54 +163,26 @@ function escapeHtml(s) {
     return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
 }
 
-// ========== IP ==========
 async function getMyIP() {
-    try {
-        var res = await fetch('https://api.ipify.org?format=json');
-        var data = await res.json();
-        return data.ip;
-    } catch(e) { return null; }
+    try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; }
+    catch(e) { return null; }
 }
 
-// ========== REDIRECT ==========
-function goToUnauthorized() {
-    window.location.href = '/unauthorized';
-}
+function goToUnauthorized() { window.location.href = '/unauthorized'; }
 
 // ========== AUTO LOGIN CHECK ==========
 async function checkAutoLogin() {
     currentIP = await getMyIP();
-    if (!currentIP) {
-        showLoginForm();
-        return;
-    }
-
+    if (!currentIP) { showLoginForm(); return; }
     document.getElementById('currentIP').textContent = currentIP;
 
     try {
         var res = await fetch('/api/admin/check-ip');
         var data = await res.json();
-
-        if (data.isAdmin) {
-            // IP cocok → auto login
-            adminKey = ADMIN_PASSWORD;
-            showAdminPanel();
-            toast('Auto-login! IP Admin terdeteksi.');
-            return;
-        }
-
-        if (!data.hasAdmin) {
-            // Belum ada admin → tampilkan form login
-            showLoginForm('Belum diatur', '#f59e0b');
-            return;
-        }
-
-        // Ada admin tapi IP gak cocok → usir
+        if (data.isAdmin) { adminKey = ''; showAdminPanel(); return; }
+        if (!data.hasAdmin) { showLoginForm('Belum diatur', '#f59e0b'); return; }
         goToUnauthorized();
-
-    } catch(e) {
-        showLoginForm();
-    }
+    } catch(e) { showLoginForm(); }
 }
 
 function showLoginForm(statusText, statusColor) {
@@ -236,43 +200,36 @@ function showAdminPanel() {
     document.getElementById('currentIP').textContent = currentIP || '-';
     document.getElementById('ipStatus').textContent = 'Admin';
     document.getElementById('ipStatus').style.color = '#10b981';
-    loadStats();
-    loadProducts();
-    loadOrders();
+    loadStats(); loadProducts(); loadOrders();
 }
 
-// ========== LOGIN ==========
+// ========== LOGIN (VALIDASI VIA BACKEND) ==========
 async function doLogin() {
-    var key = document.getElementById('adminKeyInput').value;
+    var password = document.getElementById('adminKeyInput').value;
     var errorDiv = document.getElementById('loginError');
-    
-    if (!key) {
-        errorDiv.innerText = 'Masukkan kunci admin';
-        errorDiv.style.display = 'block';
-        return;
-    }
+    if (!password) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
     errorDiv.style.display = 'none';
 
-    if (key === ADMIN_PASSWORD) {
-        // Simpan IP ke database
-        try {
-            await fetch('/api/admin/set-ip', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminKey: key })
-            });
-        } catch(e) {}
-
-        adminKey = key;
-        showAdminPanel();
-        toast('Login berhasil! IP lo disimpan sebagai Admin.');
-    } else {
-        errorDiv.innerText = 'Kunci admin salah!';
+    try {
+        var res = await fetch('/api/admin/set-ip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey: password })
+        });
+        if (res.ok) {
+            adminKey = password;
+            showAdminPanel();
+            toast('Login berhasil! IP disimpan sebagai Admin.');
+        } else {
+            errorDiv.innerText = 'Kunci admin salah!';
+            errorDiv.style.display = 'block';
+        }
+    } catch(e) {
+        errorDiv.innerText = 'Gagal terhubung ke server';
         errorDiv.style.display = 'block';
     }
 }
 
-// ========== LOGOUT ==========
 function doLogout() {
     adminKey = '';
     showLoginForm('Bukan Admin', '#ef4444');
@@ -281,10 +238,8 @@ function doLogout() {
     toast('Logout berhasil.');
 }
 
-// ========== RESET IP ==========
 async function doResetIP() {
     if (!confirm('Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan jadi Admin baru.')) return;
-
     try {
         await fetch('/api/admin/reset-ip', {
             method: 'POST',
@@ -292,81 +247,41 @@ async function doResetIP() {
             body: JSON.stringify({ adminKey: adminKey })
         });
     } catch(e) {}
-
     adminKey = '';
     showLoginForm('Belum diatur', '#f59e0b');
     document.getElementById('adminKeyInput').value = '';
     if (autoRefreshOn) toggleAutoRefresh();
-    toast('IP Admin direset. Silakan login ulang.');
+    toast('IP Admin direset.');
 }
 
 // ========== AUTO REFRESH ==========
 function toggleAutoRefresh() {
     autoRefreshOn = !autoRefreshOn;
     var btn = document.getElementById('autoRefreshBtn');
-    if (autoRefreshOn) {
-        btn.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)';
-        autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000);
-        toast('Auto refresh ON');
-    } else {
-        btn.classList.remove('active');
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF';
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-        toast('Auto refresh OFF');
-    }
+    if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000); toast('Auto refresh ON'); }
+    else { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); autoRefreshInterval = null; toast('Auto refresh OFF'); }
 }
 
-function refreshAll() {
-    loadStats();
-    loadProducts();
-    loadOrders();
-    toast('Data diperbarui');
-}
-
-// ========== SELECTION ==========
-function updateSelectedCount() {
-    document.getElementById('selectedCount').innerText = selectedOrders.size + ' dipilih';
-}
+function refreshAll() { loadStats(); loadProducts(); loadOrders(); toast('Data diperbarui'); }
+function updateSelectedCount() { document.getElementById('selectedCount').innerText = selectedOrders.size + ' dipilih'; }
 
 async function deleteSelected() {
     if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
     if (!confirm('Hapus ' + selectedOrders.size + ' order?')) return;
-    var res = await fetch('/api/admin/delete-selected-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey, orderIds: Array.from(selectedOrders) })
-    });
-    if (res.ok) {
-        toast('✅ ' + selectedOrders.size + ' order dihapus');
-        selectedOrders.clear();
-        updateSelectedCount();
-        loadOrders();
-        loadStats();
-    } else {
-        toast('Gagal', true);
-    }
+    var res = await fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, orderIds: Array.from(selectedOrders) }) });
+    if (res.ok) { toast('✅ ' + selectedOrders.size + ' order dihapus'); selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
+    else { toast('Gagal', true); }
 }
 
 function selectAllOrders() {
     var cbs = document.querySelectorAll('.order-checkbox');
     var allSel = Array.from(cbs).every(function(cb) { return cb.checked; });
-    cbs.forEach(function(cb) {
-        cb.checked = !allSel;
-        if (!allSel) selectedOrders.add(cb.value);
-        else selectedOrders.delete(cb.value);
-    });
+    cbs.forEach(function(cb) { cb.checked = !allSel; if (!allSel) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); });
     updateSelectedCount();
 }
 
-function toggleOrderSelect(cb) {
-    if (cb.checked) selectedOrders.add(cb.value);
-    else selectedOrders.delete(cb.value);
-    updateSelectedCount();
-}
+function toggleOrderSelect(cb) { if (cb.checked) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); updateSelectedCount(); }
 
-// ========== LOAD DATA ==========
 async function loadStats() {
     try {
         var res = await fetch('/api/admin/stats?adminKey=' + adminKey);
@@ -392,9 +307,7 @@ async function loadProducts() {
         c.innerHTML = data.products.map(function(p) {
             return '<div class="item"><div class="item-info"><div class="item-name">' + escapeHtml(p.name) + '</div><div class="item-detail">Rp ' + p.price.toLocaleString() + ' | Stok: ' + p.stock + ' | Tipe: ' + p.itemType + '</div></div><div class="item-actions"><button class="btn-success" onclick="testProduct(' + p.id + ')"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal(' + p.id + ')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct(' + p.id + ')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
         }).join('');
-    } else {
-        c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
-    }
+    } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; }
 }
 
 async function loadOrders() {
@@ -404,252 +317,112 @@ async function loadOrders() {
         var c = document.getElementById('ordersList');
         if (data.success && data.orders.length) {
             c.innerHTML = data.orders.map(function(o) {
-                var statusText = o.status === 'paid' ? '✅ Lunas' : o.status === 'pending' ? '⏳ Pending' : o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled';
-                return '<div class="item"><input type="checkbox" class="order-checkbox" value="' + o.id + '" onchange="toggleOrderSelect(this)"><div class="item-info"><div class="item-name">' + escapeHtml(o.productName) + '</div><div class="item-detail">' + escapeHtml(o.customerName) + ' | ' + statusText + '</div><div class="item-detail" style="font-size:0.6rem;">' + new Date(o.createdAt).toLocaleString() + ' | ID: ' + o.id + '</div></div></div>';
+                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
+                return '<div class="item"><input type="checkbox" class="order-checkbox" value="' + o.id + '" onchange="toggleOrderSelect(this)"><div class="item-info"><div class="item-name">' + escapeHtml(o.productName) + '</div><div class="item-detail">' + escapeHtml(o.customerName) + ' | ' + st + '</div><div class="item-detail" style="font-size:0.6rem;">' + new Date(o.createdAt).toLocaleString() + ' | ID: ' + o.id + '</div></div></div>';
             }).join('');
-            selectedOrders.clear();
-            updateSelectedCount();
+            selectedOrders.clear(); updateSelectedCount();
             document.getElementById('selectAllBtn').onclick = selectAllOrders;
             document.getElementById('deleteSelectedBtn').onclick = deleteSelected;
-        } else {
-            c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>';
-        }
+        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
     } catch(e) {}
 }
 
-// ========== PRODUCT CRUD ==========
 async function addProduct() {
     var it = document.getElementById('itemType').value;
-    var ic = '';
-    if (it === 'text') ic = document.getElementById('itemText').value;
-    else if (it === 'link') ic = document.getElementById('itemLink').value;
-    else if (it === 'html') ic = document.getElementById('itemHtml').value;
-    if (!ic) { toast('Konten item wajib diisi', true); return; }
-
+    var ic = ''; if (it==='text') ic=document.getElementById('itemText').value; else if (it==='link') ic=document.getElementById('itemLink').value; else if (it==='html') ic=document.getElementById('itemHtml').value;
+    if (!ic) { toast('Konten wajib diisi', true); return; }
     var bt = document.getElementById('bonusType').value;
-    var bc = '';
-    if (bt === 'text') bc = document.getElementById('bonusText').value;
-    else if (bt === 'link') bc = document.getElementById('bonusLink').value;
-
-    var res = await fetch('/api/admin/product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            adminKey: adminKey,
-            name: document.getElementById('productName').value,
-            description: document.getElementById('productDesc').value,
-            price: parseInt(document.getElementById('productPrice').value),
-            stock: parseInt(document.getElementById('productStock').value) || 1,
-            itemType: it,
-            itemContent: ic,
-            bonusType: bt,
-            bonusContent: bc
-        })
-    });
-    if (res.ok) {
-        toast('Produk ditambahkan');
-        document.getElementById('productName').value = '';
-        document.getElementById('productDesc').value = '';
-        document.getElementById('productPrice').value = '';
-        document.getElementById('productStock').value = '';
-        document.getElementById('itemText').value = '';
-        document.getElementById('itemLink').value = '';
-        document.getElementById('itemHtml').value = '';
-        document.getElementById('bonusText').value = '';
-        document.getElementById('bonusLink').value = '';
-        loadProducts();
-        loadStats();
-    } else {
-        toast('Gagal', true);
-    }
+    var bc = ''; if (bt==='text') bc=document.getElementById('bonusText').value; else if (bt==='link') bc=document.getElementById('bonusLink').value;
+    var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+    if (res.ok) { toast('Produk ditambahkan'); document.getElementById('productName').value=''; document.getElementById('productDesc').value=''; document.getElementById('productPrice').value=''; document.getElementById('productStock').value=''; document.getElementById('itemText').value=''; document.getElementById('itemLink').value=''; document.getElementById('itemHtml').value=''; document.getElementById('bonusText').value=''; document.getElementById('bonusLink').value=''; loadProducts(); loadStats(); }
+    else { toast('Gagal', true); }
 }
 
 async function testProduct(pid) {
     toast('Membuat test order...');
     try {
-        var res = await fetch('/api/admin/test-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: pid, adminKey: adminKey })
-        });
-        if (res.ok) {
-            var h = await res.text();
-            var w = window.open();
-            w.document.write(h);
-            w.document.close();
-            toast('✅ Berhasil!');
-        } else {
-            toast('❌ Gagal', true);
-        }
+        var res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey }) });
+        if (res.ok) { var h = await res.text(); var w = window.open(); w.document.write(h); w.document.close(); toast('✅ Berhasil!'); }
+        else { toast('❌ Gagal', true); }
     } catch(e) { toast('❌ Error', true); }
 }
 
-async function deleteProduct(id) {
-    if (!confirm('Hapus produk ini?')) return;
-    await fetch('/api/admin/product/' + id, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey })
-    });
-    loadProducts();
-    loadStats();
-}
+async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) }); loadProducts(); loadStats(); } }
 
 async function openEditModal(id) {
-    var res = await fetch('/api/admin/product/' + id + '?adminKey=' + adminKey);
+    var res = await fetch('/api/admin/product/'+id+'?adminKey='+adminKey);
     var data = await res.json();
     if (data.success && data.product) {
-        var p = data.product;
-        currentEditId = p.id;
-        document.getElementById('editProductId').value = p.id;
-        document.getElementById('editProductName').value = p.name;
-        document.getElementById('editProductDesc').value = p.description || '';
-        document.getElementById('editProductPrice').value = p.price;
-        document.getElementById('editProductStock').value = p.stock;
-        document.getElementById('editItemType').value = p.itemType || 'text';
-        if (p.itemType === 'link') document.getElementById('editItemLink').value = p.itemContent;
-        else if (p.itemType === 'html') document.getElementById('editItemHtml').value = p.itemContent;
-        else document.getElementById('editItemText').value = p.itemContent;
-        document.getElementById('editBonusType').value = p.bonusType || 'none';
-        if (p.bonusType === 'link') document.getElementById('editBonusLink').value = p.bonusContent || '';
-        else if (p.bonusType === 'text') document.getElementById('editBonusText').value = p.bonusContent || '';
-        toggleEditItemFields();
-        toggleEditBonusFields();
-        document.getElementById('editModal').style.display = 'flex';
+        var p = data.product; currentEditId = p.id;
+        document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock;
+        document.getElementById('editItemType').value=p.itemType||'text';
+        if (p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if (p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent;
+        document.getElementById('editBonusType').value=p.bonusType||'none';
+        if (p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if (p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||'';
+        toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex';
     }
 }
 
-function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-    currentEditId = null;
-}
+function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
 
 async function saveEditProduct() {
     var it = document.getElementById('editItemType').value;
-    var ic = '';
-    if (it === 'text') ic = document.getElementById('editItemText').value;
-    else if (it === 'link') ic = document.getElementById('editItemLink').value;
-    else if (it === 'html') ic = document.getElementById('editItemHtml').value;
+    var ic = ''; if (it==='text') ic=document.getElementById('editItemText').value; else if (it==='link') ic=document.getElementById('editItemLink').value; else if (it==='html') ic=document.getElementById('editItemHtml').value;
     if (!ic) { toast('Konten wajib diisi', true); return; }
-
     var bt = document.getElementById('editBonusType').value;
-    var bc = '';
-    if (bt === 'text') bc = document.getElementById('editBonusText').value;
-    else if (bt === 'link') bc = document.getElementById('editBonusLink').value;
-
-    var res = await fetch('/api/admin/product/' + currentEditId, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            adminKey: adminKey,
-            name: document.getElementById('editProductName').value,
-            description: document.getElementById('editProductDesc').value,
-            price: parseInt(document.getElementById('editProductPrice').value),
-            stock: parseInt(document.getElementById('editProductStock').value) || 1,
-            itemType: it,
-            itemContent: ic,
-            bonusType: bt,
-            bonusContent: bc
-        })
-    });
-    if (res.ok) {
-        toast('Produk diupdate');
-        closeEditModal();
-        loadProducts();
-        loadStats();
-    } else {
-        toast('Gagal', true);
-    }
+    var bc = ''; if (bt==='text') bc=document.getElementById('editBonusText').value; else if (bt==='link') bc=document.getElementById('editBonusLink').value;
+    var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+    if (res.ok) { toast('Diupdate'); closeEditModal(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
 }
 
-// ========== ORDERS ACTIONS ==========
 async function resetOrders() {
-    if (!confirm('Hapus semua order Pending & Cancelled? Order Paid aman.')) return;
-    var res = await fetch('/api/admin/reset-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey })
-    });
-    if (res.ok) {
-        var d = await res.json();
-        toast('✅ ' + d.deletedCount + ' dihapus, ' + d.keptCount + ' paid');
-        loadOrders();
-        loadStats();
-    } else {
-        toast('Gagal', true);
-    }
+    if (!confirm('Hapus semua Pending & Cancelled? Paid aman.')) return;
+    var res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
+    if (res.ok) { var d = await res.json(); toast('✅ '+d.deletedCount+' dihapus, '+d.keptCount+' paid'); loadOrders(); loadStats(); }
+    else { toast('Gagal', true); }
 }
 
 async function backupData() {
-    var res = await fetch('/api/admin/backup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey })
-    });
-    if (res.ok) toast('📦 Backup dikirim ke Telegram');
-    else toast('Gagal', true);
+    var res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
+    if (res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true);
 }
 
 async function sendBroadcast() {
     var msg = document.getElementById('broadcastMessage').value.trim();
     if (!msg) { toast('Pesan wajib diisi', true); return; }
-    var res = await fetch('/api/admin/broadcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey: adminKey, message: msg })
-    });
+    var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, message:msg }) });
     var d = await res.json();
-    if (d.success) {
-        toast('📢 Terkirim ke ' + d.sentCount + ' customer');
-        document.getElementById('broadcastMessage').value = '';
-    } else {
-        toast('Gagal', true);
-    }
+    if (d.success) { toast('📢 Terkirim ke '+d.sentCount+' customer'); document.getElementById('broadcastMessage').value=''; }
+    else { toast('Gagal', true); }
 }
 
-// ========== TOGGLE FIELDS ==========
 function toggleItemFields() {
     var t = document.getElementById('itemType').value;
-    document.getElementById('itemTextField').classList.add('hidden');
-    document.getElementById('itemLinkField').classList.add('hidden');
-    document.getElementById('itemHtmlField').classList.add('hidden');
-    if (t === 'text') document.getElementById('itemTextField').classList.remove('hidden');
-    else if (t === 'link') document.getElementById('itemLinkField').classList.remove('hidden');
-    else if (t === 'html') document.getElementById('itemHtmlField').classList.remove('hidden');
+    document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden');
+    if (t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('itemHtmlField').classList.remove('hidden');
 }
 function toggleBonusFields() {
     var t = document.getElementById('bonusType').value;
-    document.getElementById('bonusTextField').classList.add('hidden');
-    document.getElementById('bonusLinkField').classList.add('hidden');
-    if (t === 'text') document.getElementById('bonusTextField').classList.remove('hidden');
-    else if (t === 'link') document.getElementById('bonusLinkField').classList.remove('hidden');
+    document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden');
+    if (t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('bonusLinkField').classList.remove('hidden');
 }
 function toggleEditItemFields() {
     var t = document.getElementById('editItemType').value;
-    document.getElementById('editItemTextField').classList.add('hidden');
-    document.getElementById('editItemLinkField').classList.add('hidden');
-    document.getElementById('editItemHtmlField').classList.add('hidden');
-    if (t === 'text') document.getElementById('editItemTextField').classList.remove('hidden');
-    else if (t === 'link') document.getElementById('editItemLinkField').classList.remove('hidden');
-    else if (t === 'html') document.getElementById('editItemHtmlField').classList.remove('hidden');
+    document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden');
+    if (t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden');
 }
 function toggleEditBonusFields() {
     var t = document.getElementById('editBonusType').value;
-    document.getElementById('editBonusTextField').classList.add('hidden');
-    document.getElementById('editBonusLinkField').classList.add('hidden');
-    if (t === 'text') document.getElementById('editBonusTextField').classList.remove('hidden');
-    else if (t === 'link') document.getElementById('editBonusLinkField').classList.remove('hidden');
+    document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden');
+    if (t==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editBonusLinkField').classList.remove('hidden');
 }
 
-// ========== INIT ==========
-toggleItemFields();
-toggleBonusFields();
+toggleItemFields(); toggleBonusFields();
 document.getElementById('itemType').addEventListener('change', toggleItemFields);
 document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
 document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
 document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 
-// Mulai cek auto-login
 checkAutoLogin();
 </script>
 </body>
