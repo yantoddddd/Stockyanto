@@ -7,95 +7,75 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family:'Inter', sans-serif; padding:16px; animation:fadeIn 0.5s ease; padding-bottom:100px; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
-        @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
-        .container { max-width:900px; margin:0 auto; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; padding: 16px; padding-bottom: 100px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .container { max-width: 900px; margin: 0 auto; }
 
         /* TOP BAR */
-        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
-        .top-bar .info { color:#64748b; font-size:0.65rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-        .top-bar .info .dot { width:7px; height:7px; background:#10b981; border-radius:50%; }
-        .btn-icon { background:transparent; border:1px solid #475569; color:#94a3b8; padding:6px 10px; border-radius:20px; cursor:pointer; font-size:0.7rem; display:flex; align-items:center; gap:4px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 10px 16px; border: 1px solid rgba(255,255,255,0.08); }
+        .top-bar .info { color: #64748b; font-size: 0.65rem; display: flex; align-items: center; gap: 8px; }
+        .btn-sm { padding: 6px 12px; border-radius: 16px; border: 1px solid #475569; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; }
 
         /* TABS */
-        .tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; }
-        .tab { padding:8px 16px; border-radius:20px; border:1px solid #334155; background:transparent; color:#94a3b8; font-size:0.75rem; cursor:pointer; white-space:nowrap; transition:0.2s; display:flex; align-items:center; gap:6px; }
-        .tab.active { background:#3b82f6; border-color:#3b82f6; color:white; }
-        .tab .badge { background:rgba(255,255,255,0.2); padding:1px 6px; border-radius:10px; font-size:0.6rem; }
+        .tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 8px 16px; border-radius: 20px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+        .tab.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+        .tab .badge { background: rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 10px; font-size: 0.6rem; }
 
         /* PANELS */
-        .panel { display:none; }
-        .panel.active { display:block; }
+        .panel { display: none; }
+        .panel.active { display: block; }
 
         /* CARDS */
-        .card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:24px; padding:20px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.08); }
-        .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; cursor:pointer; }
-        .card-header h2 { color:white; font-size:0.95rem; display:flex; align-items:center; gap:8px; }
-        .card-header i.fa-chevron-down { transition:0.3s; color:#64748b; }
-        .card-header.open i.fa-chevron-down { transform:rotate(180deg); }
-        .card-body { display:none; }
-        .card-body.open { display:block; }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 24px; padding: 18px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08); }
+        .card h2 { color: white; font-size: 0.9rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
         /* STATS */
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; }
-        .stat-card { background:rgba(0,0,0,0.3); border-radius:16px; padding:14px; text-align:center; }
-        .stat-number { font-size:1.3rem; font-weight:800; color:#60a5fa; }
-        .stat-label { font-size:0.6rem; color:#94a3b8; margin-top:2px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+        .stat-card { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; text-align: center; }
+        .stat-number { font-size: 1.3rem; font-weight: 800; color: #60a5fa; }
+        .stat-label { font-size: 0.6rem; color: #94a3b8; margin-top: 2px; }
 
         /* ITEMS */
-        .item { background:#1e293b; padding:12px; border-radius:14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; transition:0.2s; position:relative; overflow:hidden; }
-        .item:active { background:#334155; }
-        .item-info { flex:1; min-width:120px; }
-        .item-name { font-weight:600; color:white; font-size:0.8rem; margin-bottom:2px; }
-        .item-detail { font-size:0.65rem; color:#94a3b8; }
-        .item-actions { display:flex; gap:6px; }
-        .btn-sm { padding:5px 10px; border-radius:14px; border:none; cursor:pointer; font-size:0.65rem; display:flex; align-items:center; gap:4px; color:white; }
-        .btn-sm.blue { background:#3b82f6; }
-        .btn-sm.green { background:#10b981; }
-        .btn-sm.red { background:#b91c1c; }
+        .item { background: #1e293b; padding: 12px; border-radius: 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; transition: 0.2s; }
+        .item:active { background: #334155; }
+        .item-info { flex: 1; min-width: 120px; }
+        .item-name { font-weight: 600; color: white; font-size: 0.8rem; margin-bottom: 2px; }
+        .item-detail { font-size: 0.65rem; color: #94a3b8; }
+        .item-actions { display: flex; gap: 6px; }
+        .btn-item { padding: 5px 10px; border-radius: 14px; border: none; cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; gap: 4px; color: white; }
+        .btn-item.blue { background: #3b82f6; }
+        .btn-item.green { background: #10b981; }
+        .btn-item.red { background: #b91c1c; }
+        .btn-item.orange { background: #f59e0b; }
 
-        /* ORDER SEARCH */
-        .search-mini { display:flex; gap:8px; margin-bottom:10px; }
-        .search-mini input { flex:1; padding:8px 14px; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.75rem; outline:none; }
-        .search-mini select { padding:8px 10px; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.7rem; outline:none; }
+        /* INPUT */
+        input, textarea, select { width: 100%; padding: 10px; margin: 6px 0; border-radius: 16px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.8rem; outline: none; }
+        input:focus, textarea:focus, select:focus { border-color: #3b82f6; }
+        .btn-full { width: 100%; padding: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; margin-top: 8px; color: white; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
-        /* ORDER ITEM SWIPE */
-        .order-item { transition:transform 0.2s; touch-action:pan-y; }
-        .order-item .delete-zone { position:absolute; right:0; top:0; height:100%; width:60px; background:#b91c1c; display:flex; align-items:center; justify-content:center; border-radius:0 14px 14px 0; color:white; font-size:1rem; }
-        .order-item.swiped { transform:translateX(-60px); }
-
-        /* PAGE */
-        .page-nav { display:flex; gap:6px; justify-content:center; margin-top:10px; }
-        .page-btn { padding:5px 10px; border-radius:12px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.7rem; cursor:pointer; }
-        .page-btn.active { background:#3b82f6; border-color:#3b82f6; }
+        /* ORDER */
+        .search-mini { display: flex; gap: 6px; margin-bottom: 10px; }
+        .search-mini input, .search-mini select { flex: 1; padding: 8px 12px; border-radius: 14px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.75rem; outline: none; }
+        .page-nav { display: flex; gap: 4px; justify-content: center; margin-top: 10px; }
+        .page-btn { padding: 5px 10px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.7rem; cursor: pointer; }
+        .page-btn.active { background: #3b82f6; border-color: #3b82f6; }
 
         /* FAB */
-        .fab { position:fixed; bottom:24px; right:24px; width:50px; height:50px; border-radius:50%; background:#3b82f6; color:white; border:none; font-size:1.3rem; cursor:pointer; box-shadow:0 6px 20px rgba(59,130,246,0.4); z-index:900; display:flex; align-items:center; justify-content:center; transition:0.2s; }
-        .fab:active { transform:scale(0.9); }
-
-        /* BOTTOM SHEET */
-        .sheet-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:none; }
-        .sheet-overlay.show { display:block; }
-        .sheet { position:fixed; bottom:0; left:0; width:100%; max-height:85vh; background:#0f172a; border-radius:24px 24px 0 0; z-index:1001; padding:20px; overflow-y:auto; animation:slideUp 0.3s ease; border:1px solid #334155; border-bottom:none; display:none; }
-        .sheet.show { display:block; }
-        .sheet h3 { color:white; font-size:1rem; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-        .sheet input, .sheet textarea, .sheet select { width:100%; padding:10px; margin:8px 0; border-radius:16px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.8rem; outline:none; }
-        .sheet .btn-full { width:100%; padding:12px; border-radius:20px; border:none; font-weight:600; cursor:pointer; margin-top:8px; }
+        .fab { position: fixed; bottom: 24px; right: 24px; width: 50px; height: 50px; border-radius: 50%; background: #3b82f6; color: white; border: none; font-size: 1.3rem; cursor: pointer; box-shadow: 0 6px 20px rgba(59,130,246,0.4); z-index: 900; display: flex; align-items: center; justify-content: center; }
+        .fab:active { transform: scale(0.9); }
 
         /* TOAST */
-        .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:20px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1100; white-space:nowrap; }
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; opacity: 0; transition: 0.3s; color: white; z-index: 1100; white-space: nowrap; }
 
         /* LOGIN */
-        #loginCard { text-align:center; }
-        #loginCard input { width:100%; padding:14px; margin:12px 0; border-radius:28px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.9rem; outline:none; text-align:center; }
-        #loginError { color:#ef4444; font-size:0.8rem; display:none; }
+        #loginCard { text-align: center; }
+        #loginCard input { width: 100%; padding: 14px; margin: 12px 0; border-radius: 28px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.9rem; outline: none; text-align: center; }
+        #loginCard button { width: 100%; padding: 14px; border-radius: 28px; background: #3b82f6; color: white; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+        #loginError { color: #ef4444; font-size: 0.8rem; margin-top: 8px; display: none; }
 
-        @media (max-width:640px) {
-            .item-actions { width:100%; justify-content:flex-end; }
-            .stats-grid { grid-template-columns:repeat(3,1fr); }
-        }
+        @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
@@ -103,21 +83,21 @@
 
     <!-- LOGIN -->
     <div class="card" id="loginCard">
-        <h1 style="color:white;font-size:1.2rem;"><i class="fas fa-user-shield"></i> Admin Panel</h1>
+        <h1 style="color:white;font-size:1.2rem;text-align:center;"><i class="fas fa-user-shield"></i> Admin Panel</h1>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin">
-        <button onclick="doLogin()" style="width:100%;padding:12px;border-radius:28px;background:#3b82f6;color:white;border:none;font-weight:600;cursor:pointer;"><i class="fas fa-key"></i> Login</button>
+        <button onclick="doLogin()"><i class="fas fa-key"></i> Login</button>
         <div id="loginError"></div>
     </div>
 
-    <!-- ADMIN -->
+    <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
 
         <!-- TOP BAR -->
         <div class="top-bar">
-            <div class="info"><span class="dot"></span> <span id="currentIP">-</span> | <span id="ipStatus" style="color:#10b981;">Admin</span></div>
+            <div class="info"><span style="color:#10b981;">●</span> <span id="currentIP">-</span> | <span id="ipStatus" style="color:#10b981;">Admin</span></div>
             <div style="display:flex;gap:6px;">
-                <button class="btn-icon" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
-                <button class="btn-icon" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                <button class="btn-sm" onclick="doResetIP()" style="color:#fca5a5;"><i class="fas fa-unlock-alt"></i> Reset</button>
+                <button class="btn-sm" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
 
@@ -132,39 +112,38 @@
         <!-- STATS PANEL -->
         <div class="panel active" id="panel-stats">
             <div class="stats-grid" id="statsGrid"></div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+                <button class="btn-item orange" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
+            </div>
         </div>
 
         <!-- PRODUCTS PANEL -->
         <div class="panel" id="panel-products">
             <div class="card">
-                <div class="card-header open" onclick="document.getElementById('addProductForm').classList.toggle('open'); this.classList.toggle('open');">
-                    <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
-                    <i class="fas fa-chevron-down"></i>
+                <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
+                <input type="text" id="productName" placeholder="Nama Produk">
+                <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
+                <div style="display:flex;gap:8px;">
+                    <input type="number" id="productPrice" placeholder="Harga" style="flex:1;">
+                    <input type="number" id="productStock" placeholder="Stok" style="flex:1;">
                 </div>
-                <div class="card-body open" id="addProductForm">
-                    <input type="text" id="productName" placeholder="Nama Produk">
-                    <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
-                    <input type="number" id="productPrice" placeholder="Harga">
-                    <input type="number" id="productStock" placeholder="Stok">
-                    <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-                    <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Konten teks"></textarea></div>
-                    <div id="itemLinkField" style="display:none;"><input type="url" id="itemLink" placeholder="https://..."></div>
-                    <div id="itemHtmlField" style="display:none;"><textarea id="itemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-                    <select id="bonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-                    <div id="bonusTextField" style="display:none;"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-                    <div id="bonusLinkField" style="display:none;"><input type="url" id="bonusLink" placeholder="https://..."></div>
-                    <button onclick="addProduct()" class="btn-full" style="background:#3b82f6;color:white;"><i class="fas fa-save"></i> Simpan</button>
-                </div>
+                <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
+                <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Konten teks"></textarea></div>
+                <div id="itemLinkField" style="display:none;"><input type="url" id="itemLink" placeholder="https://..."></div>
+                <div id="itemHtmlField" style="display:none;"><textarea id="itemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
+                <select id="bonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+                <div id="bonusTextField" style="display:none;"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+                <div id="bonusLinkField" style="display:none;"><input type="url" id="bonusLink" placeholder="https://..."></div>
+                <button onclick="addProduct()" class="btn-full" style="background:#3b82f6;"><i class="fas fa-save"></i> Simpan Produk</button>
             </div>
             <div id="productsList"></div>
         </div>
 
         <!-- ORDERS PANEL -->
         <div class="panel" id="panel-orders">
-            <div style="display:flex;gap:8px;margin-bottom:10px;">
-                <button class="btn-sm green" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
-                <button class="btn-sm blue" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
-                <button class="btn-sm red" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset</button>
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
+                <button class="btn-item green" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
+                <button class="btn-item red" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset</button>
             </div>
             <div class="search-mini">
                 <input type="text" id="orderSearch" placeholder="Cari order..." oninput="renderOrderPage()">
@@ -183,10 +162,10 @@
         <!-- BROADCAST PANEL -->
         <div class="panel" id="panel-broadcast">
             <div class="card">
-                <h2 style="color:white;font-size:0.9rem;margin-bottom:10px;"><i class="fas fa-bullhorn"></i> Kirim Broadcast</h2>
+                <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
                 <textarea id="broadcastMessage" rows="4" placeholder="Tulis pesan broadcast..."></textarea>
-                <button onclick="sendBroadcast()" class="btn-full" style="background:#10b981;color:white;margin-top:8px;"><i class="fas fa-paper-plane"></i> Kirim</button>
-                <button onclick="backupData()" class="btn-full" style="background:#3b82f6;color:white;margin-top:6px;"><i class="fas fa-database"></i> Backup Database</button>
+                <button onclick="sendBroadcast()" class="btn-full" style="background:#10b981;"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
+                <button onclick="backupData()" class="btn-full" style="background:#3b82f6;margin-top:4px;"><i class="fas fa-database"></i> Backup Database</button>
             </div>
         </div>
 
@@ -194,26 +173,28 @@
 </div>
 
 <!-- FAB -->
-<button class="fab" id="fabAdd" style="display:none;" onclick="switchTab('products');document.getElementById('addProductForm').classList.add('open');document.getElementById('productName').focus();"><i class="fas fa-plus"></i></button>
+<button class="fab" id="fabAdd" style="display:none;" onclick="switchTab('products');document.getElementById('productName').focus();"><i class="fas fa-plus"></i></button>
 
-<!-- BOTTOM SHEET EDIT -->
-<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
-<div class="sheet" id="editSheet">
-    <h3><i class="fas fa-edit"></i> Edit Produk</h3>
-    <input type="hidden" id="editProductId">
-    <input type="text" id="editProductName" placeholder="Nama Produk">
-    <textarea id="editProductDesc" rows="2" placeholder="Deskripsi"></textarea>
-    <input type="number" id="editProductPrice" placeholder="Harga">
-    <input type="number" id="editProductStock" placeholder="Stok">
-    <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-    <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Konten teks"></textarea></div>
-    <div id="editItemLinkField" style="display:none;"><input type="url" id="editItemLink" placeholder="https://..."></div>
-    <div id="editItemHtmlField" style="display:none;"><textarea id="editItemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-    <select id="editBonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-    <div id="editBonusTextField" style="display:none;"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-    <div id="editBonusLinkField" style="display:none;"><input type="url" id="editBonusLink" placeholder="https://..."></div>
-    <button onclick="saveEditProduct()" class="btn-full" style="background:#10b981;color:white;"><i class="fas fa-save"></i> Simpan</button>
-    <button onclick="closeSheet()" class="btn-full" style="background:#475569;color:white;"><i class="fas fa-times"></i> Batal</button>
+<!-- EDIT MODAL -->
+<div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1100;justify-content:center;align-items:center;">
+    <div style="background:#0f172a;border-radius:24px;padding:20px;max-width:450px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid #334155;">
+        <h3 style="color:white;margin-bottom:12px;"><i class="fas fa-edit"></i> Edit Produk</h3>
+        <input type="hidden" id="editProductId">
+        <input type="text" id="editProductName" placeholder="Nama Produk">
+        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi"></textarea>
+        <div style="display:flex;gap:8px;"><input type="number" id="editProductPrice" placeholder="Harga" style="flex:1;"><input type="number" id="editProductStock" placeholder="Stok" style="flex:1;"></div>
+        <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
+        <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Konten teks"></textarea></div>
+        <div id="editItemLinkField" style="display:none;"><input type="url" id="editItemLink" placeholder="https://..."></div>
+        <div id="editItemHtmlField" style="display:none;"><textarea id="editItemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
+        <select id="editBonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+        <div id="editBonusTextField" style="display:none;"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
+        <div id="editBonusLinkField" style="display:none;"><input type="url" id="editBonusLink" placeholder="https://..."></div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="saveEditProduct()" style="flex:1;padding:12px;border-radius:16px;background:#10b981;color:white;border:none;font-weight:600;cursor:pointer;"><i class="fas fa-save"></i> Simpan</button>
+            <button onclick="closeEditModal()" style="flex:1;padding:12px;border-radius:16px;background:#475569;color:white;border:none;font-weight:600;cursor:pointer;"><i class="fas fa-times"></i> Batal</button>
+        </div>
+    </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -241,23 +222,6 @@ async function getMyIP() { try { var r = await fetch('https://api.ipify.org?form
 function goToUnauthorized() { window.location.href = '/unauthorized'; }
 function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; document.getElementById('fabAdd').style.display='none'; }
 function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('fabAdd').style.display='flex'; document.getElementById('currentIP').textContent=currentIP||'-'; loadStats(); loadProducts(); loadOrders(); switchTab('stats'); }
-
-// ========== SWIPE DELETE ==========
-let touchStartX = 0;
-document.addEventListener('touchstart', function(e) { if (e.target.closest('.order-item')) touchStartX = e.touches[0].clientX; });
-document.addEventListener('touchend', function(e) {
-    var item = e.target.closest('.order-item');
-    if (!item) return;
-    var diff = touchStartX - (e.changedTouches[0]?.clientX || touchStartX);
-    if (diff > 60) {
-        item.style.transform = 'translateX(-60px)';
-        var id = item.getAttribute('data-id');
-        if (confirm('Hapus order #' + id + '?')) {
-            fetch('/api/admin/delete-selected-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, orderIds: [id] }) })
-                .then(function() { loadOrders(); loadStats(); });
-        } else { item.style.transform = ''; }
-    } else { item.style.transform = ''; }
-});
 
 // ========== TABS ==========
 function switchTab(tabName) {
@@ -327,7 +291,7 @@ async function loadProducts() {
     document.getElementById('prodCount').textContent = (data.products||[]).length;
     if (data.success && data.products.length) {
         c.innerHTML = data.products.map(function(p) {
-            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="testProduct('+p.id+')"><i class="fas fa-flask"></i></button><button class="btn-sm green" onclick="openEditSheet('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>';
+            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-item blue" onclick="testProduct('+p.id+')"><i class="fas fa-flask"></i></button><button class="btn-item green" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-item red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>';
         }).join('');
     } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Belum ada produk</div>'; }
 }
@@ -342,9 +306,9 @@ function renderOrderPage() {
     var query = (document.getElementById('orderSearch').value||'').toLowerCase();
     var filter = document.getElementById('orderFilter').value;
     var filtered = allOrders.filter(function(o) {
-        var matchSearch = !query || o.customerName.toLowerCase().includes(query) || o.productName.toLowerCase().includes(query) || (o.orderCode||'').includes(query);
-        var matchFilter = filter==='all' || o.status===filter;
-        return matchSearch && matchFilter;
+        var ms = !query || o.customerName.toLowerCase().includes(query) || o.productName.toLowerCase().includes(query) || (o.orderCode||'').includes(query);
+        var mf = filter==='all' || o.status===filter;
+        return ms && mf;
     });
     var totalPages = Math.ceil(filtered.length / ORDER_PER_PAGE) || 1;
     if (orderPage > totalPages) orderPage = totalPages;
@@ -354,7 +318,7 @@ function renderOrderPage() {
     if (pageOrders.length) {
         c.innerHTML = pageOrders.map(function(o) {
             var st = o.status==='paid'?'✅':o.status==='pending'?'⏳':o.status==='expired'?'❌':'🗑️';
-            return '<div class="item order-item" data-id="'+o.id+'"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+' '+o.status+'</div><div class="item-detail" style="font-size:0.55rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>';
+            return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+' '+o.status+'</div><div class="item-detail" style="font-size:0.55rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>';
         }).join('');
     } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Tidak ada order</div>'; }
     var pag = document.getElementById('orderPagination');
@@ -384,8 +348,8 @@ async function testProduct(pid) {
 
 async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); loadProducts(); loadStats(); } }
 
-// ========== EDIT SHEET ==========
-function openEditSheet(id) {
+// ========== EDIT MODAL ==========
+function openEditModal(id) {
     fetch('/api/admin/product/'+id+'?adminKey='+adminPassword).then(function(r) { return r.json(); }).then(function(data) {
         if (data.success && data.product) {
             var p = data.product; currentEditId = p.id;
@@ -395,12 +359,11 @@ function openEditSheet(id) {
             document.getElementById('editBonusType').value=p.bonusType||'none';
             if (p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if (p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||'';
             toggleEditFields();
-            document.getElementById('sheetOverlay').classList.add('show');
-            document.getElementById('editSheet').classList.add('show');
+            document.getElementById('editModal').style.display='flex';
         }
     });
 }
-function closeSheet() { document.getElementById('sheetOverlay').classList.remove('show'); document.getElementById('editSheet').classList.remove('show'); currentEditId=null; }
+function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
 async function saveEditProduct() {
     var it = document.getElementById('editItemType').value;
     var ic = ''; if (it==='text') ic=document.getElementById('editItemText').value; else if (it==='link') ic=document.getElementById('editItemLink').value; else if (it==='html') ic=document.getElementById('editItemHtml').value;
@@ -408,9 +371,8 @@ async function saveEditProduct() {
     var bt = document.getElementById('editBonusType').value;
     var bc = ''; if (bt==='text') bc=document.getElementById('editBonusText').value; else if (bt==='link') bc=document.getElementById('editBonusLink').value;
     var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
-    if (res.ok) { toast('✅ Diupdate'); closeSheet(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
+    if (res.ok) { toast('✅ Diupdate'); closeEditModal(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
 }
-
 function toggleEditFields() {
     var t = document.getElementById('editItemType').value;
     ['editItemTextField','editItemLinkField','editItemHtmlField'].forEach(function(id) { document.getElementById(id).style.display='none'; });
