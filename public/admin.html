@@ -24,13 +24,13 @@
         .btn-danger { background: #b91c1c; }
         .btn-warning { background: #f59e0b; }
         .btn-success { background: #10b981; }
-        .btn-outline { background: transparent; border: 1px solid #475569; }
+        .btn-outline { background: transparent; border: 1px solid #475569; color: white; }
         .btn-outline:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
         .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
         .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; }
         .item:hover { background: #334155; }
         .item-info { flex: 1; min-width: 150px; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
@@ -49,45 +49,57 @@
         .toolbar { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
         .top-bar .info { color: #64748b; font-size: 0.7rem; }
+        #loginError { color: #ef4444; margin-top: 10px; text-align: center; display: none; }
         @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card" id="loginCard" style="display:none;">
+
+    <!-- LOGIN CARD -->
+    <div class="card" id="loginCard">
         <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
-        <input type="password" id="adminKey" placeholder="Kunci Admin" onkeydown="if(event.key==='Enter')login()">
-        <button onclick="login()"><i class="fas fa-key"></i> Login</button>
-        <div id="loginError" style="color:#ef4444; margin-top:10px; text-align:center; display:none;"></div>
+        <input type="password" id="adminKeyInput" placeholder="Kunci Admin">
+        <button onclick="doLogin()"><i class="fas fa-key"></i> Login</button>
+        <div id="loginError"></div>
     </div>
+
+    <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
-            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus" style="color:#10b981;">Admin</span></div>
-            <button class="btn-outline" onclick="resetIPLock()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
-            <button class="btn-outline" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <div class="info">
+                <i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | 
+                <span id="ipStatus">-</span>
+            </div>
+            <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
+            <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
+
         <div class="card"><h2><i class="fas fa-chart-line"></i> Statistik</h2><div class="stats-grid" id="statsGrid"></div></div>
+        
         <div class="card">
             <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
             <input type="text" id="productName" placeholder="Nama Produk">
             <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
             <input type="number" id="productPrice" placeholder="Harga">
             <input type="number" id="productStock" placeholder="Stok">
-            <select id="itemType"><option value="text">Teks (copy-paste)</option><option value="link">Link</option><option value="html">HTML (kode web)</option></select>
-            <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Kode/teks yang akan diberikan ke customer"></textarea></div>
+            <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
+            <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div>
             <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-            <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>Kode HTML di sini...</div>"></textarea></div>
+            <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
             <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
             <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
             <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
             <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
         </div>
+        
         <div class="card"><h2><i class="fas fa-boxes"></i> Daftar Produk</h2><div id="productsList"></div></div>
+        
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
             <div class="toolbar">
                 <button class="btn-success" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
-                <button class="btn-warning" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh Data</button>
+                <button class="btn-warning" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
             </div>
             <div class="selection-bar">
                 <button id="selectAllBtn" class="btn-success" style="background:#475569;"><i class="fas fa-check-double"></i> Pilih Semua</button>
@@ -96,8 +108,8 @@
             </div>
             <div id="ordersList"></div>
             <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
-                <button class="btn-warning" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Pending & Cancelled</button>
-                <button class="btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup Database</button>
+                <button class="btn-warning" onclick="resetOrders()"><i class="fas fa-trash-alt"></i> Reset Pending</button>
+                <button class="btn-success" onclick="backupData()"><i class="fas fa-database"></i> Backup</button>
             </div>
             <div class="broadcast-area">
                 <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
@@ -106,29 +118,36 @@
             </div>
         </div>
     </div>
+
 </div>
 
+<!-- EDIT MODAL -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-edit"></i> Edit Produk</h3>
-        <input type="text" id="editProductId" style="display:none;">
+        <input type="hidden" id="editProductId">
         <input type="text" id="editProductName" placeholder="Nama Produk">
         <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
         <input type="number" id="editProductPrice" placeholder="Harga">
         <input type="number" id="editProductStock" placeholder="Stok">
         <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Kode/teks"></textarea></div>
+        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div>
         <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="Kode HTML..."></textarea></div>
+        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
         <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
         <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
         <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
-        <div class="modal-buttons"><button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button><button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button></div>
+        <div class="modal-buttons">
+            <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
+            <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
+        </div>
     </div>
 </div>
+
 <div id="toast" class="toast"></div>
 
 <script>
+// ========== GLOBAL STATE ==========
 let adminKey = '';
 let currentEditId = null;
 let selectedOrders = new Set();
@@ -136,55 +155,79 @@ let autoRefreshInterval = null;
 let autoRefreshOn = false;
 let currentIP = '';
 
-function toast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+const ADMIN_PASSWORD = 'nisaimut';
+
+// ========== TOAST ==========
+function toast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
     t.style.background = isError ? '#b91c1c' : '#1e293b';
     t.style.opacity = '1';
-    setTimeout(() => t.style.opacity = '0', 3000);
+    setTimeout(function() { t.style.opacity = '0'; }, 3000);
 }
 
+function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
+}
+
+// ========== IP ==========
 async function getMyIP() {
-    try { const res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; }
-    catch(e) { return null; }
+    try {
+        var res = await fetch('https://api.ipify.org?format=json');
+        var data = await res.json();
+        return data.ip;
+    } catch(e) { return null; }
 }
 
-function redirectUnauthorized() { window.location.href = '/unauthorized'; }
+// ========== REDIRECT ==========
+function goToUnauthorized() {
+    window.location.href = '/unauthorized';
+}
 
-async function tryAutoLogin() {
+// ========== AUTO LOGIN CHECK ==========
+async function checkAutoLogin() {
     currentIP = await getMyIP();
-    if (!currentIP) { document.getElementById('loginCard').style.display = 'block'; return; }
+    if (!currentIP) {
+        showLoginForm();
+        return;
+    }
+
     document.getElementById('currentIP').textContent = currentIP;
-    
+
     try {
-        const res = await fetch('/api/admin/check-ip');
-        const data = await res.json();
-        
-        if (data.isAdmin) { adminKey = 'nisaimut'; showAdminPanel(); return; }
-        if (!data.hasAdmin) {
-            document.getElementById('loginCard').style.display = 'block';
-            document.getElementById('adminContent').style.display = 'none';
-            document.getElementById('ipStatus').textContent = 'Belum diatur';
-            document.getElementById('ipStatus').style.color = '#f59e0b';
+        var res = await fetch('/api/admin/check-ip');
+        var data = await res.json();
+
+        if (data.isAdmin) {
+            // IP cocok → auto login
+            adminKey = ADMIN_PASSWORD;
+            showAdminPanel();
+            toast('Auto-login! IP Admin terdeteksi.');
             return;
         }
-        redirectUnauthorized();
-    } catch(e) { document.getElementById('loginCard').style.display = 'block'; }
+
+        if (!data.hasAdmin) {
+            // Belum ada admin → tampilkan form login
+            showLoginForm('Belum diatur', '#f59e0b');
+            return;
+        }
+
+        // Ada admin tapi IP gak cocok → usir
+        goToUnauthorized();
+
+    } catch(e) {
+        showLoginForm();
+    }
 }
 
-async function login() {
-    const key = document.getElementById('adminKey').value;
-    const errorDiv = document.getElementById('loginError');
-    if (!key) { errorDiv.innerText = 'Masukkan kunci admin'; errorDiv.style.display = 'block'; return; }
-    errorDiv.style.display = 'none';
-    if (key === 'nisaimut') {
-        try {
-            await fetch('/api/admin/set-ip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey: key }) });
-        } catch(e) {}
-        adminKey = key;
-        showAdminPanel();
-        toast('Login berhasil! IP disimpan sebagai Admin.');
-    } else { errorDiv.innerText = 'Kunci admin salah!'; errorDiv.style.display = 'block'; }
+function showLoginForm(statusText, statusColor) {
+    document.getElementById('loginCard').style.display = 'block';
+    document.getElementById('adminContent').style.display = 'none';
+    if (statusText) {
+        document.getElementById('ipStatus').textContent = statusText;
+        document.getElementById('ipStatus').style.color = statusColor || '#f59e0b';
+    }
 }
 
 function showAdminPanel() {
@@ -193,194 +236,421 @@ function showAdminPanel() {
     document.getElementById('currentIP').textContent = currentIP || '-';
     document.getElementById('ipStatus').textContent = 'Admin';
     document.getElementById('ipStatus').style.color = '#10b981';
-    loadStats(); loadProducts(); loadOrders();
+    loadStats();
+    loadProducts();
+    loadOrders();
 }
 
-function logout() {
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
-    document.getElementById('adminKey').value = '';
+// ========== LOGIN ==========
+async function doLogin() {
+    var key = document.getElementById('adminKeyInput').value;
+    var errorDiv = document.getElementById('loginError');
+    
+    if (!key) {
+        errorDiv.innerText = 'Masukkan kunci admin';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    errorDiv.style.display = 'none';
+
+    if (key === ADMIN_PASSWORD) {
+        // Simpan IP ke database
+        try {
+            await fetch('/api/admin/set-ip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminKey: key })
+            });
+        } catch(e) {}
+
+        adminKey = key;
+        showAdminPanel();
+        toast('Login berhasil! IP lo disimpan sebagai Admin.');
+    } else {
+        errorDiv.innerText = 'Kunci admin salah!';
+        errorDiv.style.display = 'block';
+    }
+}
+
+// ========== LOGOUT ==========
+function doLogout() {
+    adminKey = '';
+    showLoginForm('Bukan Admin', '#ef4444');
+    document.getElementById('adminKeyInput').value = '';
     if (autoRefreshOn) toggleAutoRefresh();
     toast('Logout berhasil.');
 }
 
-async function resetIPLock() {
-    if (confirm('⚠️ Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan disimpan sebagai Admin baru.')) {
-        try { await fetch('/api/admin/reset-ip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey }) }); } catch(e) {}
-        document.getElementById('loginCard').style.display = 'block';
-        document.getElementById('adminContent').style.display = 'none';
-        document.getElementById('adminKey').value = '';
-        if (autoRefreshOn) toggleAutoRefresh();
-        toast('IP Admin direset.');
+// ========== RESET IP ==========
+async function doResetIP() {
+    if (!confirm('Reset kunci IP Admin?\n\nSetelah ini, login dari IP manapun akan jadi Admin baru.')) return;
+
+    try {
+        await fetch('/api/admin/reset-ip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey: adminKey })
+        });
+    } catch(e) {}
+
+    adminKey = '';
+    showLoginForm('Belum diatur', '#f59e0b');
+    document.getElementById('adminKeyInput').value = '';
+    if (autoRefreshOn) toggleAutoRefresh();
+    toast('IP Admin direset. Silakan login ulang.');
+}
+
+// ========== AUTO REFRESH ==========
+function toggleAutoRefresh() {
+    autoRefreshOn = !autoRefreshOn;
+    var btn = document.getElementById('autoRefreshBtn');
+    if (autoRefreshOn) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)';
+        autoRefreshInterval = setInterval(function() { loadStats(); loadOrders(); }, 30000);
+        toast('Auto refresh ON');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF';
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        toast('Auto refresh OFF');
     }
 }
 
-function toggleAutoRefresh() {
-    autoRefreshOn = !autoRefreshOn;
-    const btn = document.getElementById('autoRefreshBtn');
-    if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval = setInterval(() => { loadStats(); loadOrders(); }, 30000); toast('Auto refresh ON'); }
-    else { btn.classList.remove('active'); btn.innerHTML = '<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); toast('Auto refresh OFF'); }
+function refreshAll() {
+    loadStats();
+    loadProducts();
+    loadOrders();
+    toast('Data diperbarui');
 }
 
-function refreshAll() { loadStats(); loadProducts(); loadOrders(); toast('Data diperbarui'); }
-function updateSelectedCount() { document.getElementById('selectedCount').innerText = `${selectedOrders.size} dipilih`; }
+// ========== SELECTION ==========
+function updateSelectedCount() {
+    document.getElementById('selectedCount').innerText = selectedOrders.size + ' dipilih';
+}
 
 async function deleteSelected() {
     if (selectedOrders.size === 0) { toast('Tidak ada order dipilih', true); return; }
-    if (confirm(`Hapus ${selectedOrders.size} order?`)) {
-        const res = await fetch('/api/admin/delete-selected-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey, orderIds: Array.from(selectedOrders) }) });
-        if (res.ok) { toast(`✅ ${selectedOrders.size} order dihapus`); selectedOrders.clear(); updateSelectedCount(); loadOrders(); loadStats(); }
-        else { toast('Gagal hapus', true); }
+    if (!confirm('Hapus ' + selectedOrders.size + ' order?')) return;
+    var res = await fetch('/api/admin/delete-selected-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey, orderIds: Array.from(selectedOrders) })
+    });
+    if (res.ok) {
+        toast('✅ ' + selectedOrders.size + ' order dihapus');
+        selectedOrders.clear();
+        updateSelectedCount();
+        loadOrders();
+        loadStats();
+    } else {
+        toast('Gagal', true);
     }
 }
 
 function selectAllOrders() {
-    const cbs = document.querySelectorAll('.order-checkbox');
-    const allSel = Array.from(cbs).every(cb => cb.checked);
-    cbs.forEach(cb => { cb.checked = !allSel; if (!allSel) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); });
+    var cbs = document.querySelectorAll('.order-checkbox');
+    var allSel = Array.from(cbs).every(function(cb) { return cb.checked; });
+    cbs.forEach(function(cb) {
+        cb.checked = !allSel;
+        if (!allSel) selectedOrders.add(cb.value);
+        else selectedOrders.delete(cb.value);
+    });
     updateSelectedCount();
 }
 
-function toggleOrderSelect(cb) { if (cb.checked) selectedOrders.add(cb.value); else selectedOrders.delete(cb.value); updateSelectedCount(); }
+function toggleOrderSelect(cb) {
+    if (cb.checked) selectedOrders.add(cb.value);
+    else selectedOrders.delete(cb.value);
+    updateSelectedCount();
+}
 
+// ========== LOAD DATA ==========
 async function loadStats() {
     try {
-        const res = await fetch(`/api/admin/stats?adminKey=${adminKey}`);
-        const data = await res.json();
+        var res = await fetch('/api/admin/stats?adminKey=' + adminKey);
+        var data = await res.json();
         if (data.success) {
-            const s = data.stats;
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card"><div class="stat-number">${s.totalProducts}</div><div class="stat-label">Produk</div></div>
-                <div class="stat-card"><div class="stat-number">${s.totalOrders}</div><div class="stat-label">Order</div></div>
-                <div class="stat-card"><div class="stat-number">Rp ${s.totalRevenue.toLocaleString()}</div><div class="stat-label">Pendapatan</div></div>
-                <div class="stat-card"><div class="stat-number">${s.pendingCount}</div><div class="stat-label">Pending</div></div>
-                <div class="stat-card"><div class="stat-number">${s.paidCount}</div><div class="stat-label">Paid</div></div>
-                <div class="stat-card"><div class="stat-number">${s.expiredCount + s.cancelledCount}</div><div class="stat-label">Expired/Cancel</div></div>`;
+            var s = data.stats;
+            document.getElementById('statsGrid').innerHTML =
+                '<div class="stat-card"><div class="stat-number">' + s.totalProducts + '</div><div class="stat-label">Produk</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + s.totalOrders + '</div><div class="stat-label">Order</div></div>' +
+                '<div class="stat-card"><div class="stat-number">Rp ' + s.totalRevenue.toLocaleString() + '</div><div class="stat-label">Pendapatan</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + s.pendingCount + '</div><div class="stat-label">Pending</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + s.paidCount + '</div><div class="stat-label">Paid</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + (s.expiredCount + s.cancelledCount) + '</div><div class="stat-label">Expired/Cancel</div></div>';
         }
     } catch(e) {}
 }
 
 async function loadProducts() {
-    const res = await fetch(`/api/admin/products?adminKey=${adminKey}`);
-    const data = await res.json();
-    const c = document.getElementById('productsList');
+    var res = await fetch('/api/admin/products?adminKey=' + adminKey);
+    var data = await res.json();
+    var c = document.getElementById('productsList');
     if (data.success && data.products.length) {
-        c.innerHTML = data.products.map(p => `<div class="item"><div class="item-info"><div class="item-name">${escapeHtml(p.name)}</div><div class="item-detail">Rp ${p.price.toLocaleString()} | Stok: ${p.stock} | Tipe: ${p.itemType}</div></div><div class="item-actions"><button class="btn-success" onclick="testProduct(${p.id})"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal(${p.id})"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Hapus</button></div></div>`).join('');
-    } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>'; }
+        c.innerHTML = data.products.map(function(p) {
+            return '<div class="item"><div class="item-info"><div class="item-name">' + escapeHtml(p.name) + '</div><div class="item-detail">Rp ' + p.price.toLocaleString() + ' | Stok: ' + p.stock + ' | Tipe: ' + p.itemType + '</div></div><div class="item-actions"><button class="btn-success" onclick="testProduct(' + p.id + ')"><i class="fas fa-flask"></i> Cek</button><button class="btn-warning" onclick="openEditModal(' + p.id + ')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct(' + p.id + ')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
+        }).join('');
+    } else {
+        c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada produk</div>';
+    }
 }
 
 async function loadOrders() {
     try {
-        const res = await fetch(`/api/admin/orders?adminKey=${adminKey}`);
-        const data = await res.json();
-        const c = document.getElementById('ordersList');
+        var res = await fetch('/api/admin/orders?adminKey=' + adminKey);
+        var data = await res.json();
+        var c = document.getElementById('ordersList');
         if (data.success && data.orders.length) {
-            c.innerHTML = data.orders.map(o => `<div class="item"><input type="checkbox" class="order-checkbox" value="${o.id}" onchange="toggleOrderSelect(this)"><div class="item-info"><div class="item-name">${escapeHtml(o.productName)}</div><div class="item-detail">${escapeHtml(o.customerName)} | ${o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled'}</div><div class="item-detail" style="font-size:0.6rem;">${new Date(o.createdAt).toLocaleString()} | ID: ${o.id}</div></div></div>`).join('');
-            selectedOrders.clear(); updateSelectedCount();
+            c.innerHTML = data.orders.map(function(o) {
+                var statusText = o.status === 'paid' ? '✅ Lunas' : o.status === 'pending' ? '⏳ Pending' : o.status === 'expired' ? '❌ Expired' : '🗑️ Cancelled';
+                return '<div class="item"><input type="checkbox" class="order-checkbox" value="' + o.id + '" onchange="toggleOrderSelect(this)"><div class="item-info"><div class="item-name">' + escapeHtml(o.productName) + '</div><div class="item-detail">' + escapeHtml(o.customerName) + ' | ' + statusText + '</div><div class="item-detail" style="font-size:0.6rem;">' + new Date(o.createdAt).toLocaleString() + ' | ID: ' + o.id + '</div></div></div>';
+            }).join('');
+            selectedOrders.clear();
+            updateSelectedCount();
             document.getElementById('selectAllBtn').onclick = selectAllOrders;
             document.getElementById('deleteSelectedBtn').onclick = deleteSelected;
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>'; }
+        } else {
+            c.innerHTML = '<div style="text-align:center;color:#64748b;"><i class="fas fa-inbox"></i> Belum ada order</div>';
+        }
     } catch(e) {}
 }
 
+// ========== PRODUCT CRUD ==========
 async function addProduct() {
-    const it = document.getElementById('itemType').value;
-    let ic = ''; if (it==='text') ic = document.getElementById('itemText').value; else if (it==='link') ic = document.getElementById('itemLink').value; else if (it==='html') ic = document.getElementById('itemHtml').value;
+    var it = document.getElementById('itemType').value;
+    var ic = '';
+    if (it === 'text') ic = document.getElementById('itemText').value;
+    else if (it === 'link') ic = document.getElementById('itemLink').value;
+    else if (it === 'html') ic = document.getElementById('itemHtml').value;
     if (!ic) { toast('Konten item wajib diisi', true); return; }
-    const bt = document.getElementById('bonusType').value;
-    let bc = ''; if (bt==='text') bc = document.getElementById('bonusText').value; else if (bt==='link') bc = document.getElementById('bonusLink').value;
-    const res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
-    if (res.ok) { toast('Produk ditambahkan'); document.getElementById('productName').value=''; document.getElementById('productDesc').value=''; document.getElementById('productPrice').value=''; document.getElementById('productStock').value=''; document.getElementById('itemText').value=''; document.getElementById('itemLink').value=''; document.getElementById('itemHtml').value=''; document.getElementById('bonusText').value=''; document.getElementById('bonusLink').value=''; loadProducts(); loadStats(); }
-    else { toast('Gagal', true); }
-}
 
-async function testProduct(pid) {
-    toast('⏳ Membuat test order...');
-    try {
-        const res = await fetch('/api/admin/test-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId:pid, adminKey }) });
-        if (res.ok) { const h = await res.text(); const w = window.open(); w.document.write(h); w.document.close(); toast('✅ Berhasil!'); }
-        else { toast('❌ Gagal', true); }
-    } catch(e) { toast('❌ Error', true); }
-}
+    var bt = document.getElementById('bonusType').value;
+    var bc = '';
+    if (bt === 'text') bc = document.getElementById('bonusText').value;
+    else if (bt === 'link') bc = document.getElementById('bonusLink').value;
 
-async function deleteProduct(id) { if (confirm('Hapus?')) { await fetch(`/api/admin/product/${id}`, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) }); loadProducts(); loadStats(); } }
-
-async function openEditModal(id) {
-    const res = await fetch(`/api/admin/product/${id}?adminKey=${adminKey}`);
-    const data = await res.json();
-    if (data.success && data.product) {
-        const p = data.product; currentEditId = p.id;
-        document.getElementById('editProductId').value = p.id; document.getElementById('editProductName').value = p.name; document.getElementById('editProductDesc').value = p.description||''; document.getElementById('editProductPrice').value = p.price; document.getElementById('editProductStock').value = p.stock;
-        document.getElementById('editItemType').value = p.itemType||'text';
-        if (p.itemType==='link') document.getElementById('editItemLink').value = p.itemContent; else if (p.itemType==='html') document.getElementById('editItemHtml').value = p.itemContent; else document.getElementById('editItemText').value = p.itemContent;
-        document.getElementById('editBonusType').value = p.bonusType||'none';
-        if (p.bonusType==='link') document.getElementById('editBonusLink').value = p.bonusContent||''; else if (p.bonusType==='text') document.getElementById('editBonusText').value = p.bonusContent||'';
-        toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display = 'flex';
+    var res = await fetch('/api/admin/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminKey: adminKey,
+            name: document.getElementById('productName').value,
+            description: document.getElementById('productDesc').value,
+            price: parseInt(document.getElementById('productPrice').value),
+            stock: parseInt(document.getElementById('productStock').value) || 1,
+            itemType: it,
+            itemContent: ic,
+            bonusType: bt,
+            bonusContent: bc
+        })
+    });
+    if (res.ok) {
+        toast('Produk ditambahkan');
+        document.getElementById('productName').value = '';
+        document.getElementById('productDesc').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('itemText').value = '';
+        document.getElementById('itemLink').value = '';
+        document.getElementById('itemHtml').value = '';
+        document.getElementById('bonusText').value = '';
+        document.getElementById('bonusLink').value = '';
+        loadProducts();
+        loadStats();
+    } else {
+        toast('Gagal', true);
     }
 }
 
-function closeEditModal() { document.getElementById('editModal').style.display = 'none'; currentEditId = null; }
-
-async function saveEditProduct() {
-    const it = document.getElementById('editItemType').value; let ic = ''; if (it==='text') ic = document.getElementById('editItemText').value; else if (it==='link') ic = document.getElementById('editItemLink').value; else if (it==='html') ic = document.getElementById('editItemHtml').value;
-    if (!ic) { toast('Konten wajib diisi', true); return; }
-    const bt = document.getElementById('editBonusType').value; let bc = ''; if (bt==='text') bc = document.getElementById('editBonusText').value; else if (bt==='link') bc = document.getElementById('editBonusLink').value;
-    const res = await fetch(`/api/admin/product/${currentEditId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
-    if (res.ok) { toast('Diupdate'); closeEditModal(); loadProducts(); loadStats(); } else { toast('Gagal', true); }
+async function testProduct(pid) {
+    toast('Membuat test order...');
+    try {
+        var res = await fetch('/api/admin/test-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: pid, adminKey: adminKey })
+        });
+        if (res.ok) {
+            var h = await res.text();
+            var w = window.open();
+            w.document.write(h);
+            w.document.close();
+            toast('✅ Berhasil!');
+        } else {
+            toast('❌ Gagal', true);
+        }
+    } catch(e) { toast('❌ Error', true); }
 }
 
+async function deleteProduct(id) {
+    if (!confirm('Hapus produk ini?')) return;
+    await fetch('/api/admin/product/' + id, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey })
+    });
+    loadProducts();
+    loadStats();
+}
+
+async function openEditModal(id) {
+    var res = await fetch('/api/admin/product/' + id + '?adminKey=' + adminKey);
+    var data = await res.json();
+    if (data.success && data.product) {
+        var p = data.product;
+        currentEditId = p.id;
+        document.getElementById('editProductId').value = p.id;
+        document.getElementById('editProductName').value = p.name;
+        document.getElementById('editProductDesc').value = p.description || '';
+        document.getElementById('editProductPrice').value = p.price;
+        document.getElementById('editProductStock').value = p.stock;
+        document.getElementById('editItemType').value = p.itemType || 'text';
+        if (p.itemType === 'link') document.getElementById('editItemLink').value = p.itemContent;
+        else if (p.itemType === 'html') document.getElementById('editItemHtml').value = p.itemContent;
+        else document.getElementById('editItemText').value = p.itemContent;
+        document.getElementById('editBonusType').value = p.bonusType || 'none';
+        if (p.bonusType === 'link') document.getElementById('editBonusLink').value = p.bonusContent || '';
+        else if (p.bonusType === 'text') document.getElementById('editBonusText').value = p.bonusContent || '';
+        toggleEditItemFields();
+        toggleEditBonusFields();
+        document.getElementById('editModal').style.display = 'flex';
+    }
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEditId = null;
+}
+
+async function saveEditProduct() {
+    var it = document.getElementById('editItemType').value;
+    var ic = '';
+    if (it === 'text') ic = document.getElementById('editItemText').value;
+    else if (it === 'link') ic = document.getElementById('editItemLink').value;
+    else if (it === 'html') ic = document.getElementById('editItemHtml').value;
+    if (!ic) { toast('Konten wajib diisi', true); return; }
+
+    var bt = document.getElementById('editBonusType').value;
+    var bc = '';
+    if (bt === 'text') bc = document.getElementById('editBonusText').value;
+    else if (bt === 'link') bc = document.getElementById('editBonusLink').value;
+
+    var res = await fetch('/api/admin/product/' + currentEditId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            adminKey: adminKey,
+            name: document.getElementById('editProductName').value,
+            description: document.getElementById('editProductDesc').value,
+            price: parseInt(document.getElementById('editProductPrice').value),
+            stock: parseInt(document.getElementById('editProductStock').value) || 1,
+            itemType: it,
+            itemContent: ic,
+            bonusType: bt,
+            bonusContent: bc
+        })
+    });
+    if (res.ok) {
+        toast('Produk diupdate');
+        closeEditModal();
+        loadProducts();
+        loadStats();
+    } else {
+        toast('Gagal', true);
+    }
+}
+
+// ========== ORDERS ACTIONS ==========
 async function resetOrders() {
-    if (confirm('⚠️ Hapus semua Pending & Cancelled? Paid aman.')) {
-        const res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
-        if (res.ok) { const d = await res.json(); toast(`✅ ${d.deletedCount} dihapus, ${d.keptCount} paid`); loadOrders(); loadStats(); }
-        else { toast('Gagal', true); }
+    if (!confirm('Hapus semua order Pending & Cancelled? Order Paid aman.')) return;
+    var res = await fetch('/api/admin/reset-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey })
+    });
+    if (res.ok) {
+        var d = await res.json();
+        toast('✅ ' + d.deletedCount + ' dihapus, ' + d.keptCount + ' paid');
+        loadOrders();
+        loadStats();
+    } else {
+        toast('Gagal', true);
     }
 }
 
 async function backupData() {
-    const res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey }) });
-    if (res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true);
+    var res = await fetch('/api/admin/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey })
+    });
+    if (res.ok) toast('📦 Backup dikirim ke Telegram');
+    else toast('Gagal', true);
 }
 
 async function sendBroadcast() {
-    const msg = document.getElementById('broadcastMessage').value.trim();
+    var msg = document.getElementById('broadcastMessage').value.trim();
     if (!msg) { toast('Pesan wajib diisi', true); return; }
-    const res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey, message:msg }) });
-    const d = await res.json();
-    if (d.success) { toast(`📢 Terkirim ke ${d.sentCount} customer`); document.getElementById('broadcastMessage').value = ''; }
-    else { toast('Gagal', true); }
+    var res = await fetch('/api/admin/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey: adminKey, message: msg })
+    });
+    var d = await res.json();
+    if (d.success) {
+        toast('📢 Terkirim ke ' + d.sentCount + ' customer');
+        document.getElementById('broadcastMessage').value = '';
+    } else {
+        toast('Gagal', true);
+    }
 }
 
-function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-
+// ========== TOGGLE FIELDS ==========
 function toggleItemFields() {
-    const t = document.getElementById('itemType').value;
-    document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden');
-    if (t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('itemHtmlField').classList.remove('hidden');
+    var t = document.getElementById('itemType').value;
+    document.getElementById('itemTextField').classList.add('hidden');
+    document.getElementById('itemLinkField').classList.add('hidden');
+    document.getElementById('itemHtmlField').classList.add('hidden');
+    if (t === 'text') document.getElementById('itemTextField').classList.remove('hidden');
+    else if (t === 'link') document.getElementById('itemLinkField').classList.remove('hidden');
+    else if (t === 'html') document.getElementById('itemHtmlField').classList.remove('hidden');
 }
 function toggleBonusFields() {
-    const t = document.getElementById('bonusType').value;
-    document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden');
-    if (t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('bonusLinkField').classList.remove('hidden');
+    var t = document.getElementById('bonusType').value;
+    document.getElementById('bonusTextField').classList.add('hidden');
+    document.getElementById('bonusLinkField').classList.add('hidden');
+    if (t === 'text') document.getElementById('bonusTextField').classList.remove('hidden');
+    else if (t === 'link') document.getElementById('bonusLinkField').classList.remove('hidden');
 }
 function toggleEditItemFields() {
-    const t = document.getElementById('editItemType').value;
-    document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden');
-    if (t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden');
+    var t = document.getElementById('editItemType').value;
+    document.getElementById('editItemTextField').classList.add('hidden');
+    document.getElementById('editItemLinkField').classList.add('hidden');
+    document.getElementById('editItemHtmlField').classList.add('hidden');
+    if (t === 'text') document.getElementById('editItemTextField').classList.remove('hidden');
+    else if (t === 'link') document.getElementById('editItemLinkField').classList.remove('hidden');
+    else if (t === 'html') document.getElementById('editItemHtmlField').classList.remove('hidden');
 }
 function toggleEditBonusFields() {
-    const t = document.getElementById('editBonusType').value;
-    document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden');
-    if (t==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editBonusLinkField').classList.remove('hidden');
+    var t = document.getElementById('editBonusType').value;
+    document.getElementById('editBonusTextField').classList.add('hidden');
+    document.getElementById('editBonusLinkField').classList.add('hidden');
+    if (t === 'text') document.getElementById('editBonusTextField').classList.remove('hidden');
+    else if (t === 'link') document.getElementById('editBonusLinkField').classList.remove('hidden');
 }
 
-toggleItemFields(); toggleBonusFields();
+// ========== INIT ==========
+toggleItemFields();
+toggleBonusFields();
 document.getElementById('itemType').addEventListener('change', toggleItemFields);
 document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
 document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
 document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 
-tryAutoLogin();
+// Mulai cek auto-login
+checkAutoLogin();
 </script>
 </body>
 </html>
