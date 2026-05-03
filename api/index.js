@@ -21,13 +21,10 @@ let dbCache = null;
 let dbCacheTime = 0;
 const CACHE_TTL = 5000;
 
-// Rate limiter - IP admin gak kena
 const rateLimitMap = new Map();
 app.use((req, res, next) => {
     const ip = (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim();
-    if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) {
-        return next();
-    }
+    if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) return next();
     const now = Date.now();
     if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
     const requests = rateLimitMap.get(ip).filter(t => now - t < 60000);
@@ -107,23 +104,7 @@ async function sendTelegramMessage(text) {
 function sanitize(str) { if (!str) return ''; return String(str).replace(/[<>"'&]/g, m => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' })[m]); }
 async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/cancel`, { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
 
-// ✅ AUTO PING TELEGRAM - KIRIM PESAN TIAP DETIK KE ID LO
-async function autoPingTelegram() {
-    if (!TELEGRAM_BOT_TOKEN) return;
-    try {
-        await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: '8727818269',
-                text: '✅ Web Online — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })
-            })
-        });
-    } catch(e) {}
-}
-setInterval(autoPingTelegram, 1000); // Tiap 1 detik
-
-// Auto tasks lain
+// Auto tasks
 setInterval(async () => { try { await fetch('https://stockyanto.vercel.app/api/health'); } catch (e) {} }, 20000);
 setInterval(async () => { try { const db = await getDB(); const n = new Date(); let c = 0; for (const o of db.orders) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; c++; } } if (c > 0) await setDB(db.products, db.orders, db.sha); } catch (e) {} }, 30000);
 setInterval(async () => { try { const db = await getDB(); let d = 0; const k = []; for (const o of db.orders) { if (o.status === 'cancelled' || o.status === 'expired') d++; else k.push(o); } if (d > 0) { db.orders = k; await setDB(db.products, db.orders, db.sha); } } catch (e) {} }, 30000);
@@ -136,16 +117,60 @@ app.get('/api/ping-telegram', async (req, res) => {
     if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
     try {
         var start = Date.now();
-        var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+        await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: '8727818269', text: '✅ Ping — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) })
         });
-        var d = await r.json();
-        var latency = Date.now() - start;
-        if (d.ok) { res.json({ status: 'ok', latency_ms: latency }); }
-        else { res.json({ status: 'error', message: d.description }); }
+        res.json({ status: 'ok', latency_ms: Date.now() - start });
     } catch(e) { res.json({ status: 'error', message: e.message }); }
+});
+
+// ✅ PING ALL + KIRIM HASIL KE TELEGRAM
+app.get('/api/ping-all', async (req, res) => {
+    var results = {}, start;
+
+    // GitHub
+    start = Date.now();
+    try { await fetch('https://api.github.com'); results.github = (Date.now() - start) + 'ms'; } catch(e) { results.github = 'GAGAL'; }
+
+    // Qrispy
+    start = Date.now();
+    try { await fetch(QRISPY_API_URL + '/api/health'); results.qrispy = (Date.now() - start) + 'ms'; } catch(e) { results.qrispy = 'GAGAL'; }
+
+    // Telegram
+    start = Date.now();
+    try {
+        if (TELEGRAM_BOT_TOKEN) {
+            await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: '8727818269', text: '🔍 Ping All — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) })
+            });
+            results.telegram = (Date.now() - start) + 'ms';
+        } else { results.telegram = 'No token'; }
+    } catch(e) { results.telegram = 'GAGAL'; }
+
+    // Web
+    start = Date.now();
+    try { await fetch('https://stockyanto.vercel.app/api/health'); results.web = (Date.now() - start) + 'ms'; } catch(e) { results.web = 'GAGAL'; }
+
+    // ✅ Kirim hasil ping ke Telegram
+    if (TELEGRAM_BOT_TOKEN) {
+        try {
+            await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: '8727818269',
+                    text: '📊 <b>Hasil Ping:</b>\n\nGitHub: ' + results.github + '\nQrispy: ' + results.qrispy + '\nTelegram: ' + results.telegram + '\nWeb: ' + results.web,
+                    parse_mode: 'HTML'
+                })
+            });
+        } catch(e) {}
+    }
+
+    res.json({ status: 'ok', results });
 });
 
 app.get('/api/public-stats', async (req, res) => {
@@ -183,7 +208,7 @@ app.post('/api/admin/save-qris-order', async (req, res) => {
 
 app.delete('/api/admin/order/:id', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const idx = (db.orders || []).findIndex(o => o.id == req.params.id); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.orders.splice(idx, 1); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 
-// ========== ORDER & PRODUK ==========
+// ========== ORDER & PRODUCT ==========
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id }); });
 app.get('/api/check-payment/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ status: 'not_found' }); if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode }); if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(db.products, db.orders, db.sha); return res.json({ status: 'expired' }); } if (!QRISPY_TOKEN) return res.json({ status: 'pending' }); try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } }); const d = await r.json(); if (d.status === 'success' && d.data.status === 'paid') { const product = (db.products || []).find(p => p.id == order.productId); if (product && product.stock > 0) product.stock -= 1; order.status = 'paid'; order.paidAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : ''; await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + order.productName + '\nPembeli: ' + order.customerName + '\nTotal: Rp ' + (order.totalAmount || order.price).toLocaleString() + '\nOrder: ' + order.orderCode + '\n\nKode:\n' + (order.productCode || '') + bt); return res.json({ status: 'paid', productCode: order.productCode }); } res.json({ status: 'pending' }); } catch (e) { res.json({ status: 'pending' }); } });
