@@ -101,6 +101,18 @@
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-05-01T10:31:02.022Z"
+    },
+    {
+      "id": 1777773889280,
+      "name": "P",
+      "description": "P",
+      "price": 110001,
+      "stock": 1,
+      "itemType": "text",
+      "itemContent": "2",
+      "bonusType": "none",
+      "bonusContent": "",
+      "createdAt": "2026-05-03T02:04:49.280Z"
     }
   ],
   "orders": [
@@ -804,5 +816,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T01:54:35.417Z"
+  "updatedAt": "2026-05-03T02:04:49.281Z"
 }
