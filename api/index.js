@@ -108,6 +108,19 @@ setInterval(async () => { try { const db = await getDB(); let d = 0; const k = [
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
+// Proxy Ping Telegram (biar tembus blokir operator Indo)
+app.get('/api/ping-telegram', async (req, res) => {
+    if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
+    try {
+        var start = Date.now();
+        var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/getMe');
+        var latency = Date.now() - start;
+        res.json({ status: 'ok', latency_ms: latency });
+    } catch(e) {
+        res.json({ status: 'error', message: e.message });
+    }
+});
+
 app.get('/api/public-stats', async (req, res) => {
     try {
         const db = await getDB();
