@@ -106,40 +106,6 @@
   ],
   "orders": [
     {
-      "id": 1777788024278,
-      "orderCode": "873c058c1e98953ea4b7037fd3cf5242",
-      "qrisId": "a1b05a5d-45a0-4f61-9889-7e3815077287",
-      "productId": 1776700746939,
-      "productName": "APK QRIS NO KTP",
-      "productCode": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Asyayayya",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1b05a5d-45a0-4f61-9889-7e3815077287/image",
-      "expiredAt": "2026-05-03T06:15:23+00:00",
-      "createdAt": "2026-05-03T06:00:24.278Z",
-      "cancelledAt": "2026-05-03T06:01:07.075Z"
-    },
-    {
-      "id": 1777786683253,
-      "orderCode": "82c316be1f69692fb978f3825d532d9c",
-      "qrisId": "a1b0525d-a86c-4113-87c9-00d11055133a",
-      "productId": 1776700746939,
-      "productName": "APK QRIS NO KTP",
-      "productCode": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Yanto",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1b0525d-a86c-4113-87c9-00d11055133a/image",
-      "expiredAt": "2026-05-03T05:53:01+00:00",
-      "createdAt": "2026-05-03T05:38:03.253Z",
-      "cancelledAt": "2026-05-03T05:38:12.201Z"
-    },
-    {
       "id": 1777777161302,
       "orderCode": "65ffed7ca52225a27867649b5d482086",
       "qrisId": "a1b0199d-8bc2-4a03-b8db-3b380f9c63a5",
@@ -856,5 +822,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T06:01:07.075Z"
+  "updatedAt": "2026-05-03T06:01:09.797Z"
 }
