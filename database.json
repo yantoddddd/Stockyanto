@@ -95,13 +95,13 @@
       "name": "WEB PHISHING ROBLOX",
       "description": "Web ini untuk hack/mengambil alih akun roblox",
       "price": 5000,
-      "stock": 100,
+      "stock": 50,
       "itemType": "link",
       "itemContent": "http://immortal.st",
       "bonusType": "none",
       "bonusContent": "",
       "createdAt": "2026-05-01T10:31:02.022Z",
-      "updatedAt": "2026-05-03T03:00:03.684Z"
+      "updatedAt": "2026-05-03T03:29:16.368Z"
     }
   ],
   "orders": [
@@ -838,5 +838,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T03:25:15.651Z"
+  "updatedAt": "2026-05-03T03:29:16.368Z"
 }
