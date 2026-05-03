@@ -116,7 +116,7 @@
       "totalAmount": 50000,
       "customerName": "Customer",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "expired",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1b024e5-6bf1-4a92-a4bd-d98f9a12a369/image",
       "expiredAt": "2026-05-03T03:45:53+00:00",
       "createdAt": "2026-05-03T03:30:54.276Z"
@@ -838,5 +838,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T03:45:22.863Z"
+  "updatedAt": "2026-05-03T03:46:15.159Z"
 }
