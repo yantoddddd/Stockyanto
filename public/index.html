@@ -54,10 +54,7 @@
         .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .splash-title { font-size:1.6rem; font-weight:800; letter-spacing:-0.5px; color:white; margin-bottom:4px; }
         .splash-sub { font-size:0.8rem; color:var(--text2); letter-spacing:1px; margin-bottom:28px; }
-        .splash-dots { display:flex; gap:8px; }
-        .splash-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.5s infinite; }
-        .splash-dot:nth-child(2) { animation-delay:0.2s; }
-        .splash-dot:nth-child(3) { animation-delay:0.4s; }
+        .splash-loader { width:40px; height:40px; border:3px solid rgba(96,165,250,0.2); border-top-color:#60a5fa; border-radius:50%; animation:spin 0.8s linear infinite; }
 
         /* HEADER */
         .header { 
@@ -73,7 +70,7 @@
         .menu-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
 
         /* SEARCH & FILTER */
-        .search-filter-wrap { margin-bottom:22px; }
+        .search-filter-wrap { margin-bottom:22px; display:none; }
         .search-row { display:flex; gap:10px; margin-bottom:14px; }
         .search-input { 
             flex:1; padding:14px 20px; border-radius:var(--radius-sm); 
@@ -219,7 +216,7 @@
     <div class="splash-icon"><i class="fas fa-store-alt"></i></div>
     <div class="splash-title">Yanto Store</div>
     <div class="splash-sub">AutoOrder Digital</div>
-    <div class="splash-dots"><div class="splash-dot"></div><div class="splash-dot"></div><div class="splash-dot"></div></div>
+    <div class="splash-loader"></div>
 </div>
 
 <div class="container" id="mainContainer" style="display:none;">
@@ -231,15 +228,13 @@
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
 
-    <div class="search-filter-wrap" id="searchFilterWrap" style="display:none;">
+    <div class="search-filter-wrap" id="searchFilterWrap">
         <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="renderProducts()"></div>
         <div class="filter-scroll" id="filterScroll"></div>
         <div class="results-info" id="resultsInfo"></div>
     </div>
 
-    <div class="products-grid" id="productsGrid">
-        <div style="text-align:center;color:var(--text2);grid-column:1/-1;">Memuat produk...</div>
-    </div>
+    <div class="products-grid" id="productsGrid"></div>
     <div class="load-more-wrap" id="loadMoreWrap">
         <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
     </div>
@@ -288,11 +283,14 @@
     let displayCount = 6;
     let categories = [];
 
-    // ✅ FIX: Sembunyiin splash + tampilin konten + load produk sekaligus
+    // ✅ SPLASH TETEP ADA, PRODUK LOAD DI BACKGROUND
     window.addEventListener('load', function() {
-        document.getElementById('splashScreen').classList.add('hidden');
-        document.getElementById('mainContainer').style.display = 'block';
-        loadProducts(); // ✅ Langsung load tanpa nunggu
+        loadProducts(); // Load di background pas splash muncul
+        setTimeout(function() {
+            // Splash ilang setelah 1.5 detik (atau setelah produk siap)
+            document.getElementById('splashScreen').classList.add('hidden');
+            document.getElementById('mainContainer').style.display = 'block';
+        }, 1500);
     });
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
@@ -310,7 +308,6 @@
             }
             allProducts = data.products;
 
-            // Ambil soldMap dari public-stats
             try {
                 var orderRes = await fetch('/api/public-stats');
                 var orderData = await orderRes.json();
@@ -320,7 +317,6 @@
                 }
             } catch(e) {}
 
-            // Kategori
             var catSet = new Set();
             allProducts.forEach(function(p) {
                 var name = p.name.toLowerCase();
@@ -392,7 +388,6 @@
             }).join('');
         }
         document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk';
-        // ✅ FIX: Tombol "Tampilkan Lebih Banyak" ilang kalau udah gak ada
         if (displayCount < filtered.length) {
             document.getElementById('loadMoreWrap').style.display = 'block';
         } else {
