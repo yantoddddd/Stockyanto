@@ -11,16 +11,11 @@
         body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; padding: 24px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         .container { max-width: 1000px; margin: 0 auto; }
 
         /* SPLASH */
-        #adminSplash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
+        #adminSplash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, visibility 0.5s ease; }
         #adminSplash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .splash-icon { font-size: 3.5rem; margin-bottom: 16px; }
         .splash-icon i { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -65,7 +60,7 @@
         .top-bar .info { color: #64748b; font-size: 0.7rem; }
         #loginError { color: #ef4444; margin-top: 10px; text-align: center; display: none; }
 
-        /* FILTER CHIPS - FONT AWESOME */
+        /* FILTER CHIPS */
         .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
         .filter-scroll::-webkit-scrollbar { height: 2px; }
         .filter-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 0.8rem; cursor: pointer; white-space: nowrap; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
@@ -123,7 +118,7 @@
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
-        <!-- FILTER CHIPS - FONT AWESOME -->
+        <!-- FILTER CHIPS - FONT AWESOME + URL HASH -->
         <div class="filter-scroll">
             <span class="filter-chip active" onclick="switchFilter('orders', this)"><i class="fas fa-history"></i> Riwayat Order</span>
             <span class="filter-chip" onclick="switchFilter('products', this)"><i class="fas fa-boxes"></i> Barang</span>
@@ -131,6 +126,7 @@
         </div>
         <div class="results-info" id="resultsInfo"></div>
 
+        <!-- PANEL ORDER -->
         <div id="panel-orders">
             <div class="card">
                 <h2><i class="fas fa-history"></i> Riwayat Order</h2>
@@ -141,6 +137,7 @@
             </div>
         </div>
 
+        <!-- PANEL PRODUK -->
         <div id="panel-products" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
@@ -166,6 +163,7 @@
             </div>
         </div>
 
+        <!-- PANEL MENU -->
         <div id="panel-menu" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-chart-line"></i> Statistik</h2>
@@ -257,6 +255,7 @@
     let orderDisplay = 10, productDisplay = 10;
     let lastOrderCount = 0;
     let maintenanceMode = false;
+    let qrisCounter = 1; // ✅ Counter QRIS auto-name
 
     function toast(msg, isError) {
         var t = document.getElementById('toast');
@@ -284,20 +283,32 @@
         document.getElementById('ipStatus').textContent='Admin'; 
         document.getElementById('ipStatus').style.color='#10b981'; 
         loadAll(); 
-        switchFilter('orders', document.querySelector('.filter-chip')); 
+        // ✅ Ambil hash dari URL, default 'orders'
+        var hash = window.location.hash.replace('#','') || 'orders';
+        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
+        switchFilter(hash, chip || document.querySelector('.filter-chip'));
         checkMaintenanceStatus(); 
         startAutoRefresh(); 
     }
 
+    // ✅ URL HASH
     function switchFilter(filter, el) {
+        window.location.hash = filter;
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-        el.classList.add('active');
+        if (el) el.classList.add('active');
         document.getElementById('panel-orders').classList.add('hidden');
         document.getElementById('panel-products').classList.add('hidden');
         document.getElementById('panel-menu').classList.add('hidden');
         document.getElementById('panel-'+filter).classList.remove('hidden');
         updateResultsInfo();
     }
+
+    // ✅ Handle back/forward browser
+    window.addEventListener('hashchange', function() {
+        var hash = window.location.hash.replace('#','') || 'orders';
+        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
+        if (chip) switchFilter(hash, chip);
+    });
 
     function updateResultsInfo() {
         var total=0, showing=0;
@@ -307,11 +318,8 @@
         document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total;
     }
 
-    // ✅ SPLASH 1.5 DETIK → CEK IP
     window.addEventListener('load', function() {
-        setTimeout(async function() {
-            await checkAutoLogin();
-        }, 1500);
+        setTimeout(async function() { await checkAutoLogin(); }, 1500);
     });
 
     async function checkAutoLogin() {
@@ -323,7 +331,6 @@
             var data = await res.json();
             if (data.isAdmin) { 
                 adminPassword = ''; 
-                // ✅ LOADING PANEL 3 DETIK
                 document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...';
                 document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data';
                 setTimeout(function() {
@@ -348,7 +355,7 @@
         } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; }
     }
 
-    function doLogout() { adminPassword=''; showLoginForm(); stopAutoRefresh(); }
+    function doLogout() { adminPassword=''; showLoginForm(); stopAutoRefresh(); window.location.hash = ''; }
     async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
 
     let autoInterval = null;
@@ -356,95 +363,37 @@
     function stopAutoRefresh() { if (autoInterval) { clearInterval(autoInterval); autoInterval = null; } }
     function loadAll() { loadStats(); loadOrders(); loadProducts(); autoPingAll(); }
 
-    async function loadOrders() {
-        try {
-            var res = await fetch('/api/admin/orders?adminKey='+adminPassword);
-            var data = await res.json();
-            if (data.success) {
-                var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length;
-                if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} }
-                lastOrderCount = newCount;
-                allOrders = data.orders||[]; renderOrders();
-            }
-        } catch(e) {}
-    }
-    function renderOrders() {
-        var toShow = allOrders.slice(0, orderDisplay);
-        var c = document.getElementById('ordersList');
-        if (toShow.length) {
-            c.innerHTML = toShow.map(function(o) {
-                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
-                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
-        document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
-        updateResultsInfo();
-    }
+    async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = newCount; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
+    function renderOrders() { var toShow = allOrders.slice(0, orderDisplay); var c = document.getElementById('ordersList'); if (toShow.length) { c.innerHTML = toShow.map(function(o) { var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled'; return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; } document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
 
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
-    function renderProducts() {
-        var toShow = allProducts.slice(0, productDisplay);
-        var c = document.getElementById('productsList');
-        if (toShow.length) {
-            c.innerHTML = toShow.map(function(p) {
-                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; }
-        document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none';
-        updateResultsInfo();
-    }
+    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
-    async function loadStats() {
-        try {
-            var res = await fetch('/api/admin/stats?adminKey='+adminPassword);
-            var data = await res.json();
-            if (data.success) {
-                var s = data.stats;
-                document.getElementById('statsGrid').innerHTML =
-                    '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div>'+
-                    '<div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div>'+
-                    '<div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div>'+
-                    '<div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div>'+
-                    '<div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div>'+
-                    '<div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Expired/Cancel</div></div>';
-            }
-        } catch(e) {}
-    }
+    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Expired/Cancel</div></div>'; } } catch(e) {} }
 
     async function autoPingAll() { pingTestSilent('github'); pingTestSilent('qrispy'); pingTestSilent('web'); pingTestSilent('telegram'); }
-    async function pingTestSilent(target) {
-        var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' };
-        var el = document.getElementById(idMap[target]); if (!el) return;
-        var start = performance.now();
-        if (target === 'telegram') {
-            try { var res = await fetch('/api/ping-telegram'); var d = await res.json(); var ms = Math.round(performance.now()-start); el.innerHTML = d.status==='ok' ? '<span class="ok">'+ms+'ms ✅</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; }
-            return;
-        }
-        try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); var ms = Math.round(performance.now()-start); el.innerHTML = '<span class="ok">'+ms+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; }
-    }
-    async function pingTest(target) {
-        var start = performance.now();
-        if (target==='telegram') { try { var res=await fetch('/api/ping-telegram'); var d=await res.json(); if(d.status==='ok') toast('✅ TELEGRAM: '+d.latency_ms+'ms'); else toast('❌ TELEGRAM GAGAL', true); } catch(e) { toast('❌ GAGAL', true); } return; }
-        try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); }
-    }
+    async function pingTestSilent(target) { var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target === 'telegram') { try { var res = await fetch('/api/ping-telegram'); var d = await res.json(); var ms = Math.round(performance.now()-start); el.innerHTML = d.status==='ok' ? '<span class="ok">'+ms+'ms ✅</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); var ms = Math.round(performance.now()-start); el.innerHTML = '<span class="ok">'+ms+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
+    async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var res=await fetch('/api/ping-telegram'); var d=await res.json(); if(d.status==='ok') toast('✅ TELEGRAM: '+d.latency_ms+'ms'); else toast('❌ TELEGRAM GAGAL', true); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
 
+    // ✅ QRIS AUTO-NAME (Cust 1, Cust 2, ...)
     async function generateQRIS() {
         var amount = parseInt(document.getElementById('qrisAmount').value);
-        if (!amount||amount<=0) { toast('Masukkan jumlah!', true); return; }
-        var name = prompt('Nama customer (opsional):', 'Customer');
+        if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
+        var name = 'Cust ' + qrisCounter;
+        qrisCounter++;
         try {
-            var qrisRes = await fetch(QRISPY_API_URL+'/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) });
+            var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) });
             var qrisData = await qrisRes.json();
-            if (qrisData.status!=='success') { toast('Gagal generate', true); return; }
-            var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name||'Customer' }) });
+            if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; }
+            var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) });
             var saveData = await saveRes.json();
             if (saveData.success) {
-                var orderUrl = 'https://stockyanto.vercel.app/order/'+saveData.orderCode;
+                var orderUrl = 'https://stockyanto.vercel.app/order/' + saveData.orderCode;
                 document.getElementById('qrisResult').innerHTML =
                     '<img src="'+qrisData.data.qris_image_url+'" class="qris-img" alt="QRIS">'+
-                    '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+'</p>'+
+                    '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+' | '+name+'</p>'+
                     '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+
                     '<div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button></div>'+
                     '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka Halaman Pembayaran</button>';
