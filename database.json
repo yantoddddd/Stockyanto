@@ -116,10 +116,11 @@
       "totalAmount": 1573,
       "customerName": "aiajaha",
       "customerEmail": "-",
-      "status": "pending",
+      "status": "cancelled",
       "qrisImage": "https://api.qrispy.id/api/public/qris/a1b0483e-3665-408e-a86f-e7414949ed57/image",
       "expiredAt": "2026-05-03T05:24:43+00:00",
-      "createdAt": "2026-05-03T05:09:44.359Z"
+      "createdAt": "2026-05-03T05:09:44.359Z",
+      "cancelledAt": "2026-05-03T05:09:55.407Z"
     },
     {
       "id": 1777784943293,
@@ -854,5 +855,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T05:09:44.359Z"
+  "updatedAt": "2026-05-03T05:09:55.408Z"
 }
