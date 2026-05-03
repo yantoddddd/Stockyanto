@@ -19,22 +19,22 @@
             --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
-            --radius: 20px;
-            --radius-sm: 14px;
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { background:var(--bg); font-family:'Inter',sans-serif; padding:20px 16px 40px; color:var(--text); background-image:radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(96,165,250,0.05) 0%, transparent 50%); animation:fadeIn 0.5s ease; }
+        body { 
+            background:var(--bg); font-family:'Inter',sans-serif; padding:20px 16px 40px; 
+            color:var(--text); min-height:100vh;
+            background-image:radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.08) 0%, transparent 50%);
+            animation:fadeIn 0.5s ease;
+        }
         @keyframes fadeIn { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
-        @keyframes fadeScale { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
-        @keyframes slideOut { to{opacity:0;transform:translateX(80px);} }
         .container { max-width:1000px; margin:0 auto; }
-
-        .card { background:var(--surface2); backdrop-filter:blur(16px); border-radius:var(--radius); padding:24px; margin-bottom:18px; border:1px solid var(--border); }
-        h1,h2 { color:white; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+        .card { background:var(--surface2); backdrop-filter:blur(16px); border-radius:24px; padding:24px; margin-bottom:18px; border:1px solid var(--border); }
+        h1, h2 { color:white; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
         h1 { font-size:1.3rem; font-weight:700; }
         h2 { font-size:1rem; font-weight:600; border-left:3px solid var(--accent); padding-left:14px; }
-        input,textarea,select { width:100%; padding:12px; margin:6px 0; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface); color:white; font-size:0.82rem; outline:none; transition:0.2s; }
-        input:focus,textarea:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.12); }
+        input, textarea, select { width:100%; padding:12px; margin:6px 0; border-radius:14px; border:1px solid var(--border); background:var(--surface); color:white; font-size:0.82rem; outline:none; transition:0.2s; }
+        input:focus, textarea:focus, select:focus { border-color:var(--accent); }
         button { padding:10px 18px; border-radius:24px; border:none; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s; font-size:0.8rem; color:white; }
         button:active { transform:scale(0.96); }
         .btn-primary { background:var(--accent); }
@@ -44,13 +44,12 @@
         .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text2); }
         .btn-outline:hover { border-color:var(--accent); color:white; }
 
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
-        .stat-card { background:var(--surface); border-radius:var(--radius-sm); padding:16px; text-align:center; border:1px solid var(--border); }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin-bottom:16px; }
+        .stat-card { background:var(--surface); border-radius:16px; padding:16px; text-align:center; border:1px solid var(--border); }
         .stat-number { font-size:1.5rem; font-weight:800; color:var(--accent2); }
-        .stat-label { font-size:0.65rem; color:var(--text2); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; }
+        .stat-label { font-size:0.65rem; color:var(--text2); margin-top:2px; }
 
-        .item { background:var(--surface); padding:14px; border-radius:var(--radius-sm); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border:1px solid var(--border); transition:0.2s; animation:fadeScale 0.3s ease; }
-        .item.removing { animation:slideOut 0.25s ease forwards; }
+        .item { background:var(--surface); padding:14px; border-radius:14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border:1px solid var(--border); transition:0.2s; }
         .item:active { background:rgba(255,255,255,0.05); }
         .item-info { flex:1; min-width:130px; }
         .item-name { font-weight:600; color:white; font-size:0.82rem; margin-bottom:2px; }
@@ -65,18 +64,16 @@
         .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:24px; font-size:0.78rem; opacity:0; transition:0.3s; color:white; z-index:1000; white-space:nowrap; }
         .hidden { display:none !important; }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:1100; }
-        .modal-content { background:linear-gradient(160deg,#111827,#0f172a); border-radius:24px; padding:24px; max-width:460px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid var(--border); animation:fadeScale 0.3s ease; }
+        .modal-content { background:#0f172a; border-radius:24px; padding:24px; max-width:460px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid var(--border); }
         .modal-content h3 { color:white; font-size:1.1rem; margin-bottom:14px; }
         .modal-buttons { display:flex; gap:8px; margin-top:16px; }
         .modal-buttons button { flex:1; justify-content:center; }
 
-        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; background:var(--surface2); border-radius:var(--radius); padding:12px 18px; border:1px solid var(--border); }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; background:var(--surface2); border-radius:24px; padding:12px 18px; border:1px solid var(--border); }
         .top-bar .info { color:var(--text2); font-size:0.7rem; display:flex; align-items:center; gap:8px; }
-        .top-bar .dot { width:6px; height:6px; background:var(--success); border-radius:50%; }
         .maint-badge { background:rgba(239,68,68,0.15); color:#fca5a5; padding:3px 10px; border-radius:12px; font-size:0.65rem; font-weight:600; }
 
         .filter-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
-        .filter-scroll::-webkit-scrollbar { height:2px; }
         .filter-chip { padding:8px 16px; border-radius:22px; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:0.78rem; cursor:pointer; white-space:nowrap; transition:0.2s; font-weight:500; }
         .filter-chip:hover,.filter-chip.active { border-color:var(--accent); color:var(--accent2); background:rgba(59,130,246,0.1); }
         .results-info { font-size:0.68rem; color:var(--text2); margin-bottom:8px; }
@@ -114,7 +111,7 @@
     <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
-            <div class="info"><span class="dot"></span> IP: <span id="currentIP">-</span> | <span id="ipStatus" style="color:var(--success);">Admin</span> <span class="maint-badge hidden" id="maintBadge">MAINTENANCE</span></div>
+            <div class="info">● IP: <span id="currentIP">-</span> | <span id="ipStatus" style="color:var(--success);">Admin</span> <span class="maint-badge hidden" id="maintBadge">MAINTENANCE</span></div>
             <div style="display:flex;gap:6px;">
                 <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
                 <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -132,7 +129,7 @@
         <!-- ORDERS -->
         <div id="panel-orders">
             <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                     <h2><i class="fas fa-history"></i> Riwayat Order</h2>
                     <div style="display:flex;gap:6px;">
                         <button class="btn-success btn-sm" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
@@ -233,7 +230,7 @@
 
 <!-- PREVIEW MODAL -->
 <div id="previewModal" class="modal">
-    <div class="modal-content preview-content">
+    <div class="modal-content">
         <h3><i class="fas fa-eye"></i> Preview: <span id="previewName"></span></h3>
         <div id="previewBody"></div>
         <button class="btn-outline" onclick="document.getElementById('previewModal').style.display='none'" style="width:100%;justify-content:center;margin-top:10px;"><i class="fas fa-times"></i> Tutup</button>
@@ -272,9 +269,11 @@
     }
 
     function switchFilter(filter, el) {
-        document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+        document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
         el.classList.add('active');
-        ['panel-orders','panel-products','panel-menu'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+        document.getElementById('panel-orders').classList.add('hidden');
+        document.getElementById('panel-products').classList.add('hidden');
+        document.getElementById('panel-menu').classList.add('hidden');
         document.getElementById('panel-'+filter).classList.remove('hidden');
         updateResultsInfo();
     }
@@ -440,7 +439,7 @@
         } catch(e) { result.innerHTML = '❌ <b>'+target.toUpperCase()+'</b>: <span style="color:var(--danger);">GAGAL</span>'; }
     }
 
-    // ========== MAINTENANCE MODE (SIMAPN KE DB) ==========
+    // ========== MAINTENANCE MODE (KE DATABASE) ==========
     async function checkMaintenanceStatus() {
         try {
             var res = await fetch('/api/public-stats');
@@ -449,7 +448,8 @@
                 maintenanceMode = true;
                 document.getElementById('maintBadge').classList.remove('hidden');
                 document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
-                document.getElementById('maintToggleBtn').classList.add('active');
+                document.getElementById('maintToggleBtn').style.background = 'var(--danger)';
+                document.getElementById('maintToggleBtn').style.color = 'white';
             }
         } catch(e) {}
     }
@@ -463,10 +463,12 @@
         } catch(e) {}
         if (maintenanceMode) {
             btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+            btn.style.background = 'var(--danger)'; btn.style.color = 'white';
             badge.classList.remove('hidden');
             toast('🔧 Maintenance AKTIF (disimpan)');
         } else {
             btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
+            btn.style.background = 'var(--warning)'; btn.style.color = '#000';
             badge.classList.add('hidden');
             toast('✅ Maintenance NONAKTIF (disimpan)');
         }
