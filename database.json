@@ -837,6 +837,6 @@
     }
   ],
   "adminIP": "null",
-  "maintenance": false,
+  "maintenance": true,
   "updatedAt": "2026-05-03T00:07:26.832Z"
 }
