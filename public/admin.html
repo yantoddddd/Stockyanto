@@ -385,19 +385,13 @@
         if (!el) return;
         var start = performance.now();
         
+        // Telegram: pake backend proxy biar tembus blokir
         if (target === 'telegram') {
             try {
-                var res = await fetch('https://api.telegram.org/bot8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs/sendMessage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: '8727818269',
-                        text: '✅ Ping - ' + new Date().toLocaleString('id-ID')
-                    })
-                });
+                var res = await fetch('/api/ping-telegram');
                 var d = await res.json();
                 var ms = Math.round(performance.now() - start);
-                if (d.ok) {
+                if (d.status === 'ok') {
                     el.innerHTML = '<span class="ok">' + ms + 'ms ✅</span>';
                 } else {
                     el.innerHTML = '<span class="fail">GAGAL</span>';
@@ -408,6 +402,7 @@
             return;
         }
         
+        // GitHub, Qrispy, Web: fetch langsung
         try {
             var url = target === 'github' ? 'https://api.github.com' 
                     : target === 'qrispy' ? (QRISPY_API_URL + '/api/health') 
@@ -422,8 +417,22 @@
 
     async function pingTest(target) {
         var start = performance.now();
+        if (target === 'telegram') {
+            try {
+                var res = await fetch('/api/ping-telegram');
+                var d = await res.json();
+                if (d.status === 'ok') {
+                    toast('✅ TELEGRAM: ' + d.latency_ms + 'ms (via proxy)');
+                } else {
+                    toast('❌ TELEGRAM GAGAL: ' + d.message, true);
+                }
+            } catch(e) {
+                toast('❌ TELEGRAM GAGAL', true);
+            }
+            return;
+        }
         try {
-            var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):target==='telegram'?'https://api.telegram.org':'https://stockyanto.vercel.app/api/health';
+            var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health';
             await fetch(url);
             toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms');
         } catch(e) {
