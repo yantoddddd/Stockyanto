@@ -121,23 +121,6 @@
       "createdAt": "2026-05-03T02:27:06.813Z"
     },
     {
-      "id": 1777775180080,
-      "orderCode": "d82347c4f7bfb0d970ceb585af4817d0",
-      "qrisId": "a1b00dcd-be6e-4006-bcc6-156c18da7dfc",
-      "productId": null,
-      "productName": "QRIS Manual - Rp 10,000",
-      "productCode": "QRIS Manual",
-      "price": 10000,
-      "totalAmount": 10000,
-      "customerName": "Customer",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1b00dcd-be6e-4006-bcc6-156c18da7dfc/image",
-      "expiredAt": "2026-05-03T02:41:19+00:00",
-      "createdAt": "2026-05-03T02:26:20.116Z",
-      "cancelledAt": "2026-05-03T02:26:30.328Z"
-    },
-    {
       "id": 1777649320348,
       "orderCode": "89a3b6fb46a691b45e8e6caf890922fc",
       "qrisId": "a1ad1f9e-cc2d-4e6f-b712-4e504a53a5cf",
@@ -837,5 +820,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T02:27:06.813Z"
+  "updatedAt": "2026-05-03T02:27:14.517Z"
 }
