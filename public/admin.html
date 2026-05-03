@@ -217,6 +217,7 @@
     let allOrders = [], allProducts = [];
     let orderDisplay = 10, productDisplay = 10;
     let lastOrderCount = 0;
+    let maintenanceMode = false;
 
     function toast(msg, isError) {
         var t = document.getElementById('toast');
@@ -359,37 +360,27 @@
         productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Terhapus');
     }
 
-    // ✅ FUNGSI BARU: QRIS SHAREABLE
     async function generateQRIS() {
         var amount = parseInt(document.getElementById('qrisAmount').value);
         if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
         var name = prompt('Nama customer (opsional):', 'Customer');
-        
         try {
             var res = await fetch('/api/admin/generate-qris-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ adminKey: adminPassword, amount: amount, customerName: name || 'Customer' })
             });
             var data = await res.json();
-            
             if (data.success) {
                 var orderUrl = 'https://stockyanto.vercel.app/order/' + data.orderCode;
-                document.getElementById('qrisResult').innerHTML = 
+                document.getElementById('qrisResult').innerHTML =
                     '<img src="'+data.qrisImage+'" class="qris-img" alt="QRIS">'+
                     '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+'</p>'+
-                    '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran (share ke customer):</p>'+
-                    '<div class="copy-link-wrap">'+
-                        '<input type="text" id="qrisLinkInput" value="'+orderUrl+'" readonly>'+
-                        '<button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button>'+
-                    '</div>'+
+                    '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+
+                    '<div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button></div>'+
                     '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka Halaman Pembayaran</button>';
-            } else {
-                toast('Gagal: ' + (data.error || 'Unknown'), true);
-            }
+            } else { toast('Gagal: ' + (data.error || 'Unknown'), true); }
         } catch(e) { toast('Error: '+e.message, true); }
     }
-
     function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
 
     async function pingTest(target) {
@@ -408,6 +399,7 @@
             var res = await fetch('/api/public-stats');
             var data = await res.json();
             if (data.success && data.maintenance) {
+                maintenanceMode = true;
                 document.getElementById('maintBadge').classList.remove('hidden');
                 document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
                 document.getElementById('maintToggleBtn').classList.add('active');
@@ -416,18 +408,19 @@
     }
 
     async function toggleMaintenance() {
-        var isActive = document.getElementById('maintToggleBtn').classList.contains('active');
-        var newMode = !isActive;
-        try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:newMode }) }); } catch(e) {}
-        if (newMode) {
-            document.getElementById('maintBadge').classList.remove('hidden');
-            document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
-            document.getElementById('maintToggleBtn').classList.add('active');
+        maintenanceMode = !maintenanceMode;
+        var btn = document.getElementById('maintToggleBtn');
+        var badge = document.getElementById('maintBadge');
+        try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {}
+        if (maintenanceMode) {
+            btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+            btn.classList.add('active');
+            badge.classList.remove('hidden');
             toast('🔧 Maintenance AKTIF');
         } else {
-            document.getElementById('maintBadge').classList.add('hidden');
-            document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
-            document.getElementById('maintToggleBtn').classList.remove('active');
+            btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
+            btn.classList.remove('active');
+            badge.classList.add('hidden');
             toast('✅ Maintenance NONAKTIF');
         }
     }
