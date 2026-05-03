@@ -12,7 +12,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes fadeScale { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
         .container { max-width: 1000px; margin: 0 auto; }
 
         /* SPLASH */
@@ -24,13 +23,13 @@
         .splash-sub { font-size: 0.75rem; color: #94a3b8; margin-bottom: 24px; letter-spacing: 1px; }
         .splash-loader { width: 36px; height: 36px; border: 3px solid rgba(96,165,250,0.2); border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
-        h1, h2 { color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-        h1 { font-size: 1.4rem; }
-        h2 { font-size: 1.05rem; border-left: 3px solid #3b82f6; padding-left: 14px; }
-        input, textarea, select { width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 24px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 28px; margin-bottom: 28px; border: 1px solid rgba(255,255,255,0.08); }
+        h1, h2 { color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.2rem; border-left: 3px solid #3b82f6; padding-left: 16px; }
+        input, textarea, select { width: 100%; padding: 12px 16px; margin: 10px 0; border-radius: 28px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; }
         input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
-        button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 36px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
+        button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
         button:active { transform: scale(0.96); }
         button.active { background: #10b981; }
         .btn-danger { background: #b91c1c; }
@@ -38,24 +37,25 @@
         .btn-success { background: #10b981; }
         .btn-outline { background: transparent; border: 1px solid #475569; color: white; }
         .btn-outline:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 18px; }
-        .stat-card { background: rgba(0,0,0,0.3); border-radius: 18px; padding: 15px; text-align: center; }
-        .stat-number { font-size: 1.6rem; font-weight: 800; color: #60a5fa; }
-        .stat-label { font-size: 0.68rem; color: #94a3b8; margin-top: 3px; }
-        .item { background: #1e293b; padding: 14px; border-radius: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; transition: 0.2s; cursor: pointer; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; text-align: center; }
+        .stat-number { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+        .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; cursor: pointer; }
         .item:active { background: #334155; }
-        .item-info { flex: 1; min-width: 140px; }
-        .item-name { font-weight: 600; color: white; font-size: 0.85rem; margin-bottom: 3px; }
+        .item-info { flex: 1; min-width: 150px; }
+        .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
-        .item-actions { display: flex; gap: 6px; z-index: 1; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 36px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
+        .item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
         .hidden { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
-        .modal-content { background: #0f172a; border-radius: 28px; padding: 26px; max-width: 480px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; animation: fadeScale 0.3s ease; }
-        .modal-content h3 { color: white; font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 18px; }
+        .modal-content { background: #0f172a; border-radius: 32px; padding: 28px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
+        .modal-content h3 { color: white; font-size: 1.3rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
         .modal-buttons button { flex: 1; justify-content: center; }
         textarea { resize: vertical; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
         .top-bar .info { color: #64748b; font-size: 0.7rem; }
         #loginError { color: #ef4444; margin-top: 10px; text-align: center; display: none; }
@@ -68,31 +68,32 @@
         .filter-chip:hover, .filter-chip.active { border-color: #3b82f6; color: #60a5fa; background: rgba(59,130,246,0.1); }
         .results-info { font-size: 0.7rem; color: #64748b; margin-bottom: 8px; }
         .load-more-wrap { text-align: center; margin-top: 12px; }
-        .btn-load-more { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; border-radius: 28px; color: white; cursor: pointer; font-size: 0.8rem; }
+        .btn-load-more { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; border-radius: 30px; color: white; cursor: pointer; font-size: 0.8rem; }
 
         .preview-content { text-align: left; }
-        .preview-section { background: rgba(0,0,0,0.3); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+        .preview-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 14px; margin-bottom: 10px; }
         .preview-section .preview-label { font-size: 0.7rem; color: #60a5fa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .preview-section .preview-text { color: #e2e8f0; font-size: 0.8rem; word-break: break-all; }
-        .maint-badge { background: rgba(239,68,68,0.2); color: #fca5a5; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 4px; }
-        .qris-img { max-width: 180px; border-radius: 14px; display: block; margin: 8px auto; }
+        .maint-badge { background: rgba(239,68,68,0.2); color: #fca5a5; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; }
+        .qris-img { max-width: 200px; border-radius: 16px; display: block; margin: 10px auto; }
         .copy-link-wrap { display: flex; gap: 8px; margin-top: 10px; }
-        .copy-link-wrap input { flex: 1; padding: 8px 12px; font-size: 0.7rem; border-radius: 14px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
-        .copy-link-wrap button { padding: 8px 16px; font-size: 0.7rem; border-radius: 14px; }
+        .copy-link-wrap input { flex: 1; padding: 8px 12px; font-size: 0.7rem; border-radius: 16px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
+        .copy-link-wrap button { padding: 8px 16px; font-size: 0.7rem; border-radius: 16px; }
         
         .auto-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 0.7rem; font-weight: 600; }
         .auto-status .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         .ping-status { font-size: 0.68rem; color: #94a3b8; margin-top: 6px; line-height: 1.6; }
         .ping-status span { margin-right: 10px; }
         .ping-status .ok { color: #10b981; }
         .ping-status .fail { color: #ef4444; }
 
         /* DETAIL ROW */
-        .detail-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.82rem; }
         .detail-row .dl { color: #64748b; }
         .detail-row .dv { color: #e2e8f0; text-align: right; word-break: break-all; }
 
-        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } .stats-grid { grid-template-columns: repeat(3,1fr); } }
+        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
     </style>
 </head>
 <body>
@@ -122,7 +123,7 @@
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
-        <!-- FILTER CHIPS -->
+        <!-- FILTER CHIPS - FONT AWESOME + URL HASH -->
         <div class="filter-scroll">
             <span class="filter-chip active" onclick="switchFilter('orders', this)"><i class="fas fa-history"></i> Riwayat Order</span>
             <span class="filter-chip" onclick="switchFilter('products', this)"><i class="fas fa-boxes"></i> Barang</span>
@@ -146,16 +147,17 @@
             <div class="card">
                 <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
                 <input type="text" id="productName" placeholder="Nama Produk">
-                <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
-                <div style="display:flex;gap:8px;"><input type="number" id="productPrice" placeholder="Harga" style="flex:1;"><input type="number" id="productStock" placeholder="Stok" style="flex:1;"></div>
+                <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
+                <input type="number" id="productPrice" placeholder="Harga">
+                <input type="number" id="productStock" placeholder="Stok">
                 <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-                <div id="itemTextField"><textarea id="itemText" rows="4" placeholder="Konten teks"></textarea></div>
+                <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div>
                 <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="4" placeholder="<div>HTML...</div>"></textarea></div>
+                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
                 <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
                 <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
                 <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
-                <button onclick="addProduct()" class="btn-success" style="width:100%;justify-content:center;margin-top:8px;"><i class="fas fa-save"></i> Simpan Produk</button>
+                <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
             </div>
             <div class="card">
                 <h2><i class="fas fa-boxes"></i> Daftar Produk</h2>
@@ -183,7 +185,7 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button onclick="pingTest('github')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button>
                     <button onclick="pingTest('qrispy')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button>
-                    <button onclick="pingTest('telegram')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Tele</button>
+                    <button onclick="pingTest('telegram')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Telegram</button>
                     <button onclick="pingTest('web')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-globe"></i> Web</button>
                 </div>
                 <div class="ping-status" id="pingStatus">
@@ -200,7 +202,7 @@
             <div class="card">
                 <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
                 <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
-                <button onclick="sendBroadcast()" class="btn-primary" style="width:100%;justify-content:center;margin-top:6px;"><i class="fas fa-paper-plane"></i> Kirim</button>
+                <button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
                 <button class="btn-warning" onclick="resetOrders()" style="flex:1;"><i class="fas fa-trash-alt"></i> Reset Pending</button>
@@ -217,24 +219,24 @@
         <h3><i class="fas fa-info-circle"></i> Detail Order</h3>
         <div id="detailContent"></div>
         <div class="modal-buttons">
-            <button class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt"></i> Hapus</button>
+            <button class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt"></i> Hapus Order</button>
             <button class="btn-outline" onclick="document.getElementById('detailModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
         </div>
     </div>
 </div>
 
-<!-- EDIT MODAL -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-edit"></i> Edit Produk</h3>
         <input type="hidden" id="editProductId">
         <input type="text" id="editProductName" placeholder="Nama Produk">
         <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
-        <div style="display:flex;gap:8px;"><input type="number" id="editProductPrice" placeholder="Harga" style="flex:1;"><input type="number" id="editProductStock" placeholder="Stok" style="flex:1;"></div>
+        <input type="number" id="editProductPrice" placeholder="Harga">
+        <input type="number" id="editProductStock" placeholder="Stok">
         <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="4" placeholder="Konten teks"></textarea></div>
+        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div>
         <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="4" placeholder="<div>HTML...</div>"></textarea></div>
+        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
         <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
         <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
         <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
@@ -377,15 +379,15 @@
     function loadAll() { loadStats(); loadOrders(); loadProducts(); autoPingAll(); }
 
     async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = newCount; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
-
-    // ✅ RENDER ORDER BISA DIKLIK
+    
+    // ✅ RENDER ORDER - BISA DIKLIK BUAT DETAIL
     function renderOrders() {
         var toShow = allOrders.slice(0, orderDisplay);
         var c = document.getElementById('ordersList');
         if (toShow.length) {
             c.innerHTML = toShow.map(function(o) {
-                var st = o.status==='paid'?'<span style="color:#10b981;">Lunas</span>':o.status==='pending'?'<span style="color:#f59e0b;">Pending</span>':o.status==='expired'?'<span style="color:#ef4444;">Expired</span>':'<span style="color:#94a3b8;">Cancelled</span>';
-                return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>';
+                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
+                return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
             }).join('');
         } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
         document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
@@ -422,10 +424,10 @@
     }
 
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
-    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
+    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
-    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Revenue</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Exp/Cancel</div></div>'; } } catch(e) {} }
+    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Expired/Cancel</div></div>'; } } catch(e) {} }
 
     async function autoPingAll() { pingTestSilent('github'); pingTestSilent('qrispy'); pingTestSilent('web'); pingTestSilent('telegram'); }
     async function pingTestSilent(target) { var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target === 'telegram') { try { var res = await fetch('/api/ping-telegram'); var d = await res.json(); var ms = Math.round(performance.now()-start); el.innerHTML = d.status==='ok' ? '<span class="ok">'+ms+'ms ✅</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); var ms = Math.round(performance.now()-start); el.innerHTML = '<span class="ok">'+ms+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
@@ -448,7 +450,7 @@
                     '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+' | '+name+'</p>'+
                     '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+
                     '<div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button></div>'+
-                    '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka</button>';
+                    '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka Halaman Pembayaran</button>';
             } else { toast('Gagal: '+(saveData.error||'Unknown'), true); }
         } catch(e) { toast('Error: '+e.message, true); }
     }
