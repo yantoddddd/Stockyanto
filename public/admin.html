@@ -19,7 +19,7 @@
         input, textarea, select { width: 100%; padding: 12px 16px; margin: 10px 0; border-radius: 28px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; }
         input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
         button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
-        button:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        button:active { transform: scale(0.96); }
         button.active { background: #10b981; }
         .btn-danger { background: #b91c1c; }
         .btn-warning { background: #f59e0b; }
@@ -32,7 +32,7 @@
         .stat-label { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
         .item { background: #1e293b; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: 0.3s; overflow-x: auto; animation: fadeIn 0.3s ease; }
         .item.removing { animation: slideOut 0.3s ease forwards; }
-        .item:hover { background: #334155; }
+        .item:active { background: #334155; }
         .item-info { flex: 1; min-width: 150px; }
         .item-name { font-weight: 600; color: white; margin-bottom: 4px; }
         .item-detail { font-size: 0.7rem; color: #94a3b8; }
@@ -67,6 +67,15 @@
         .copy-link-wrap { display: flex; gap: 8px; margin-top: 10px; }
         .copy-link-wrap input { flex: 1; padding: 8px 12px; font-size: 0.7rem; border-radius: 16px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
         .copy-link-wrap button { padding: 8px 16px; font-size: 0.7rem; border-radius: 16px; }
+        
+        .auto-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 0.7rem; font-weight: 600; }
+        .auto-status .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .ping-status { font-size: 0.68rem; color: #94a3b8; margin-top: 6px; line-height: 1.6; }
+        .ping-status span { margin-right: 10px; }
+        .ping-status .ok { color: #10b981; }
+        .ping-status .fail { color: #ef4444; }
+
         @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } }
     </style>
 </head>
@@ -83,6 +92,7 @@
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
             <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span> <span class="maint-badge hidden" id="maintBadge">MAINTENANCE</span></div>
+            <div class="auto-status"><span class="dot"></span> Auto ON (1s)</div>
             <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
@@ -97,10 +107,6 @@
         <div id="panel-orders">
             <div class="card">
                 <h2><i class="fas fa-history"></i> Riwayat Order</h2>
-                <div class="toolbar">
-                    <button class="btn-success" id="autoRefreshBtn" onclick="toggleAutoRefresh()"><i class="fas fa-sync-alt"></i> Auto OFF</button>
-                    <button class="btn-warning" onclick="refreshAll()"><i class="fas fa-redo-alt"></i> Refresh</button>
-                </div>
                 <div id="ordersList"></div>
                 <div class="load-more-wrap" id="ordersLoadMore" style="display:none;">
                     <button class="btn-load-more" onclick="loadMoreOrders()">Tampilkan Lebih Banyak</button>
@@ -150,8 +156,14 @@
                     <button onclick="pingTest('github')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button>
                     <button onclick="pingTest('qrispy')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button>
                     <button onclick="pingTest('telegram')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Telegram</button>
+                    <button onclick="pingTest('web')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-globe"></i> Web</button>
                 </div>
-                <div id="pingResult" style="margin-top:10px;font-size:0.75rem;color:#94a3b8;text-align:center;"></div>
+                <div class="ping-status" id="pingStatus">
+                    <span>GitHub: <span id="pingGithub">-</span></span>
+                    <span>Qrispy: <span id="pingQrispy">-</span></span>
+                    <span>Telegram: <span id="pingTelegram">-</span></span>
+                    <span>Web: <span id="pingWeb">-</span></span>
+                </div>
             </div>
             <div class="card">
                 <h2><i class="fas fa-tools"></i> Maintenance Mode</h2>
@@ -213,8 +225,6 @@
 
     let adminPassword = '';
     let currentEditId = null;
-    let autoRefreshInterval = null;
-    let autoRefreshOn = false;
     let currentIP = '';
     let allOrders = [], allProducts = [];
     let orderDisplay = 10, productDisplay = 10;
@@ -233,7 +243,7 @@
     async function getMyIP() { try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; } catch(e) { return null; } }
     function goToUnauthorized() { window.location.href = '/unauthorized'; }
     function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; }
-    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='#10b981'; loadStats(); loadOrders(); loadProducts(); switchFilter('orders', document.querySelector('.filter-chip')); checkMaintenanceStatus(); }
+    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='#10b981'; loadAll(); switchFilter('orders', document.querySelector('.filter-chip')); checkMaintenanceStatus(); startAutoRefresh(); }
 
     function switchFilter(filter, el) {
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -246,11 +256,11 @@
     }
 
     function updateResultsInfo() {
-        var total = 0, showing = 0;
-        if (!document.getElementById('panel-orders').classList.contains('hidden')) { total = allOrders.length; showing = Math.min(orderDisplay, total); }
-        else if (!document.getElementById('panel-products').classList.contains('hidden')) { total = allProducts.length; showing = Math.min(productDisplay, total); }
-        else { document.getElementById('resultsInfo').textContent = ''; return; }
-        document.getElementById('resultsInfo').textContent = 'Menampilkan ' + showing + ' dari ' + total;
+        var total=0, showing=0;
+        if (!document.getElementById('panel-orders').classList.contains('hidden')) { total=allOrders.length; showing=Math.min(orderDisplay,total); }
+        else if (!document.getElementById('panel-products').classList.contains('hidden')) { total=allProducts.length; showing=Math.min(productDisplay,total); }
+        else { document.getElementById('resultsInfo').textContent=''; return; }
+        document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total;
     }
 
     async function checkAutoLogin() {
@@ -270,35 +280,46 @@
         var pwd = document.getElementById('adminKeyInput').value;
         if (!pwd) return;
         try {
-            var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: pwd }) });
+            var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:pwd }) });
             if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); }
             else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; }
         } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; }
     }
 
-    function doLogout() { adminPassword=''; showLoginForm(); if(autoRefreshOn) toggleAutoRefresh(); }
-    async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) }); doLogout(); }
+    function doLogout() { adminPassword=''; showLoginForm(); stopAutoRefresh(); }
+    async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
 
-    function toggleAutoRefresh() {
-        autoRefreshOn = !autoRefreshOn;
-        var btn = document.getElementById('autoRefreshBtn');
-        if (autoRefreshOn) { btn.classList.add('active'); btn.innerHTML='<i class="fas fa-sync-alt fa-spin"></i> Auto ON (30s)'; autoRefreshInterval=setInterval(function(){ loadStats(); loadOrders(); loadProducts(); }, 30000); }
-        else { btn.classList.remove('active'); btn.innerHTML='<i class="fas fa-sync-alt"></i> Auto OFF'; clearInterval(autoRefreshInterval); autoRefreshInterval=null; }
+    // ========== AUTO REFRESH 1 DETIK ==========
+    let autoInterval = null;
+    function startAutoRefresh() {
+        stopAutoRefresh();
+        autoInterval = setInterval(function() {
+            loadStats();
+            loadOrders();
+            loadProducts();
+            autoPingAll();
+        }, 1000);
     }
-    function refreshAll() { loadStats(); loadOrders(); loadProducts(); }
+    function stopAutoRefresh() {
+        if (autoInterval) { clearInterval(autoInterval); autoInterval = null; }
+    }
+
+    function loadAll() {
+        loadStats();
+        loadOrders();
+        loadProducts();
+        autoPingAll();
+    }
 
     async function loadOrders() {
         try {
             var res = await fetch('/api/admin/orders?adminKey='+adminPassword);
             var data = await res.json();
-            if (data.success) { 
+            if (data.success) {
                 var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length;
-                if (lastOrderCount > 0 && newCount > lastOrderCount) {
-                    try { document.getElementById('chachingSound').play(); } catch(e) {}
-                    toast('🔔 Order baru masuk!', false);
-                }
+                if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} }
                 lastOrderCount = newCount;
-                allOrders = data.orders||[]; renderOrders(); 
+                allOrders = data.orders||[]; renderOrders();
             }
         } catch(e) {}
     }
@@ -312,19 +333,14 @@
                 return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
             }).join('');
         } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
-        document.getElementById('ordersLoadMore').style.display = (orderDisplay < allOrders.length) ? 'block' : 'none';
+        document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
         updateResultsInfo();
     }
-    function loadMoreOrders() { orderDisplay += 10; renderOrders(); }
+    function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
 
     async function loadProducts() {
-        try {
-            var res = await fetch('/api/admin/products?adminKey='+adminPassword);
-            var data = await res.json();
-            if (data.success) { allProducts = data.products||[]; renderProducts(); }
-        } catch(e) {}
+        try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {}
     }
-
     function renderProducts() {
         var toShow = allProducts.slice(0, productDisplay);
         var c = document.getElementById('productsList');
@@ -333,10 +349,10 @@
                 return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>';
             }).join('');
         } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; }
-        document.getElementById('productsLoadMore').style.display = (productDisplay < allProducts.length) ? 'block' : 'none';
+        document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none';
         updateResultsInfo();
     }
-    function loadMoreProducts() { productDisplay += 10; renderProducts(); }
+    function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
     async function loadStats() {
         try {
@@ -355,118 +371,102 @@
         } catch(e) {}
     }
 
+    // ========== AUTO PING ALL ==========
+    async function autoPingAll() {
+        var targets = ['github', 'qrispy', 'telegram', 'web'];
+        targets.forEach(function(t) { pingTestSilent(t); });
+    }
+
+    async function pingTestSilent(target) {
+        var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' };
+        var el = document.getElementById(idMap[target]);
+        if (!el) return;
+        var start = Date.now();
+        try {
+            var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):target==='telegram'?'https://api.telegram.org':'https://stockyanto.vercel.app/api/health';
+            var res = await fetch(url);
+            el.innerHTML = '<span class="ok">'+(Date.now()-start)+'ms</span>';
+        } catch(e) {
+            el.innerHTML = '<span class="fail">GAGAL</span>';
+        }
+    }
+
+    async function pingTest(target) {
+        var start = Date.now();
+        try {
+            var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):target==='telegram'?'https://api.telegram.org':'https://stockyanto.vercel.app/api/health';
+            var res = await fetch(url);
+            toast('✅ '+target.toUpperCase()+': '+(Date.now()-start)+'ms');
+        } catch(e) {
+            toast('❌ '+target.toUpperCase()+' GAGAL', true);
+        }
+    }
+
+    // ========== QRIS GENERATOR (KIRIM KE DB, productId NULL) ==========
+    async function generateQRIS() {
+        var amount = parseInt(document.getElementById('qrisAmount').value);
+        if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
+        var name = prompt('Nama customer (opsional):', 'Customer');
+        try {
+            // Generate QRIS dulu
+            var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
+                method: 'POST',
+                headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: amount })
+            });
+            var qrisData = await qrisRes.json();
+            if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; }
+
+            // Kirim ke database via backend
+            var saveRes = await fetch('/api/admin/save-qris-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adminKey: adminPassword,
+                    qrisId: qrisData.data.qris_id,
+                    qrisImage: qrisData.data.qris_image_url,
+                    totalAmount: amount,
+                    expiredAt: qrisData.data.expired_at,
+                    customerName: name || 'Customer'
+                })
+            });
+            var saveData = await saveRes.json();
+            if (saveData.success) {
+                var orderUrl = 'https://stockyanto.vercel.app/order/' + saveData.orderCode;
+                document.getElementById('qrisResult').innerHTML =
+                    '<img src="'+qrisData.data.qris_image_url+'" class="qris-img" alt="QRIS">'+
+                    '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+'</p>'+
+                    '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+
+                    '<div class="copy-link-wrap">'+
+                        '<input type="text" value="'+orderUrl+'" readonly>'+
+                        '<button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button>'+
+                    '</div>'+
+                    '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka Halaman Pembayaran</button>';
+            } else { toast('Gagal simpan: '+(saveData.error||'Unknown'), true); }
+        } catch(e) { toast('Error: '+e.message, true); }
+    }
+
+    function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
+
+    // ========== PREVIEW ==========
     async function previewProduct(pid) {
-        var product = allProducts.find(function(p){ return p.id == pid; });
+        var product = allProducts.find(function(p){ return p.id==pid; });
         if (!product) return;
         document.getElementById('previewName').textContent = product.name;
         var body = '';
-        if (product.itemType === 'html') {
-            body = '<div class="preview-section"><div class="preview-label">HTML Content</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
-        } else if (product.itemType === 'link' || (product.itemContent||'').startsWith('http')) {
-            body = '<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(product.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(product.itemContent)+'</a></div></div>';
-        } else {
-            body = '<div class="preview-section"><div class="preview-label">Konten Teks</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
-        }
-        if (product.bonusContent) {
-            body += '<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>';
-        }
+        if (product.itemType==='html') body = '<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
+        else if (product.itemType==='link'||(product.itemContent||'').startsWith('http')) body = '<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(product.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(product.itemContent)+'</a></div></div>';
+        else body = '<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>';
+        if (product.bonusContent) body += '<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>';
         body += '<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>';
         document.getElementById('previewBody').innerHTML = body;
         document.getElementById('previewModal').style.display = 'flex';
     }
 
     async function deleteProduct(id) {
-        if (!confirm('Hapus produk ini?')) return;
-        var el = document.getElementById('order-'+id);
-        if (el) { el.classList.add('removing'); await new Promise(function(r){ setTimeout(r, 300); }); }
-        await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
-        productDisplay = 10; loadProducts(); loadStats();
-        toast('🗑️ Produk dihapus');
-    }
-
-    // ✅ QRIS SHAREABLE - cuma fungsi ini yang diubah
-    async function generateQRIS() {
-    var amount = parseInt(document.getElementById('qrisAmount').value);
-    if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
-    var name = prompt('Nama customer (opsional):', 'Customer');
-    try {
-        var res = await fetch('/api/admin/generate-qris-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey: adminPassword, amount: amount, customerName: name || 'Customer' })
-        });
-        var data = await res.json();
-        if (data.success) {
-            var orderUrl = 'https://stockyanto.vercel.app/order/' + data.orderCode;
-            document.getElementById('qrisResult').innerHTML =
-                '<img src="' + data.qrisImage + '" class="qris-img" alt="QRIS">' +
-                '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp ' + amount.toLocaleString() + '</p>' +
-                '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran (share ke customer):</p>' +
-                '<div class="copy-link-wrap">' +
-                    '<input type="text" id="qrisLinkInput" value="' + orderUrl + '" readonly>' +
-                    '<button onclick="copyToClipboard(\'' + orderUrl + '\')"><i class="fas fa-copy"></i> Copy</button>' +
-                '</div>' +
-                '<button onclick="window.open(\'' + orderUrl + '\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka Halaman Pembayaran</button>';
-        } else {
-            toast('Gagal: ' + (data.error || 'Unknown'), true);
-        }
-    } catch(e) {
-        toast('Error: ' + e.message, true);
-    }
-    }
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function() { toast('📋 Tersalin!'); }).catch(function() { toast('Gagal copy', true); });
-    }
-
-    async function pingTest(target) {
-        var result = document.getElementById('pingResult');
-        result.innerHTML = '⏳ Testing <b>'+target.toUpperCase()+'</b>...';
-        var start = Date.now();
-        try {
-            var url = target==='github' ? 'https://api.github.com' : target==='qrispy' ? (QRISPY_API_URL+'/api/health') : 'https://api.telegram.org';
-            var res = await fetch(url);
-            var latency = Date.now() - start;
-            result.innerHTML = '✅ <b>'+target.toUpperCase()+'</b>: <span style="color:#10b981;">'+latency+'ms</span> (OK)';
-        } catch(e) {
-            result.innerHTML = '❌ <b>'+target.toUpperCase()+'</b>: <span style="color:#ef4444;">GAGAL</span>';
-        }
-    }
-
-    async function checkMaintenanceStatus() {
-        try {
-            var res = await fetch('/api/public-stats');
-            var data = await res.json();
-            if (data.success && data.maintenance) {
-                maintenanceMode = true;
-                document.getElementById('maintBadge').classList.remove('hidden');
-                document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
-                document.getElementById('maintToggleBtn').classList.add('active');
-            }
-        } catch(e) {}
-    }
-
-    async function toggleMaintenance() {
-        maintenanceMode = !maintenanceMode;
-        var btn = document.getElementById('maintToggleBtn');
-        var badge = document.getElementById('maintBadge');
-        try {
-            await fetch('/api/admin/toggle-maintenance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminKey: adminPassword, maintenance: maintenanceMode })
-            });
-        } catch(e) {}
-        if (maintenanceMode) {
-            btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
-            btn.classList.add('active');
-            badge.classList.remove('hidden');
-            toast('🔧 Maintenance AKTIF (disimpan)');
-        } else {
-            btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
-            btn.classList.remove('active');
-            badge.classList.add('hidden');
-            toast('✅ Maintenance NONAKTIF (disimpan)');
-        }
+        if (!confirm('Hapus?')) return;
+        await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) });
+        productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Terhapus');
     }
 
     async function addProduct() {
@@ -475,11 +475,10 @@
         if (!ic) { toast('Konten wajib diisi', true); return; }
         var bt = document.getElementById('bonusType').value;
         var bc = ''; if (bt==='text') bc=document.getElementById('bonusText').value; else if (bt==='link') bc=document.getElementById('bonusLink').value;
-        var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+        var res = await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
         if (res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ document.getElementById(id).value=''; }); productDisplay=10; loadProducts(); loadStats(); }
         else { toast('Gagal', true); }
     }
-
     async function openEditModal(id) {
         var res = await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword);
         var data = await res.json();
@@ -493,56 +492,76 @@
             toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex';
         }
     }
-
     function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
-
     async function saveEditProduct() {
         var it = document.getElementById('editItemType').value;
         var ic = ''; if (it==='text') ic=document.getElementById('editItemText').value; else if (it==='link') ic=document.getElementById('editItemLink').value; else if (it==='html') ic=document.getElementById('editItemHtml').value;
         if (!ic) { toast('Konten wajib diisi', true); return; }
         var bt = document.getElementById('editBonusType').value;
         var bc = ''; if (bt==='text') bc=document.getElementById('editBonusText').value; else if (bt==='link') bc=document.getElementById('editBonusLink').value;
-        var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
+        var res = await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) });
         if (res.ok) { toast('✅ Diupdate'); closeEditModal(); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); }
     }
-
     async function resetOrders() {
         if (!confirm('Hapus semua Pending & Cancelled?')) return;
-        var res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
+        var res = await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) });
         if (res.ok) { var d = await res.json(); toast('✅ '+d.deletedCount+' dihapus'); orderDisplay=10; loadOrders(); loadStats(); }
     }
-
     async function backupData() {
-        var res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword }) });
+        var res = await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) });
         if (res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true);
     }
-
     async function sendBroadcast() {
         var msg = document.getElementById('broadcastMessage').value.trim();
         if (!msg) return;
-        var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey: adminPassword, message:msg }) });
+        var res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, message:msg }) });
         var d = await res.json();
         if (d.success) { toast('📢 Terkirim ke '+d.sentCount); document.getElementById('broadcastMessage').value=''; }
     }
-
+    async function checkMaintenanceStatus() {
+        try {
+            var res = await fetch('/api/public-stats');
+            var data = await res.json();
+            if (data.success && data.maintenance) {
+                maintenanceMode = true;
+                document.getElementById('maintBadge').classList.remove('hidden');
+                document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+                document.getElementById('maintToggleBtn').classList.add('active');
+            }
+        } catch(e) {}
+    }
+    async function toggleMaintenance() {
+        maintenanceMode = !maintenanceMode;
+        var btn = document.getElementById('maintToggleBtn');
+        var badge = document.getElementById('maintBadge');
+        try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {}
+        if (maintenanceMode) {
+            btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
+            btn.classList.add('active');
+            badge.classList.remove('hidden');
+            toast('🔧 Maintenance AKTIF');
+        } else {
+            btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
+            btn.classList.remove('active');
+            badge.classList.add('hidden');
+            toast('✅ Maintenance NONAKTIF');
+        }
+    }
     function toggleItemFields() {
         var t = document.getElementById('itemType').value;
         document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden');
         if (t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('itemHtmlField').classList.remove('hidden');
     }
-
     function toggleBonusFields() {
         var t = document.getElementById('bonusType').value;
         document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden');
         if (t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('bonusLinkField').classList.remove('hidden');
     }
-
     function toggleEditItemFields() {
         var t = document.getElementById('editItemType').value;
         document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden');
         if (t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if (t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if (t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden');
     }
-
     function toggleEditBonusFields() {
         var t = document.getElementById('editBonusType').value;
         document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden');
