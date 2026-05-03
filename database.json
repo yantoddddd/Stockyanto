@@ -822,6 +822,6 @@
   ],
   "adminIP": "182.8.226.135",
   "adminIPs": [],
-  "maintenance": true,
-  "updatedAt": "2026-05-03T11:28:41.940Z"
+  "maintenance": false,
+  "updatedAt": "2026-05-03T11:30:59.230Z"
 }
