@@ -7,95 +7,97 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family:'Inter',sans-serif; padding:24px; animation:fadeIn 0.5s ease; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
-        @keyframes spin { to{transform:rotate(360deg);} }
-        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; padding: 24px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes fadeScale { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
-        .container { max-width:1000px; margin:0 auto; }
+        .container { max-width: 1000px; margin: 0 auto; }
 
-        #adminSplash { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #0f172a, #1e1b4b); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s, visibility 0.5s; }
-        #adminSplash.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-        .splash-icon { font-size:3.5rem; margin-bottom:16px; }
-        .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .splash-title { font-size:1.5rem; font-weight:700; color:white; margin-bottom:4px; }
-        .splash-sub { font-size:0.75rem; color:#94a3b8; margin-bottom:24px; letter-spacing:1px; }
-        .splash-loader { width:36px; height:36px; border:3px solid rgba(96,165,250,0.2); border-top-color:#60a5fa; border-radius:50%; animation:spin 0.8s linear infinite; }
+        /* SPLASH */
+        #adminSplash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, visibility 0.5s ease; }
+        #adminSplash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-icon { font-size: 3.5rem; margin-bottom: 16px; }
+        .splash-icon i { background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .splash-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 4px; }
+        .splash-sub { font-size: 0.75rem; color: #94a3b8; margin-bottom: 24px; letter-spacing: 1px; }
+        .splash-loader { width: 36px; height: 36px; border: 3px solid rgba(96,165,250,0.2); border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-        .card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:28px; padding:24px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.08); }
-        h1,h2 { color:white; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
-        h1 { font-size:1.4rem; }
-        h2 { font-size:1.1rem; border-left:3px solid #3b82f6; padding-left:14px; }
-        input,textarea,select { width:100%; padding:11px 14px; margin:6px 0; border-radius:24px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.82rem; outline:none; transition:0.2s; }
-        input:focus,textarea:focus,select:focus { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,0.3); }
-        button { background:#3b82f6; border:none; padding:9px 18px; border-radius:36px; color:white; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:0.2s; font-size:0.82rem; }
-        button:active { transform:scale(0.96); }
-        button.active { background:#10b981; }
-        .btn-danger { background:#b91c1c; }
-        .btn-warning { background:#f59e0b; }
-        .btn-success { background:#10b981; }
-        .btn-outline { background:transparent; border:1px solid #475569; color:white; }
-        .btn-outline:hover { border-color:#ef4444; }
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; margin-bottom:18px; }
-        .stat-card { background:rgba(0,0,0,0.3); border-radius:18px; padding:15px; text-align:center; }
-        .stat-number { font-size:1.6rem; font-weight:800; color:#60a5fa; }
-        .stat-label { font-size:0.68rem; color:#94a3b8; margin-top:3px; }
-        .item { background:#1e293b; padding:14px; border-radius:18px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; transition:0.2s; cursor:pointer; }
-        .item:active { background:#334155; }
-        .item-info { flex:1; min-width:140px; }
-        .item-name { font-weight:600; color:white; font-size:0.82rem; margin-bottom:2px; }
-        .item-detail { font-size:0.68rem; color:#94a3b8; }
-        .item-actions { display:flex; gap:6px; }
-        .btn-sm { padding:5px 10px; border-radius:14px; font-size:0.65rem; border:none; cursor:pointer; color:white; display:flex; align-items:center; gap:4px; }
-        .btn-sm.blue { background:#3b82f6; }
-        .btn-sm.green { background:#10b981; }
-        .btn-sm.red { background:#b91c1c; }
-        .btn-sm.orange { background:#f59e0b; color:#000; }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); }
+        h1, h2 { color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        h1 { font-size: 1.4rem; }
+        h2 { font-size: 1.05rem; border-left: 3px solid #3b82f6; padding-left: 14px; }
+        input, textarea, select { width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 24px; border: 1px solid #334155; background: #1e293b; color: white; font-size: 0.85rem; outline: none; }
+        input:focus, textarea:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+        button { background: #3b82f6; border: none; padding: 10px 20px; border-radius: 36px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 0.85rem; }
+        button:active { transform: scale(0.96); }
+        button.active { background: #10b981; }
+        .btn-danger { background: #b91c1c; }
+        .btn-warning { background: #f59e0b; }
+        .btn-success { background: #10b981; }
+        .btn-outline { background: transparent; border: 1px solid #475569; color: white; }
+        .btn-outline:hover { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .stat-card { background: rgba(0,0,0,0.3); border-radius: 18px; padding: 15px; text-align: center; }
+        .stat-number { font-size: 1.6rem; font-weight: 800; color: #60a5fa; }
+        .stat-label { font-size: 0.68rem; color: #94a3b8; margin-top: 3px; }
+        .item { background: #1e293b; padding: 14px; border-radius: 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; transition: 0.2s; cursor: pointer; }
+        .item:active { background: #334155; }
+        .item-info { flex: 1; min-width: 140px; }
+        .item-name { font-weight: 600; color: white; font-size: 0.85rem; margin-bottom: 3px; }
+        .item-detail { font-size: 0.7rem; color: #94a3b8; }
+        .item-actions { display: flex; gap: 6px; z-index: 1; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 12px 24px; border-radius: 36px; font-size: 0.85rem; opacity: 0; transition: 0.3s; color: white; z-index: 1000; display: flex; align-items: center; gap: 8px; }
+        .hidden { display: none; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1100; animation: fadeIn 0.3s ease; }
+        .modal-content { background: #0f172a; border-radius: 28px; padding: 26px; max-width: 480px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; animation: fadeScale 0.3s ease; }
+        .modal-content h3 { color: white; font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 18px; }
+        .modal-buttons button { flex: 1; justify-content: center; }
+        textarea { resize: vertical; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .top-bar .info { color: #64748b; font-size: 0.7rem; }
+        #loginError { color: #ef4444; margin-top: 10px; text-align: center; display: none; }
 
-        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1e293b; padding:11px 22px; border-radius:36px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:7px; }
-        .hidden { display:none !important; }
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:1100; }
-        .modal-content { background:#0f172a; border-radius:26px; padding:24px; max-width:460px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid #334155; animation:fadeScale 0.3s ease; }
-        .modal-content h3 { color:white; font-size:1.1rem; margin-bottom:14px; }
-        .modal-buttons { display:flex; gap:8px; margin-top:16px; }
-        .modal-buttons button { flex:1; justify-content:center; }
+        /* FILTER CHIPS */
+        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+        .filter-scroll::-webkit-scrollbar { height: 2px; }
+        .filter-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 0.8rem; cursor: pointer; white-space: nowrap; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .filter-chip i { font-size: 0.75rem; }
+        .filter-chip:hover, .filter-chip.active { border-color: #3b82f6; color: #60a5fa; background: rgba(59,130,246,0.1); }
+        .results-info { font-size: 0.7rem; color: #64748b; margin-bottom: 8px; }
+        .load-more-wrap { text-align: center; margin-top: 12px; }
+        .btn-load-more { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; border-radius: 28px; color: white; cursor: pointer; font-size: 0.8rem; }
 
-        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
-        .top-bar .info { color:#64748b; font-size:0.68rem; }
-        #loginError { color:#ef4444; margin-top:8px; text-align:center; display:none; }
+        .preview-content { text-align: left; }
+        .preview-section { background: rgba(0,0,0,0.3); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+        .preview-section .preview-label { font-size: 0.7rem; color: #60a5fa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .preview-section .preview-text { color: #e2e8f0; font-size: 0.8rem; word-break: break-all; }
+        .maint-badge { background: rgba(239,68,68,0.2); color: #fca5a5; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 4px; }
+        .qris-img { max-width: 180px; border-radius: 14px; display: block; margin: 8px auto; }
+        .copy-link-wrap { display: flex; gap: 8px; margin-top: 10px; }
+        .copy-link-wrap input { flex: 1; padding: 8px 12px; font-size: 0.7rem; border-radius: 14px; border: 1px solid #334155; background: #1e293b; color: white; outline: none; }
+        .copy-link-wrap button { padding: 8px 16px; font-size: 0.7rem; border-radius: 14px; }
+        
+        .auto-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 16px; background: rgba(16,185,129,0.15); color: #10b981; font-size: 0.7rem; font-weight: 600; }
+        .auto-status .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 1s infinite; }
+        .ping-status { font-size: 0.68rem; color: #94a3b8; margin-top: 6px; line-height: 1.6; }
+        .ping-status span { margin-right: 10px; }
+        .ping-status .ok { color: #10b981; }
+        .ping-status .fail { color: #ef4444; }
 
-        .filter-scroll { display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
-        .filter-chip { padding:8px 15px; border-radius:20px; border:1px solid #334155; background:transparent; color:#94a3b8; font-size:0.78rem; cursor:pointer; white-space:nowrap; transition:0.2s; display:flex; align-items:center; gap:6px; }
-        .filter-chip i { font-size:0.72rem; }
-        .filter-chip:hover,.filter-chip.active { border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1); }
-        .results-info { font-size:0.68rem; color:#64748b; margin-bottom:8px; }
-        .load-more-wrap { text-align:center; margin-top:10px; }
-        .btn-load-more { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); padding:8px 22px; border-radius:26px; color:white; cursor:pointer; font-size:0.78rem; }
+        /* DETAIL ROW */
+        .detail-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
+        .detail-row .dl { color: #64748b; }
+        .detail-row .dv { color: #e2e8f0; text-align: right; word-break: break-all; }
 
-        .auto-status { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:14px; background:rgba(16,185,129,0.15); color:#10b981; font-size:0.68rem; font-weight:600; }
-        .auto-status .dot { width:5px; height:5px; background:#10b981; border-radius:50%; animation:pulse 1s infinite; }
-        .ping-status { font-size:0.65rem; color:#94a3b8; margin-top:6px; line-height:1.6; }
-        .ping-status span { margin-right:9px; }
-        .ping-status .ok { color:#10b981; }
-        .ping-status .fail { color:#ef4444; }
-        .maint-badge { background:rgba(239,68,68,0.2); color:#fca5a5; padding:4px 10px; border-radius:12px; font-size:0.62rem; display:inline-flex; align-items:center; gap:4px; }
-        .qris-img { max-width:180px; border-radius:14px; display:block; margin:8px auto; }
-        .copy-link-wrap { display:flex; gap:6px; margin-top:8px; }
-        .copy-link-wrap input { flex:1; padding:8px 12px; font-size:0.68rem; border-radius:14px; border:1px solid #334155; background:#1e293b; color:white; outline:none; }
-        .copy-link-wrap button { padding:7px 14px; font-size:0.68rem; }
-        .preview-section { background:rgba(0,0,0,0.3); border-radius:14px; padding:12px; margin-bottom:8px; }
-        .preview-section .preview-label { font-size:0.65rem; color:#60a5fa; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-        .preview-section .preview-text { color:#e2e8f0; font-size:0.75rem; word-break:break-all; }
-        .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.78rem; }
-        .detail-row .dl { color:#64748b; }
-        .detail-row .dv { color:#e2e8f0; text-align:right; }
-
-        @media (max-width:640px) { .item { flex-direction:column; align-items:flex-start; } .item-info { width:100%; } .item-actions { width:100%; justify-content:flex-end; } .stats-grid { grid-template-columns:repeat(3,1fr); } }
+        @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } .stats-grid { grid-template-columns: repeat(3,1fr); } }
     </style>
 </head>
 <body>
 
+<!-- SPLASH -->
 <div id="adminSplash">
     <div class="splash-icon"><i class="fas fa-user-shield"></i></div>
     <div class="splash-title">Admin Panel</div>
@@ -114,12 +116,13 @@
 
     <div id="adminContent" style="display:none;">
         <div class="top-bar">
-            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span> <span class="maint-badge hidden" id="maintBadge"><i class="fas fa-tools"></i> MAINT</span></div>
-            <div class="auto-status"><span class="dot"></span> Auto (1s)</div>
+            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span> <span class="maint-badge hidden" id="maintBadge"><i class="fas fa-tools"></i> MAINTENANCE</span></div>
+            <div class="auto-status"><span class="dot"></span> Auto ON (1s)</div>
             <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
+        <!-- FILTER CHIPS -->
         <div class="filter-scroll">
             <span class="filter-chip active" onclick="switchFilter('orders', this)"><i class="fas fa-history"></i> Riwayat Order</span>
             <span class="filter-chip" onclick="switchFilter('products', this)"><i class="fas fa-boxes"></i> Barang</span>
@@ -127,18 +130,18 @@
         </div>
         <div class="results-info" id="resultsInfo"></div>
 
-        <!-- ORDER PANEL -->
+        <!-- PANEL ORDER -->
         <div id="panel-orders">
             <div class="card">
                 <h2><i class="fas fa-history"></i> Riwayat Order</h2>
                 <div id="ordersList"></div>
                 <div class="load-more-wrap" id="ordersLoadMore" style="display:none;">
-                    <button class="btn-load-more" onclick="loadMoreOrders()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
+                    <button class="btn-load-more" onclick="loadMoreOrders()">Tampilkan Lebih Banyak</button>
                 </div>
             </div>
         </div>
 
-        <!-- PRODUCT PANEL -->
+        <!-- PANEL PRODUK -->
         <div id="panel-products" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
@@ -146,10 +149,10 @@
                 <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
                 <div style="display:flex;gap:8px;"><input type="number" id="productPrice" placeholder="Harga" style="flex:1;"><input type="number" id="productStock" placeholder="Stok" style="flex:1;"></div>
                 <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-                <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Konten teks"></textarea></div>
+                <div id="itemTextField"><textarea id="itemText" rows="4" placeholder="Konten teks"></textarea></div>
                 <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-                <select id="bonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="4" placeholder="<div>HTML...</div>"></textarea></div>
+                <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
                 <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
                 <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
                 <button onclick="addProduct()" class="btn-success" style="width:100%;justify-content:center;margin-top:8px;"><i class="fas fa-save"></i> Simpan Produk</button>
@@ -158,12 +161,12 @@
                 <h2><i class="fas fa-boxes"></i> Daftar Produk</h2>
                 <div id="productsList"></div>
                 <div class="load-more-wrap" id="productsLoadMore" style="display:none;">
-                    <button class="btn-load-more" onclick="loadMoreProducts()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
+                    <button class="btn-load-more" onclick="loadMoreProducts()">Tampilkan Lebih Banyak</button>
                 </div>
             </div>
         </div>
 
-        <!-- MENU PANEL -->
+        <!-- PANEL MENU -->
         <div id="panel-menu" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-chart-line"></i> Statistik</h2>
@@ -173,21 +176,21 @@
                 <h2><i class="fas fa-qrcode"></i> QRIS Generator</h2>
                 <input type="number" id="qrisAmount" placeholder="Jumlah (Rp)">
                 <button onclick="generateQRIS()" class="btn-success" style="width:100%;justify-content:center;"><i class="fas fa-qrcode"></i> Generate QRIS</button>
-                <div id="qrisResult" style="margin-top:10px;text-align:center;"></div>
+                <div id="qrisResult" style="margin-top:12px;text-align:center;"></div>
             </div>
             <div class="card">
                 <h2><i class="fas fa-plug"></i> Ping Test</h2>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button onclick="pingTest('github')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button>
                     <button onclick="pingTest('qrispy')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button>
                     <button onclick="pingTest('telegram')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Tele</button>
                     <button onclick="pingTest('web')" class="btn-outline" style="flex:1;justify-content:center;"><i class="fas fa-globe"></i> Web</button>
                 </div>
-                <div class="ping-status">
-                    <span><i class="fab fa-github"></i> <span id="pingGithub">-</span></span>
-                    <span><i class="fas fa-qrcode"></i> <span id="pingQrispy">-</span></span>
-                    <span><i class="fab fa-telegram-plane"></i> <span id="pingTelegram">-</span></span>
-                    <span><i class="fas fa-globe"></i> <span id="pingWeb">-</span></span>
+                <div class="ping-status" id="pingStatus">
+                    <span>GitHub: <span id="pingGithub">-</span></span>
+                    <span>Qrispy: <span id="pingQrispy">-</span></span>
+                    <span>Telegram: <span id="pingTelegram">-</span></span>
+                    <span>Web: <span id="pingWeb">-</span></span>
                 </div>
             </div>
             <div class="card">
@@ -199,7 +202,7 @@
                 <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
                 <button onclick="sendBroadcast()" class="btn-primary" style="width:100%;justify-content:center;margin-top:6px;"><i class="fas fa-paper-plane"></i> Kirim</button>
             </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
                 <button class="btn-warning" onclick="resetOrders()" style="flex:1;"><i class="fas fa-trash-alt"></i> Reset Pending</button>
                 <button class="btn-success" onclick="backupData()" style="flex:1;"><i class="fas fa-database"></i> Backup</button>
             </div>
@@ -208,7 +211,7 @@
 
 </div>
 
-<!-- DETAIL MODAL -->
+<!-- DETAIL MODAL (FITUR #11) -->
 <div id="detailModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-info-circle"></i> Detail Order</h3>
@@ -226,36 +229,40 @@
         <h3><i class="fas fa-edit"></i> Edit Produk</h3>
         <input type="hidden" id="editProductId">
         <input type="text" id="editProductName" placeholder="Nama Produk">
-        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi"></textarea>
+        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
         <div style="display:flex;gap:8px;"><input type="number" id="editProductPrice" placeholder="Harga" style="flex:1;"><input type="number" id="editProductStock" placeholder="Stok" style="flex:1;"></div>
         <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Konten teks"></textarea></div>
+        <div id="editItemTextField"><textarea id="editItemText" rows="4" placeholder="Konten teks"></textarea></div>
         <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-        <select id="editBonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="4" placeholder="<div>HTML...</div>"></textarea></div>
+        <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
         <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
         <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
         <div class="modal-buttons">
-            <button class="btn-success" onclick="saveEditProduct()"><i class="fas fa-save"></i> Simpan</button>
-            <button class="btn-outline" onclick="closeEditModal()"><i class="fas fa-times"></i> Batal</button>
+            <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
+            <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
         </div>
     </div>
 </div>
 
 <div id="previewModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content preview-content">
         <h3><i class="fas fa-eye"></i> Preview: <span id="previewName"></span></h3>
         <div id="previewBody"></div>
-        <button class="btn-outline" onclick="document.getElementById('previewModal').style.display='none'" style="width:100%;justify-content:center;margin-top:10px;"><i class="fas fa-times"></i> Tutup</button>
+        <button onclick="document.getElementById('previewModal').style.display='none'" style="background:#475569;width:100%;justify-content:center;margin-top:12px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
 
 <div id="toast" class="toast"></div>
-<audio id="chachingSound" preload="auto"><source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav"></audio>
+
+<audio id="chachingSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
 
 <script>
     const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
     const QRISPY_API_URL = 'https://api.qrispy.id';
+
     let adminPassword = '';
     let currentEditId = null;
     let currentDetailId = null;
@@ -274,8 +281,8 @@
         setTimeout(function() { t.style.opacity = '0'; }, 3000);
     }
 
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m==='&'?'&amp;':m==='<'?'&lt;':m=='>'?'&gt;'; }); }
-    async function getMyIP() { try { var r = await fetch('https://api.ipify.org?format=json'); return (await r.json()).ip; } catch(e) { return null; } }
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
+    async function getMyIP() { try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; } catch(e) { return null; } }
     function goToUnauthorized() { window.location.href = '/unauthorized'; }
 
     function showLoginForm() { 
@@ -295,19 +302,18 @@
         var hash = window.location.hash.replace('#','') || 'orders';
         var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
         switchFilter(hash, chip || document.querySelector('.filter-chip'));
-        checkMaintenanceStatus(); startAutoRefresh(); 
+        checkMaintenanceStatus(); 
+        startAutoRefresh(); 
     }
 
     function switchFilter(filter, el) {
         window.location.hash = filter;
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
         if (el) el.classList.add('active');
-        document.getElementById('panel-orders').classList.remove('hidden');
-        document.getElementById('panel-products').classList.remove('hidden');
-        document.getElementById('panel-menu').classList.remove('hidden');
-        if (filter !== 'orders') document.getElementById('panel-orders').classList.add('hidden');
-        if (filter !== 'products') document.getElementById('panel-products').classList.add('hidden');
-        if (filter !== 'menu') document.getElementById('panel-menu').classList.add('hidden');
+        document.getElementById('panel-orders').classList.add('hidden');
+        document.getElementById('panel-products').classList.add('hidden');
+        document.getElementById('panel-menu').classList.add('hidden');
+        document.getElementById('panel-'+filter).classList.remove('hidden');
         updateResultsInfo();
     }
 
@@ -370,7 +376,9 @@
     function stopAutoRefresh() { if (autoInterval) { clearInterval(autoInterval); autoInterval = null; } }
     function loadAll() { loadStats(); loadOrders(); loadProducts(); autoPingAll(); }
 
-    async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var nc = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && nc>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = nc; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
+    async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = newCount; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
+
+    // ✅ RENDER ORDER BISA DIKLIK
     function renderOrders() {
         var toShow = allOrders.slice(0, orderDisplay);
         var c = document.getElementById('ordersList');
@@ -379,13 +387,13 @@
                 var st = o.status==='paid'?'<span style="color:#10b981;">Lunas</span>':o.status==='pending'?'<span style="color:#f59e0b;">Pending</span>':o.status==='expired'?'<span style="color:#ef4444;">Expired</span>':'<span style="color:#94a3b8;">Cancelled</span>';
                 return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>';
             }).join('');
-        } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Belum ada order</div>'; }
+        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
         document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
         updateResultsInfo();
     }
     function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
 
-    // ✅ OPEN DETAIL MODAL + DELETE
+    // ✅ FITUR #11: DETAIL ORDER + HAPUS
     function openDetailModal(id) {
         var order = allOrders.find(function(o) { return o.id == id; });
         if (!order) return;
@@ -396,7 +404,7 @@
             '<div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div>'+
             '<div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div>'+
             '<div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Kode</span><span class="dv" style="font-size:0.65rem;word-break:break-all;">'+(order.orderCode||'-')+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Kode Order</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div>'+
             '<div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>';
         document.getElementById('detailModal').style.display = 'flex';
     }
@@ -414,58 +422,59 @@
     }
 
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
-    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button class="btn-sm orange" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:#64748b;text-align:center;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
+    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-success" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i> Preview</button><button class="btn-warning" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i> Edit</button><button class="btn-danger" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i> Hapus</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
     async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Revenue</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Exp/Cancel</div></div>'; } } catch(e) {} }
 
-    async function autoPingAll() { pingSilent('github'); pingSilent('qrispy'); pingSilent('web'); pingSilent('telegram'); }
-    async function pingSilent(target) {
-        var idMap = { github:'pingGithub', qrispy:'pingQrispy', telegram:'pingTelegram', web:'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return;
-        var start = performance.now();
-        if (target==='telegram') { try { var r = await fetch('/api/ping-telegram'); var d = await r.json(); el.innerHTML = d.status==='ok' ? '<span class="ok">'+d.latency_ms+'ms</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; }
-        try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); el.innerHTML = '<span class="ok">'+Math.round(performance.now()-start)+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; }
-    }
-    async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var r=await fetch('/api/ping-telegram'); var d=await r.json(); toast(d.status==='ok'?'✅ TELEGRAM: '+d.latency_ms+'ms':'❌ GAGAL', d.status!=='ok'); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
+    async function autoPingAll() { pingTestSilent('github'); pingTestSilent('qrispy'); pingTestSilent('web'); pingTestSilent('telegram'); }
+    async function pingTestSilent(target) { var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target === 'telegram') { try { var res = await fetch('/api/ping-telegram'); var d = await res.json(); var ms = Math.round(performance.now()-start); el.innerHTML = d.status==='ok' ? '<span class="ok">'+ms+'ms ✅</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); var ms = Math.round(performance.now()-start); el.innerHTML = '<span class="ok">'+ms+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
+    async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var res=await fetch('/api/ping-telegram'); var d=await res.json(); if(d.status==='ok') toast('✅ TELEGRAM: '+d.latency_ms+'ms'); else toast('❌ TELEGRAM GAGAL', true); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
 
     async function generateQRIS() {
         var amount = parseInt(document.getElementById('qrisAmount').value);
-        if (!amount||amount<=0) { toast('Masukkan jumlah!', true); return; }
+        if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
         var name = 'Cust ' + qrisCounter; qrisCounter++;
         try {
-            var qrisRes = await fetch(QRISPY_API_URL+'/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) });
+            var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) });
             var qrisData = await qrisRes.json();
-            if (qrisData.status!=='success') { toast('Gagal generate', true); return; }
+            if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; }
             var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) });
             var saveData = await saveRes.json();
             if (saveData.success) {
-                var orderUrl = 'https://stockyanto.vercel.app/order/'+saveData.orderCode;
-                document.getElementById('qrisResult').innerHTML = '<img src="'+qrisData.data.qris_image_url+'" class="qris-img"><p style="color:#10b981;margin:4px 0;">✅ Rp '+amount.toLocaleString()+' | '+name+'</p><div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button class="btn-sm blue" onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i></button></div><button class="btn-sm blue" onclick="window.open(\''+orderUrl+'\',\'_blank\')" style="width:100%;justify-content:center;margin-top:4px;"><i class="fas fa-external-link-alt"></i> Buka</button>';
+                var orderUrl = 'https://stockyanto.vercel.app/order/' + saveData.orderCode;
+                document.getElementById('qrisResult').innerHTML =
+                    '<img src="'+qrisData.data.qris_image_url+'" class="qris-img" alt="QRIS">'+
+                    '<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+' | '+name+'</p>'+
+                    '<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+
+                    '<div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i> Copy</button></div>'+
+                    '<button onclick="window.open(\''+orderUrl+'\', \'_blank\')" class="btn-outline" style="margin-top:6px;width:100%;justify-content:center;"><i class="fas fa-external-link-alt"></i> Buka</button>';
             } else { toast('Gagal: '+(saveData.error||'Unknown'), true); }
         } catch(e) { toast('Error: '+e.message, true); }
     }
     function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
 
-    async function previewProduct(pid) { var p = allProducts.find(function(x){ return x.id==pid; }); if(!p) return; document.getElementById('previewName').textContent=p.name; var b=''; if(p.itemType==='html') b='<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; else if(p.itemType==='link'||(p.itemContent||'').startsWith('http')) b='<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(p.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(p.itemContent)+'</a></div></div>'; else b='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; if(p.bonusContent) b+='<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(p.bonusContent)+'</div></div>'; b+='<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+'</div>'; document.getElementById('previewBody').innerHTML=b; document.getElementById('previewModal').style.display='flex'; }
+    async function previewProduct(pid) { var product = allProducts.find(function(p){ return p.id==pid; }); if(!product) return; document.getElementById('previewName').textContent=product.name; var body=''; if(product.itemType==='html') body='<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'; else if(product.itemType==='link'||(product.itemContent||'').startsWith('http')) body='<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(product.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(product.itemContent)+'</a></div></div>'; else body='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'; if(product.bonusContent) body+='<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>'; body+='<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>'; document.getElementById('previewBody').innerHTML=body; document.getElementById('previewModal').style.display='flex'; }
     async function deleteProduct(id) { if(!confirm('Hapus?')) return; await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Terhapus'); }
     async function addProduct() { var it=document.getElementById('itemType').value; var ic=''; if(it==='text') ic=document.getElementById('itemText').value; else if(it==='link') ic=document.getElementById('itemLink').value; else if(it==='html') ic=document.getElementById('itemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('bonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('bonusText').value; else if(bt==='link') bc=document.getElementById('bonusLink').value; var res=await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ document.getElementById(id).value=''; }); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
-    async function openEditModal(id) { var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); var data=await res.json(); if(data.success&&data.product) { var p=data.product; currentEditId=p.id; document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock; document.getElementById('editItemType').value=p.itemType||'text'; if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent; document.getElementById('editBonusType').value=p.bonusType||'none'; if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; toggleEditFields(); document.getElementById('editModal').style.display='flex'; } }
+    async function openEditModal(id) { var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); var data=await res.json(); if(data.success&&data.product) { var p=data.product; currentEditId=p.id; document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock; document.getElementById('editItemType').value=p.itemType||'text'; if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent; document.getElementById('editBonusType').value=p.bonusType||'none'; if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex'; } }
     function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
     async function saveEditProduct() { var it=document.getElementById('editItemType').value; var ic=''; if(it==='text') ic=document.getElementById('editItemText').value; else if(it==='link') ic=document.getElementById('editItemLink').value; else if(it==='html') ic=document.getElementById('editItemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('editBonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('editBonusText').value; else if(bt==='link') bc=document.getElementById('editBonusLink').value; var res=await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Diupdate'); closeEditModal(); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
-    function toggleEditFields() { var t=document.getElementById('editItemType').value; ['editItemTextField','editItemLinkField','editItemHtmlField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden'); var bt=document.getElementById('editBonusType').value; ['editBonusTextField','editBonusLinkField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(bt==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if(bt==='link') document.getElementById('editBonusLinkField').classList.remove('hidden'); }
-    document.getElementById('editItemType').addEventListener('change', toggleEditFields);
-    document.getElementById('editBonusType').addEventListener('change', toggleEditFields);
-
     async function resetOrders() { if(!confirm('Hapus Pending & Cancelled?')) return; var res=await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) { var d=await res.json(); toast('✅ '+d.deletedCount+' dihapus'); orderDisplay=10; loadOrders(); loadStats(); } }
     async function backupData() { var res=await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true); }
     async function sendBroadcast() { var msg=document.getElementById('broadcastMessage').value.trim(); if(!msg) return; var res=await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, message:msg }) }); var d=await res.json(); if(d.success) { toast('📢 Terkirim ke '+d.sentCount); document.getElementById('broadcastMessage').value=''; } }
     async function checkMaintenanceStatus() { try { var res=await fetch('/api/public-stats'); var data=await res.json(); if(data.success&&data.maintenance) { maintenanceMode=true; document.getElementById('maintBadge').classList.remove('hidden'); document.getElementById('maintToggleBtn').innerHTML='<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.add('active'); } } catch(e) {} }
     async function toggleMaintenance() { maintenanceMode=!maintenanceMode; var btn=document.getElementById('maintToggleBtn'); var badge=document.getElementById('maintBadge'); try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {} if(maintenanceMode) { btn.innerHTML='<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; btn.classList.add('active'); badge.classList.remove('hidden'); toast('🔧 Maintenance AKTIF'); } else { btn.innerHTML='<i class="fas fa-power-off"></i> Aktifkan Maintenance'; btn.classList.remove('active'); badge.classList.add('hidden'); toast('✅ Maintenance NONAKTIF'); } }
-    function toggleItemFields() { var t=document.getElementById('itemType').value; ['itemTextField','itemLinkField','itemHtmlField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('itemHtmlField').classList.remove('hidden'); }
-    function toggleBonusFields() { var t=document.getElementById('bonusType').value; ['bonusTextField','bonusLinkField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('bonusLinkField').classList.remove('hidden'); }
+    function toggleItemFields() { var t=document.getElementById('itemType').value; document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden'); if(t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('itemHtmlField').classList.remove('hidden'); }
+    function toggleBonusFields() { var t=document.getElementById('bonusType').value; document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden'); if(t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('bonusLinkField').classList.remove('hidden'); }
+    function toggleEditItemFields() { var t=document.getElementById('editItemType').value; document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden'); if(t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden'); }
+    function toggleEditBonusFields() { var t=document.getElementById('editBonusType').value; document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden'); if(t==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editBonusLinkField').classList.remove('hidden'); }
+
+    toggleItemFields(); toggleBonusFields();
     document.getElementById('itemType').addEventListener('change', toggleItemFields);
     document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
-    toggleItemFields(); toggleBonusFields();
+    document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
+    document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 </script>
 </body>
-    </html>
+</html>
