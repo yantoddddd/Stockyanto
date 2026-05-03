@@ -19,8 +19,9 @@ const GITHUB_PATH = 'database.json';
 
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 10000;
+const CACHE_TTL = 5000; // ✅ 5 detik (lebih fresh)
 
+// ✅ RATE LIMITER DIPERBAIKI (60 req/menit)
 const rateLimitMap = new Map();
 app.use((req, res, next) => {
     const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
@@ -54,7 +55,7 @@ async function getDB() {
 
 async function setDB(products, orders, oldSha, retryCount) {
     if (!retryCount) retryCount = 0;
-    if (retryCount > 3) throw new Error('Save failed');
+    if (retryCount > 5) throw new Error('Save failed after 5 retries');
     const db = await getDB();
     const content = {
         products: products || db.products || [],
@@ -71,8 +72,12 @@ async function setDB(products, orders, oldSha, retryCount) {
     });
     if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        if (e.message?.includes('SHA')) { await new Promise(r => setTimeout(r, 500)); const f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); }
-        throw new Error('Save failed');
+        if (e.message?.includes('SHA')) { 
+            await new Promise(r => setTimeout(r, 800)); 
+            const f = await getDB(); 
+            return setDB(products, orders, f.sha, retryCount + 1); 
+        }
+        throw new Error('Save failed: ' + (e.message || res.status));
     }
     const d = await res.json();
     dbCache = { ...content, sha: d.content.sha };
@@ -108,17 +113,9 @@ setInterval(async () => { try { const db = await getDB(); let d = 0; const k = [
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// Proxy Ping Telegram (biar tembus blokir operator Indo)
 app.get('/api/ping-telegram', async (req, res) => {
     if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
-    try {
-        var start = Date.now();
-        var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/getMe');
-        var latency = Date.now() - start;
-        res.json({ status: 'ok', latency_ms: latency });
-    } catch(e) {
-        res.json({ status: 'error', message: e.message });
-    }
+    try { var start = Date.now(); var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/getMe'); var latency = Date.now() - start; res.json({ status: 'ok', latency_ms: latency }); } catch(e) { res.json({ status: 'error', message: e.message }); }
 });
 
 app.get('/api/public-stats', async (req, res) => {
@@ -137,28 +134,37 @@ app.post('/api/admin/set-ip', async (req, res) => { if (req.body.adminKey !== AD
 app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// ========== QRIS ORDER (ADMIN) ==========
+// ✅ SAVE QRIS ORDER (DIPERBAIKI)
 app.post('/api/admin/save-qris-order', async (req, res) => {
     const { adminKey, qrisId, qrisImage, totalAmount, expiredAt, customerName } = req.body;
     if (!isAdmin(req, adminKey)) return res.status(401).json({ error: 'Unauthorized' });
     if (!qrisId || !totalAmount) return res.status(400).json({ error: 'Data tidak lengkap' });
-    try {
-        const orderCode = crypto.randomBytes(16).toString('hex');
-        const db = await getDB();
-        db.orders.unshift({
-            id: Date.now(), orderCode, qrisId,
-            productId: null,
-            productName: 'QRIS Manual - Rp ' + totalAmount.toLocaleString(),
-            productCode: 'QRIS Manual',
-            price: totalAmount, totalAmount: totalAmount,
-            customerName: sanitize(customerName || 'Admin'),
-            customerEmail: '-', status: 'pending',
-            qrisImage: qrisImage, expiredAt: expiredAt,
-            createdAt: new Date().toISOString()
-        });
-        await setDB(db.products, db.orders, db.sha);
-        res.json({ success: true, orderCode });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+
+    let lastError = '';
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const db = await getDB();
+            const orderCode = crypto.randomBytes(16).toString('hex');
+            db.orders.unshift({
+                id: Date.now() + attempt, // ✅ Unique ID tiap attempt
+                orderCode, qrisId,
+                productId: null,
+                productName: 'QRIS Manual - Rp ' + totalAmount.toLocaleString(),
+                productCode: 'QRIS Manual',
+                price: totalAmount, totalAmount: totalAmount,
+                customerName: sanitize(customerName || 'Customer'),
+                customerEmail: '-', status: 'pending',
+                qrisImage: qrisImage, expiredAt: expiredAt,
+                createdAt: new Date().toISOString()
+            });
+            await setDB(db.products, db.orders, db.sha);
+            return res.json({ success: true, orderCode });
+        } catch (e) {
+            lastError = e.message;
+            if (attempt < 3) await new Promise(r => setTimeout(r, 500));
+        }
+    }
+    res.status(500).json({ error: 'Save failed: ' + lastError });
 });
 
 // ========== ORDER & PRODUCT ==========
