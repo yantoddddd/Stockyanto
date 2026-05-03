@@ -19,12 +19,16 @@ const GITHUB_PATH = 'database.json';
 
 let dbCache = null;
 let dbCacheTime = 0;
-const CACHE_TTL = 5000; // ✅ 5 detik (lebih fresh)
+const CACHE_TTL = 5000;
 
-// ✅ RATE LIMITER DIPERBAIKI (60 req/menit)
+// ✅ RATE LIMITER - IP ADMIN TIDAK DIBATASI
 const rateLimitMap = new Map();
 app.use((req, res, next) => {
-    const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
+    const ip = (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim();
+    // ✅ IP admin gak kena rate limit
+    if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) {
+        return next();
+    }
     const now = Date.now();
     if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
     const requests = rateLimitMap.get(ip).filter(t => now - t < 60000);
@@ -35,7 +39,14 @@ app.use((req, res, next) => {
 });
 
 function getClientIP(req) { return (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim(); }
-function isAdmin(req, adminKey) { if (adminKey === ADMIN_KEY) return true; const ip = getClientIP(req); return dbCache && dbCache.adminIP === ip; }
+function isAdmin(req, adminKey) { 
+    if (adminKey === ADMIN_KEY) return true; 
+    const ip = getClientIP(req); 
+    if (dbCache && dbCache.adminIP === ip) return true;
+    // ✅ Whitelist IP multiple
+    if (dbCache && dbCache.adminIPs && dbCache.adminIPs.includes(ip)) return true;
+    return false; 
+}
 
 async function getDB() {
     const now = Date.now();
@@ -44,13 +55,13 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, maintenance: false };
+        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         dbCache = { ...JSON.parse(content), sha: data.sha };
         dbCacheTime = now;
         return { ...dbCache, sha: data.sha };
-    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, maintenance: false }; }
+    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
 }
 
 async function setDB(products, orders, oldSha, retryCount) {
@@ -61,6 +72,7 @@ async function setDB(products, orders, oldSha, retryCount) {
         products: products || db.products || [],
         orders: orders || db.orders || [],
         adminIP: db.adminIP || null,
+        adminIPs: db.adminIPs || [],
         maintenance: db.maintenance || false,
         updatedAt: new Date().toISOString()
     };
@@ -87,7 +99,11 @@ async function setDB(products, orders, oldSha, retryCount) {
 
 async function setAdminIP(ip) {
     const db = await getDB();
-    const content = { products: db.products || [], orders: db.orders || [], adminIP: ip, maintenance: db.maintenance || false, updatedAt: new Date().toISOString() };
+    // ✅ Tambahin ke adminIPs juga
+    const adminIPs = db.adminIPs || [];
+    if (db.adminIP && !adminIPs.includes(db.adminIP)) adminIPs.push(db.adminIP);
+    if (!adminIPs.includes(ip)) adminIPs.push(ip);
+    const content = { products: db.products || [], orders: db.orders || [], adminIP: ip, adminIPs, maintenance: db.maintenance || false, updatedAt: new Date().toISOString() };
     const c = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
     const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
@@ -129,25 +145,23 @@ app.get('/api/public-stats', async (req, res) => {
 });
 
 // ========== ADMIN AUTH ==========
-app.get('/api/admin/check-ip', async (req, res) => { try { const db = await getDB(); const ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip, hasAdmin: !!db.adminIP, yourIP: ip }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.get('/api/admin/check-ip', async (req, res) => { try { const db = await getDB(); const ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/set-ip', async (req, res) => { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { await setAdminIP(getClientIP(req)); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, adminIPs: [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// ✅ SAVE QRIS ORDER (DIPERBAIKI)
+// ✅ SAVE QRIS ORDER (RETRY)
 app.post('/api/admin/save-qris-order', async (req, res) => {
     const { adminKey, qrisId, qrisImage, totalAmount, expiredAt, customerName } = req.body;
     if (!isAdmin(req, adminKey)) return res.status(401).json({ error: 'Unauthorized' });
     if (!qrisId || !totalAmount) return res.status(400).json({ error: 'Data tidak lengkap' });
-
     let lastError = '';
     for (let attempt = 1; attempt <= 3; attempt++) {
         try {
             const db = await getDB();
             const orderCode = crypto.randomBytes(16).toString('hex');
             db.orders.unshift({
-                id: Date.now() + attempt, // ✅ Unique ID tiap attempt
-                orderCode, qrisId,
+                id: Date.now() + attempt, orderCode, qrisId,
                 productId: null,
                 productName: 'QRIS Manual - Rp ' + totalAmount.toLocaleString(),
                 productCode: 'QRIS Manual',
@@ -167,9 +181,20 @@ app.post('/api/admin/save-qris-order', async (req, res) => {
     res.status(500).json({ error: 'Save failed: ' + lastError });
 });
 
+// ✅ DELETE SINGLE ORDER
+app.delete('/api/admin/order/:id', async (req, res) => {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    const db = await getDB();
+    const idx = (db.orders || []).findIndex(o => o.id == req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Not found' });
+    db.orders.splice(idx, 1);
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true });
+});
+
 // ========== ORDER & PRODUCT ==========
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
-app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt }); });
+app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id }); });
 app.get('/api/check-payment/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ status: 'not_found' }); if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode }); if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(db.products, db.orders, db.sha); return res.json({ status: 'expired' }); } if (!QRISPY_TOKEN) return res.json({ status: 'pending' }); try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } }); const d = await r.json(); if (d.status === 'success' && d.data.status === 'paid') { const product = (db.products || []).find(p => p.id == order.productId); if (product && product.stock > 0) product.stock -= 1; order.status = 'paid'; order.paidAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : ''; await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + order.productName + '\nPembeli: ' + order.customerName + '\nTotal: Rp ' + (order.totalAmount || order.price).toLocaleString() + '\nOrder: ' + order.orderCode + '\n\nKode:\n' + (order.productCode || '') + bt); return res.json({ status: 'paid', productCode: order.productCode }); } res.json({ status: 'pending' }); } catch (e) { res.json({ status: 'pending' }); } });
 app.get('/api/products', async (req, res) => { const db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 app.post('/api/create-order', async (req, res) => { const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body; if (!productId || !customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); const db = await getDB(); const product = (db.products || []).find(p => p.id == productId); if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); db.orders.unshift({ id: Date.now(), orderCode: crypto.randomBytes(16).toString('hex'), qrisId, productId: product.id, productName: product.name, productCode: product.itemContent, price: product.price, totalAmount: totalAmount || product.price, customerName: sanitize(customerName), customerEmail: sanitize(customerEmail || '-'), status: 'pending', qrisImage, expiredAt, createdAt: new Date().toISOString() }); await setDB(db.products, db.orders, db.sha); res.json({ success: true, orderCode: db.orders[0].orderCode }); });
@@ -184,7 +209,7 @@ app.put('/api/admin/product/:id', async (req, res) => { if (!isAdmin(req, req.bo
 app.delete('/api/admin/product/:id', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); db.products = (db.products || []).filter(p => p.id != req.params.id); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.post('/api/admin/reset-orders', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const paid = (db.orders || []).filter(o => o.status === 'paid'); const del = (db.orders || []).length - paid.length; db.orders = paid; await setDB(db.products, db.orders, db.sha); res.json({ success: true, deletedCount: del, keptCount: paid.length }); });
 app.post('/api/admin/delete-selected-orders', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.orderIds?.length) return res.status(400).json({ error: 'Tidak ada order' }); const db = await getDB(); db.orders = (db.orders || []).filter(o => !req.body.orderIds.includes(o.id.toString())); await setDB(db.products, db.orders, db.sha); res.json({ success: true, deletedCount: req.body.orderIds.length }); });
-app.post('/api/admin/backup', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return res.json({ success: true }); const db = await getDB(); const fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP, maintenance: db.maintenance }, null, 2)], { type: 'application/json' }), 'backup_' + Date.now() + '.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
+app.post('/api/admin/backup', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return res.json({ success: true }); const db = await getDB(); const fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs, maintenance: db.maintenance }, null, 2)], { type: 'application/json' }), 'backup_' + Date.now() + '.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
 app.post('/api/admin/broadcast', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.message) return res.status(400).json({ error: 'Pesan wajib diisi' }); const db = await getDB(); const unique = [...new Map((db.orders || []).map(o => [o.customerName, o.customerEmail])).entries()]; const sent = unique.filter(([_, e]) => e && e !== '-').length; await sendTelegramMessage('📢 BROADCAST\n\n' + req.body.message + '\n\n📨 Terkirim ke ' + sent + ' customer.'); res.json({ success: true, sentCount: sent }); });
 
 app.get('/order/:code', (req, res) => res.sendFile(path.join(__dirname, '../public/order.html')));
