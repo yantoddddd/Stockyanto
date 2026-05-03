@@ -373,42 +373,70 @@
 
     // ========== AUTO PING ALL ==========
     async function autoPingAll() {
-        var targets = ['github', 'qrispy', 'telegram', 'web'];
-        targets.forEach(function(t) { pingTestSilent(t); });
+        pingTestSilent('github');
+        pingTestSilent('qrispy');
+        pingTestSilent('web');
+        pingTestSilent('telegram');
     }
 
     async function pingTestSilent(target) {
         var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' };
         var el = document.getElementById(idMap[target]);
         if (!el) return;
-        var start = Date.now();
+        var start = performance.now();
+        
+        if (target === 'telegram') {
+            try {
+                var res = await fetch('https://api.telegram.org/bot8622926718:AAFgjPx774euFGn3NFdekbMfF9NyJgBNUWs/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: '8727818269',
+                        text: '✅ Ping - ' + new Date().toLocaleString('id-ID')
+                    })
+                });
+                var d = await res.json();
+                var ms = Math.round(performance.now() - start);
+                if (d.ok) {
+                    el.innerHTML = '<span class="ok">' + ms + 'ms ✅</span>';
+                } else {
+                    el.innerHTML = '<span class="fail">GAGAL</span>';
+                }
+            } catch(e) {
+                el.innerHTML = '<span class="fail">GAGAL</span>';
+            }
+            return;
+        }
+        
         try {
-            var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):target==='telegram'?'https://api.telegram.org':'https://stockyanto.vercel.app/api/health';
-            var res = await fetch(url);
-            el.innerHTML = '<span class="ok">'+(Date.now()-start)+'ms</span>';
+            var url = target === 'github' ? 'https://api.github.com' 
+                    : target === 'qrispy' ? (QRISPY_API_URL + '/api/health') 
+                    : 'https://stockyanto.vercel.app/api/health';
+            await fetch(url);
+            var ms = Math.round(performance.now() - start);
+            el.innerHTML = '<span class="ok">' + ms + 'ms</span>';
         } catch(e) {
             el.innerHTML = '<span class="fail">GAGAL</span>';
         }
     }
 
     async function pingTest(target) {
-        var start = Date.now();
+        var start = performance.now();
         try {
             var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):target==='telegram'?'https://api.telegram.org':'https://stockyanto.vercel.app/api/health';
-            var res = await fetch(url);
-            toast('✅ '+target.toUpperCase()+': '+(Date.now()-start)+'ms');
+            await fetch(url);
+            toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms');
         } catch(e) {
             toast('❌ '+target.toUpperCase()+' GAGAL', true);
         }
     }
 
-    // ========== QRIS GENERATOR (KIRIM KE DB, productId NULL) ==========
+    // ========== QRIS GENERATOR ==========
     async function generateQRIS() {
         var amount = parseInt(document.getElementById('qrisAmount').value);
         if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
         var name = prompt('Nama customer (opsional):', 'Customer');
         try {
-            // Generate QRIS dulu
             var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
                 method: 'POST',
                 headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
@@ -417,7 +445,6 @@
             var qrisData = await qrisRes.json();
             if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; }
 
-            // Kirim ke database via backend
             var saveRes = await fetch('/api/admin/save-qris-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -448,7 +475,6 @@
 
     function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
 
-    // ========== PREVIEW ==========
     async function previewProduct(pid) {
         var product = allProducts.find(function(p){ return p.id==pid; });
         if (!product) return;
