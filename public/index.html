@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Yanto Store | AutoOrder Digital</title>
+    <title>Yanto Store | Beli Digital</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -36,10 +36,8 @@
         }
         @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
-        @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
-        @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
-        @keyframes pulseGlow { 0%,100% { box-shadow:0 0 20px rgba(59,130,246,0.15); } 50% { box-shadow:0 0 40px rgba(59,130,246,0.3); } }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
         .container { max-width:1100px; margin:0 auto; }
 
@@ -48,29 +46,18 @@
             position:fixed; top:0; left:0; width:100%; height:100%;
             background: var(--bg); z-index:9999;
             display:flex; flex-direction:column; align-items:center; justify-content:center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
             background-image: radial-gradient(ellipse at center, rgba(59,130,246,0.1) 0%, transparent 70%);
         }
         #splashScreen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-        .splash-icon { font-size:3.5rem; animation:float 2s ease-in-out infinite; margin-bottom:20px; }
+        .splash-icon { font-size:3.5rem; margin-bottom:20px; }
         .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .splash-title { font-size:1.6rem; font-weight:800; letter-spacing:-0.5px; color:white; margin-bottom:4px; }
         .splash-sub { font-size:0.8rem; color:var(--text2); letter-spacing:1px; margin-bottom:28px; }
         .splash-dots { display:flex; gap:8px; }
-        .splash-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulseGlow 1.5s infinite; }
+        .splash-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.5s infinite; }
         .splash-dot:nth-child(2) { animation-delay:0.2s; }
         .splash-dot:nth-child(3) { animation-delay:0.4s; }
-
-        /* MAINTENANCE */
-        #maintenanceScreen {
-            display:none; min-height:80vh; flex-direction:column; align-items:center; justify-content:center;
-            text-align:center; animation:fadeScale 0.6s ease;
-        }
-        #maintenanceScreen .maint-icon { font-size:5rem; margin-bottom:20px; animation:float 3s ease-in-out infinite; }
-        #maintenanceScreen .maint-icon i { background:linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        #maintenanceScreen h1 { font-size:1.8rem; font-weight:800; margin-bottom:8px; color:white; }
-        #maintenanceScreen p { color:var(--text2); font-size:0.9rem; max-width:400px; line-height:1.6; }
-        #maintenanceScreen .maint-contact { margin-top:24px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
 
         /* HEADER */
         .header { 
@@ -78,18 +65,15 @@
             margin-bottom:28px; padding:14px 22px;
             background:var(--surface2); backdrop-filter:blur(20px);
             border-radius:60px; border:1px solid var(--border);
-            animation:slideDown 0.6s ease;
         }
         .logo-wrap { display:flex; align-items:center; gap:12px; }
         .logo-icon { width:38px; height:38px; border-radius:14px; background:linear-gradient(135deg, var(--accent), #6366f1); display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; }
         .logo-text h1 { font-size:1.15rem; font-weight:700; color:white; letter-spacing:-0.3px; }
         .logo-text span { font-size:0.65rem; color:var(--text2); letter-spacing:1px; }
-        .header-btns { display:flex; gap:8px; align-items:center; }
-        .btn-icon-header { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; font-size:1rem; }
-        .btn-icon-header:hover { border-color:var(--accent); color:var(--accent2); background:rgba(59,130,246,0.1); }
+        .menu-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
 
         /* SEARCH & FILTER */
-        .search-filter-wrap { margin-bottom:22px; animation:fadeIn 0.5s ease; }
+        .search-filter-wrap { margin-bottom:22px; }
         .search-row { display:flex; gap:10px; margin-bottom:14px; }
         .search-input { 
             flex:1; padding:14px 20px; border-radius:var(--radius-sm); 
@@ -110,22 +94,20 @@
         .filter-chip.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
         .results-info { font-size:0.7rem; color:var(--text2); margin-top:10px; }
 
-        /* TESTIMONI */
-        .testimoni-bar { margin-bottom:22px; animation:fadeIn 0.6s ease; }
-        .testimoni-bar .t-title { font-size:0.75rem; color:var(--text2); margin-bottom:10px; display:flex; align-items:center; gap:6px; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
-        .t-scroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; }
-        .t-scroll::-webkit-scrollbar { height:2px; }
-        .t-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-        .t-card { 
-            min-width:210px; background:var(--surface2); border:1px solid var(--border);
-            border-radius:var(--radius-sm); padding:14px; flex-shrink:0; 
-            backdrop-filter:blur(10px); transition:0.2s;
-        }
-        .t-card:active { border-color:var(--accent); }
-        .t-card .t-name { font-size:0.78rem; font-weight:600; color:white; margin-bottom:2px; }
-        .t-card .t-star { color:var(--warning); font-size:0.6rem; }
-        .t-card .t-time { font-size:0.6rem; color:var(--text2); margin-bottom:4px; }
-        .t-card .t-msg { font-size:0.7rem; color:var(--text2); }
+        /* SIDEBAR */
+        .sidebar { position:fixed; top:0; right:-310px; width:290px; height:100%; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); z-index:1000; transition:0.35s cubic-bezier(0.4,0,0.2,1); padding:70px 22px 22px; border-left:1px solid var(--border); overflow-y:auto; }
+        .sidebar.open { right:0; animation:slideRight 0.3s ease; }
+        .sidebar .close-btn { position:absolute; top:20px; right:18px; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; }
+        .sidebar-title { color:var(--text2); font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; margin:22px 0 10px; font-weight:700; }
+        .sidebar .menu-item { display:flex; align-items:center; gap:12px; padding:12px 0; color:var(--text2); text-decoration:none; font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s; cursor:pointer; background:none; width:100%; text-align:left; border-left:none; border-right:none; border-top:none; }
+        .sidebar .menu-item:hover { color:white; padding-left:6px; }
+        .sidebar .menu-item i { width:22px; text-align:center; }
+        .sidebar-stat { background:var(--surface); border-radius:var(--radius-sm); padding:16px; margin-bottom:8px; border:1px solid var(--border); }
+        .sidebar-stat .stat-num { font-size:1.3rem; font-weight:800; color:var(--accent2); }
+        .sidebar-stat .stat-label { font-size:0.68rem; color:var(--text2); }
+        
+        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; display:none; }
+        .overlay.show { display:block; }
 
         /* PRODUCT GRID */
         .products-grid { 
@@ -172,7 +154,7 @@
         .btn-buy:active { transform:scale(0.97); }
         .btn-buy:disabled { background:#334155; cursor:not-allowed; opacity:0.5; transform:none; box-shadow:none; }
 
-        .load-more-wrap { text-align:center; margin-bottom:30px; }
+        .load-more-wrap { text-align:center; margin-bottom:30px; display:none; }
         .btn-load-more { 
             background:var(--surface); border:1px solid var(--border);
             padding:12px 32px; border-radius:30px; color:var(--text2);
@@ -223,42 +205,11 @@
             display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
         }
         .loading-spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-
-        /* SIDEBAR */
-        .sidebar { position:fixed; top:0; right:-310px; width:290px; height:100%; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); z-index:1000; transition:0.35s cubic-bezier(0.4,0,0.2,1); padding:70px 22px 22px; border-left:1px solid var(--border); overflow-y:auto; }
-        .sidebar.open { right:0; animation:slideRight 0.3s ease; }
-        .sidebar .close-btn { position:absolute; top:20px; right:18px; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; }
-        .sidebar-title { color:var(--text2); font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; margin:22px 0 10px; font-weight:700; }
-        .sidebar .menu-item { display:flex; align-items:center; gap:12px; padding:12px 0; color:var(--text2); text-decoration:none; font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s; cursor:pointer; background:none; width:100%; text-align:left; border-left:none; border-right:none; border-top:none; }
-        .sidebar .menu-item:hover { color:white; padding-left:6px; }
-        .sidebar .menu-item i { width:22px; text-align:center; }
-        .sidebar-stat { background:var(--surface); border-radius:var(--radius-sm); padding:16px; margin-bottom:8px; border:1px solid var(--border); }
-        .sidebar-stat .stat-num { font-size:1.3rem; font-weight:800; color:var(--accent2); }
-        .sidebar-stat .stat-label { font-size:0.68rem; color:var(--text2); }
-        .sidebar-live-order { background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.15); border-radius:10px; padding:10px 12px; margin-bottom:6px; font-size:0.7rem; color:var(--success); }
-
-        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; display:none; }
-        .overlay.show { display:block; }
-
         .site-footer { text-align:center; padding:20px; color:var(--text2); font-size:0.65rem; border-top:1px solid var(--border); margin-top:20px; }
         .site-footer a { color:var(--text2); text-decoration:none; margin:0 8px; transition:0.2s; }
         .site-footer a:hover { color:var(--accent2); }
 
-        /* CONTACT CHIPS */
-        .contact-chip {
-            display:inline-flex; align-items:center; gap:8px;
-            padding:10px 18px; border-radius:30px; text-decoration:none;
-            font-size:0.8rem; font-weight:500; transition:0.2s;
-        }
-        .contact-chip.tele { background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.2); }
-        .contact-chip.wa { background:rgba(16,185,129,0.15); color:#6ee7b7; border:1px solid rgba(16,185,129,0.2); }
-        .contact-chip:hover { transform:translateY(-2px); }
-
-        @media (max-width:640px) { 
-            .products-grid { grid-template-columns:1fr; } 
-            .header { padding:12px 16px; }
-        }
+        @media (max-width:640px) { .products-grid { grid-template-columns:1fr; } .header { padding:12px 16px; } }
     </style>
 </head>
 <body>
@@ -272,50 +223,30 @@
 </div>
 
 <div class="container" id="mainContainer" style="display:none;">
-
-    <!-- MAINTENANCE -->
-    <div id="maintenanceScreen">
-        <div class="maint-icon"><i class="fas fa-tools"></i></div>
-        <h1>Dalam Perbaikan</h1>
-        <p>Toko lagi maintenance bentar ya Bre. Kami lagi upgrade biar makin cepet & aman. Balik lagi nanti!</p>
-        <div class="maint-contact">
-            <a href="https://t.me/Yantoidiotbruh" target="_blank" class="contact-chip tele"><i class="fab fa-telegram-plane"></i> Telegram</a>
-            <a href="https://wa.me/6289676041776" target="_blank" class="contact-chip wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <div class="header">
+        <div class="logo-wrap">
+            <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+            <div class="logo-text"><h1>Yanto Store</h1><span>AutoOrder Digital</span></div>
         </div>
+        <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
     </div>
 
-    <!-- NORMAL CONTENT -->
-    <div id="normalContent">
-        <div class="header">
-            <div class="logo-wrap">
-                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-                <div class="logo-text"><h1>Yanto Store</h1><span>AutoOrder Digital</span></div>
-            </div>
-            <div class="header-btns">
-                <button class="btn-icon-header" onclick="toggleMenu()" title="Menu"><i class="fas fa-bars"></i></button>
-            </div>
-        </div>
+    <div class="search-filter-wrap" id="searchFilterWrap" style="display:none;">
+        <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="renderProducts()"></div>
+        <div class="filter-scroll" id="filterScroll"></div>
+        <div class="results-info" id="resultsInfo"></div>
+    </div>
 
-        <div class="search-filter-wrap" id="searchFilterWrap">
-            <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk... (nama, deskripsi)" oninput="renderProducts()"></div>
-            <div class="filter-scroll" id="filterScroll"></div>
-            <div class="results-info" id="resultsInfo"></div>
-        </div>
+    <div class="products-grid" id="productsGrid">
+        <div style="text-align:center;color:var(--text2);grid-column:1/-1;">Memuat produk...</div>
+    </div>
+    <div class="load-more-wrap" id="loadMoreWrap">
+        <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
+    </div>
 
-        <div class="testimoni-bar hidden" id="testimoniBar">
-            <div class="t-title"><i class="fas fa-star" style="color:#f59e0b;"></i> Pembeli Terbaru</div>
-            <div class="t-scroll" id="testimoniScroll"></div>
-        </div>
-
-        <div class="products-grid" id="productsGrid"></div>
-        <div class="load-more-wrap hidden" id="loadMoreWrap">
-            <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
-        </div>
-
-        <div class="site-footer">
-            <span>&copy; 2026 Yanto Store</span>
-            <a href="/ketentuan">Ketentuan</a>
-        </div>
+    <div class="site-footer">
+        <span>&copy; 2026 Yanto Store</span>
+        <a href="/ketentuan">Ketentuan</a>
     </div>
 </div>
 
@@ -325,7 +256,6 @@
     <div class="sidebar-title">Status</div>
     <div class="sidebar-stat"><div class="stat-num" id="menuProducts">-</div><div class="stat-label">Produk Tersedia</div></div>
     <div class="sidebar-stat"><div class="stat-num" id="menuTodayOrders">-</div><div class="stat-label">Order Hari Ini</div></div>
-    <div id="sidebarLiveOrder" style="display:none;"><div class="sidebar-title">Order Terbaru</div><div id="sidebarLiveList"></div></div>
     <div class="sidebar-title">Menu</div>
     <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
     <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
@@ -358,31 +288,12 @@
     let displayCount = 6;
     let categories = [];
 
+    // ✅ FIX: Sembunyiin splash + tampilin konten + load produk sekaligus
     window.addEventListener('load', function() {
-        setTimeout(function() {
-            document.getElementById('splashScreen').classList.add('hidden');
-            document.getElementById('mainContainer').style.display = 'block';
-            checkMaintenance();
-        }, 1500);
+        document.getElementById('splashScreen').classList.add('hidden');
+        document.getElementById('mainContainer').style.display = 'block';
+        loadProducts(); // ✅ Langsung load tanpa nunggu
     });
-
-    async function checkMaintenance() {
-        try {
-            var res = await fetch('/api/public-stats');
-            var data = await res.json();
-            if (data.success && data.maintenance) {
-                document.getElementById('maintenanceScreen').style.display = 'flex';
-                document.getElementById('normalContent').style.display = 'none';
-            } else {
-                document.getElementById('maintenanceScreen').style.display = 'none';
-                document.getElementById('normalContent').style.display = 'block';
-                loadProducts();
-            }
-        } catch(e) {
-            document.getElementById('normalContent').style.display = 'block';
-            loadProducts();
-        }
-    }
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
     function toast(msg, isError) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
@@ -399,28 +310,17 @@
             }
             allProducts = data.products;
 
+            // Ambil soldMap dari public-stats
             try {
                 var orderRes = await fetch('/api/public-stats');
                 var orderData = await orderRes.json();
                 if (orderData.success) {
                     document.getElementById('menuTodayOrders').innerText = orderData.todayOrders + ' order';
                     if (orderData.soldMap) { soldMap = orderData.soldMap; }
-                    if (orderData.recentOrders && orderData.recentOrders.length > 0) {
-                        document.getElementById('testimoniBar').classList.remove('hidden');
-                        document.getElementById('testimoniScroll').innerHTML = orderData.recentOrders.map(function(o) {
-                            return '<div class="t-card"><div class="t-name">' + escapeHtml(o.customerName) + '</div><div class="t-star">★★★★★</div><div class="t-time">Baru saja</div><div class="t-msg">Membeli ' + escapeHtml(o.productName) + '</div></div>';
-                        }).join('');
-                        var latest = orderData.recentOrders.slice(0, 3);
-                        if (latest.length > 0) {
-                            document.getElementById('sidebarLiveOrder').style.display = 'block';
-                            document.getElementById('sidebarLiveList').innerHTML = latest.map(function(o) {
-                                return '<div class="sidebar-live-order"><i class="fas fa-circle" style="font-size:0.4rem;"></i> ' + escapeHtml(o.customerName) + ' beli <b>' + escapeHtml(o.productName) + '</b></div>';
-                            }).join('');
-                        }
-                    }
                 }
             } catch(e) {}
 
+            // Kategori
             var catSet = new Set();
             allProducts.forEach(function(p) {
                 var name = p.name.toLowerCase();
@@ -492,8 +392,12 @@
             }).join('');
         }
         document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk';
-        if (displayCount < filtered.length) { document.getElementById('loadMoreWrap').classList.remove('hidden'); }
-        else { document.getElementById('loadMoreWrap').classList.add('hidden'); }
+        // ✅ FIX: Tombol "Tampilkan Lebih Banyak" ilang kalau udah gak ada
+        if (displayCount < filtered.length) {
+            document.getElementById('loadMoreWrap').style.display = 'block';
+        } else {
+            document.getElementById('loadMoreWrap').style.display = 'none';
+        }
     }
 
     function loadMore() { displayCount += 6; renderProducts(); }
@@ -538,8 +442,6 @@
             loading.style.display = 'none';
         }
     };
-
-    window.checkMaintenance = checkMaintenance;
 </script>
 </body>
 </html>
