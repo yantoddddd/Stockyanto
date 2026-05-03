@@ -106,22 +106,6 @@
   ],
   "orders": [
     {
-      "id": 1777806042364,
-      "orderCode": "21a10a151f4760e3a4c0343e088ca425",
-      "qrisId": "a1b0c5c2-de54-4e54-aa91-504f3ae74bcb",
-      "productId": 1776700746939,
-      "productName": "APK QRIS NO KTP",
-      "productCode": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Yanto",
-      "customerEmail": "-",
-      "status": "pending",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1b0c5c2-de54-4e54-aa91-504f3ae74bcb/image",
-      "expiredAt": "2026-05-03T11:15:41+00:00",
-      "createdAt": "2026-05-03T11:00:42.364Z"
-    },
-    {
       "id": 1777805815032,
       "orderCode": "d5fac4749a9128b8f8f81c43a3839756",
       "qrisId": "a1b0c467-6106-4680-8868-ebe398f28d2c",
@@ -855,5 +839,5 @@
   "adminIP": "182.8.226.135",
   "adminIPs": [],
   "maintenance": false,
-  "updatedAt": "2026-05-03T11:00:42.364Z"
+  "updatedAt": "2026-05-03T11:10:33.892Z"
 }
