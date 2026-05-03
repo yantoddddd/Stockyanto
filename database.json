@@ -105,40 +105,6 @@
   ],
   "orders": [
     {
-      "id": 1777766840022,
-      "orderCode": "702068ec4b7399d87262300726fa1e3c",
-      "qrisId": "a1afdc18-ab49-4348-b721-29b4676185a7",
-      "productId": 1776940055706,
-      "productName": "WEB SUNTIK SOSMED",
-      "productCode": "https://fayupedia.id/",
-      "price": 2000,
-      "totalAmount": 2000,
-      "customerName": "Asyayayya",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1afdc18-ab49-4348-b721-29b4676185a7/image",
-      "expiredAt": "2026-05-03T00:22:19+00:00",
-      "createdAt": "2026-05-03T00:07:20.022Z",
-      "cancelledAt": "2026-05-03T00:07:26.832Z"
-    },
-    {
-      "id": 1777766823136,
-      "orderCode": "2559fd5af0e90f626c0f104620f743a7",
-      "qrisId": "a1afdbfe-a06d-43cb-9688-319f742e9ecd",
-      "productId": 1776700746939,
-      "productName": "APK QRIS NO KTP",
-      "productCode": "APK: (CARI DI PLAYSTORE)\n- ZevalDigital\n- Nexapay (QRIS MERAH)\n- Davpay\n- Uperpay",
-      "price": 1000,
-      "totalAmount": 1000,
-      "customerName": "Yanto",
-      "customerEmail": "-",
-      "status": "cancelled",
-      "qrisImage": "https://api.qrispy.id/api/public/qris/a1afdbfe-a06d-43cb-9688-319f742e9ecd/image",
-      "expiredAt": "2026-05-03T00:22:02+00:00",
-      "createdAt": "2026-05-03T00:07:03.136Z",
-      "cancelledAt": "2026-05-03T00:07:09.601Z"
-    },
-    {
       "id": 1777649320348,
       "orderCode": "89a3b6fb46a691b45e8e6caf890922fc",
       "qrisId": "a1ad1f9e-cc2d-4e6f-b712-4e504a53a5cf",
@@ -838,5 +804,5 @@
   ],
   "adminIP": "103.65.214.22",
   "maintenance": false,
-  "updatedAt": "2026-05-03T00:07:26.832Z"
+  "updatedAt": "2026-05-03T01:54:35.417Z"
 }
