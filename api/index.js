@@ -21,11 +21,10 @@ let dbCache = null;
 let dbCacheTime = 0;
 const CACHE_TTL = 5000;
 
-// ✅ RATE LIMITER - IP ADMIN TIDAK DIBATASI
+// Rate limiter - IP admin gak kena
 const rateLimitMap = new Map();
 app.use((req, res, next) => {
     const ip = (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim();
-    // ✅ IP admin gak kena rate limit
     if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) {
         return next();
     }
@@ -39,14 +38,7 @@ app.use((req, res, next) => {
 });
 
 function getClientIP(req) { return (req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown').split(',')[0].trim(); }
-function isAdmin(req, adminKey) { 
-    if (adminKey === ADMIN_KEY) return true; 
-    const ip = getClientIP(req); 
-    if (dbCache && dbCache.adminIP === ip) return true;
-    // ✅ Whitelist IP multiple
-    if (dbCache && dbCache.adminIPs && dbCache.adminIPs.includes(ip)) return true;
-    return false; 
-}
+function isAdmin(req, adminKey) { if (adminKey === ADMIN_KEY) return true; const ip = getClientIP(req); if (dbCache && dbCache.adminIP === ip) return true; if (dbCache && dbCache.adminIPs && dbCache.adminIPs.includes(ip)) return true; return false; }
 
 async function getDB() {
     const now = Date.now();
@@ -84,11 +76,7 @@ async function setDB(products, orders, oldSha, retryCount) {
     });
     if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        if (e.message?.includes('SHA')) { 
-            await new Promise(r => setTimeout(r, 800)); 
-            const f = await getDB(); 
-            return setDB(products, orders, f.sha, retryCount + 1); 
-        }
+        if (e.message?.includes('SHA')) { await new Promise(r => setTimeout(r, 800)); const f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); }
         throw new Error('Save failed: ' + (e.message || res.status));
     }
     const d = await res.json();
@@ -99,7 +87,6 @@ async function setDB(products, orders, oldSha, retryCount) {
 
 async function setAdminIP(ip) {
     const db = await getDB();
-    // ✅ Tambahin ke adminIPs juga
     const adminIPs = db.adminIPs || [];
     if (db.adminIP && !adminIPs.includes(db.adminIP)) adminIPs.push(db.adminIP);
     if (!adminIPs.includes(ip)) adminIPs.push(ip);
@@ -120,7 +107,23 @@ async function sendTelegramMessage(text) {
 function sanitize(str) { if (!str) return ''; return String(str).replace(/[<>"'&]/g, m => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' })[m]); }
 async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/cancel`, { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
 
-// Auto tasks
+// ✅ AUTO PING TELEGRAM - KIRIM PESAN TIAP DETIK KE ID LO
+async function autoPingTelegram() {
+    if (!TELEGRAM_BOT_TOKEN) return;
+    try {
+        await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: '8727818269',
+                text: '✅ Web Online — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })
+            })
+        });
+    } catch(e) {}
+}
+setInterval(autoPingTelegram, 1000); // Tiap 1 detik
+
+// Auto tasks lain
 setInterval(async () => { try { await fetch('https://stockyanto.vercel.app/api/health'); } catch (e) {} }, 20000);
 setInterval(async () => { try { const db = await getDB(); const n = new Date(); let c = 0; for (const o of db.orders) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; c++; } } if (c > 0) await setDB(db.products, db.orders, db.sha); } catch (e) {} }, 30000);
 setInterval(async () => { try { const db = await getDB(); let d = 0; const k = []; for (const o of db.orders) { if (o.status === 'cancelled' || o.status === 'expired') d++; else k.push(o); } if (d > 0) { db.orders = k; await setDB(db.products, db.orders, db.sha); } } catch (e) {} }, 30000);
@@ -131,7 +134,18 @@ app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); re
 
 app.get('/api/ping-telegram', async (req, res) => {
     if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
-    try { var start = Date.now(); var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/getMe'); var latency = Date.now() - start; res.json({ status: 'ok', latency_ms: latency }); } catch(e) { res.json({ status: 'error', message: e.message }); }
+    try {
+        var start = Date.now();
+        var r = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: '8727818269', text: '✅ Ping — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) })
+        });
+        var d = await r.json();
+        var latency = Date.now() - start;
+        if (d.ok) { res.json({ status: 'ok', latency_ms: latency }); }
+        else { res.json({ status: 'error', message: d.description }); }
+    } catch(e) { res.json({ status: 'error', message: e.message }); }
 });
 
 app.get('/api/public-stats', async (req, res) => {
@@ -150,7 +164,6 @@ app.post('/api/admin/set-ip', async (req, res) => { if (req.body.adminKey !== AD
 app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, adminIPs: [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
-// ✅ SAVE QRIS ORDER (RETRY)
 app.post('/api/admin/save-qris-order', async (req, res) => {
     const { adminKey, qrisId, qrisImage, totalAmount, expiredAt, customerName } = req.body;
     if (!isAdmin(req, adminKey)) return res.status(401).json({ error: 'Unauthorized' });
@@ -160,39 +173,17 @@ app.post('/api/admin/save-qris-order', async (req, res) => {
         try {
             const db = await getDB();
             const orderCode = crypto.randomBytes(16).toString('hex');
-            db.orders.unshift({
-                id: Date.now() + attempt, orderCode, qrisId,
-                productId: null,
-                productName: 'QRIS Manual - Rp ' + totalAmount.toLocaleString(),
-                productCode: 'QRIS Manual',
-                price: totalAmount, totalAmount: totalAmount,
-                customerName: sanitize(customerName || 'Customer'),
-                customerEmail: '-', status: 'pending',
-                qrisImage: qrisImage, expiredAt: expiredAt,
-                createdAt: new Date().toISOString()
-            });
+            db.orders.unshift({ id: Date.now() + attempt, orderCode, qrisId, productId: null, productName: 'QRIS Manual - Rp ' + totalAmount.toLocaleString(), productCode: 'QRIS Manual', price: totalAmount, totalAmount: totalAmount, customerName: sanitize(customerName || 'Customer'), customerEmail: '-', status: 'pending', qrisImage: qrisImage, expiredAt: expiredAt, createdAt: new Date().toISOString() });
             await setDB(db.products, db.orders, db.sha);
             return res.json({ success: true, orderCode });
-        } catch (e) {
-            lastError = e.message;
-            if (attempt < 3) await new Promise(r => setTimeout(r, 500));
-        }
+        } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
     }
     res.status(500).json({ error: 'Save failed: ' + lastError });
 });
 
-// ✅ DELETE SINGLE ORDER
-app.delete('/api/admin/order/:id', async (req, res) => {
-    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    const db = await getDB();
-    const idx = (db.orders || []).findIndex(o => o.id == req.params.id);
-    if (idx === -1) return res.status(404).json({ error: 'Not found' });
-    db.orders.splice(idx, 1);
-    await setDB(db.products, db.orders, db.sha);
-    res.json({ success: true });
-});
+app.delete('/api/admin/order/:id', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const idx = (db.orders || []).findIndex(o => o.id == req.params.id); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.orders.splice(idx, 1); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 
-// ========== ORDER & PRODUCT ==========
+// ========== ORDER & PRODUK ==========
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id }); });
 app.get('/api/check-payment/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ status: 'not_found' }); if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode }); if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(db.products, db.orders, db.sha); return res.json({ status: 'expired' }); } if (!QRISPY_TOKEN) return res.json({ status: 'pending' }); try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } }); const d = await r.json(); if (d.status === 'success' && d.data.status === 'paid') { const product = (db.products || []).find(p => p.id == order.productId); if (product && product.stock > 0) product.stock -= 1; order.status = 'paid'; order.paidAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : ''; await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + order.productName + '\nPembeli: ' + order.customerName + '\nTotal: Rp ' + (order.totalAmount || order.price).toLocaleString() + '\nOrder: ' + order.orderCode + '\n\nKode:\n' + (order.productCode || '') + bt); return res.json({ status: 'paid', productCode: order.productCode }); } res.json({ status: 'pending' }); } catch (e) { res.json({ status: 'pending' }); } });
