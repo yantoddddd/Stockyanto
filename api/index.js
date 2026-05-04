@@ -16,6 +16,27 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY; // ✅ WAJIB dari env, gak ada fallback
+
+// ✅ ENKRIPSI DATABASE
+function encrypt(text) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
+
+function decrypt(encryptedText) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const parts = encryptedText.split(':');
+    const iv = Buffer.from(parts[0], 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let decrypted = decipher.update(parts[1], 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
 
 let dbCache = null;
 let dbCacheTime = 0;
@@ -44,13 +65,27 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
+        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false, encrypted: false };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
-        dbCache = { ...JSON.parse(content), sha: data.sha };
+        let parsed;
+        // ✅ Auto-detect: kalau encrypted, decrypt dulu
+        if (content.includes('{"products":') || content.includes('{"products": [')) {
+            parsed = JSON.parse(content);
+        } else {
+            try {
+                const decrypted = decrypt(content);
+                parsed = JSON.parse(decrypted);
+                parsed.encrypted = true;
+            } catch(e) {
+                // Kalau decrypt gagal, mungkin masih plain text lama
+                parsed = JSON.parse(content);
+            }
+        }
+        dbCache = { ...parsed, sha: data.sha };
         dbCacheTime = now;
         return { ...dbCache, sha: data.sha };
-    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
+    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false, encrypted: false }; }
 }
 
 async function setDB(products, orders, oldSha, retryCount) {
@@ -63,9 +98,13 @@ async function setDB(products, orders, oldSha, retryCount) {
         adminIP: db.adminIP || null,
         adminIPs: db.adminIPs || [],
         maintenance: db.maintenance || false,
+        encrypted: true,
         updatedAt: new Date().toISOString()
     };
-    const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+    // ✅ Enkripsi sebelum simpan
+    const jsonString = JSON.stringify(content);
+    const encryptedContent = encrypt(jsonString);
+    const updatedContent = Buffer.from(encryptedContent).toString('base64');
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT',
         headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
@@ -87,8 +126,9 @@ async function setAdminIP(ip) {
     const adminIPs = db.adminIPs || [];
     if (db.adminIP && !adminIPs.includes(db.adminIP)) adminIPs.push(db.adminIP);
     if (!adminIPs.includes(ip)) adminIPs.push(ip);
-    const content = { products: db.products || [], orders: db.orders || [], adminIP: ip, adminIPs, maintenance: db.maintenance || false, updatedAt: new Date().toISOString() };
-    const c = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+    const content = { products: db.products || [], orders: db.orders || [], adminIP: ip, adminIPs, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() };
+    const encryptedContent = encrypt(JSON.stringify(content));
+    const c = Buffer.from(encryptedContent).toString('base64');
     const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Set IP', content: c, sha: db.sha })
@@ -111,65 +151,27 @@ setInterval(async () => { try { const db = await getDB(); let d = 0; const k = [
 
 // ========== PUBLIC ==========
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
-app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length, encrypted: db.encrypted || false }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 app.get('/api/ping-telegram', async (req, res) => {
     if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
     try {
         var start = Date.now();
         await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: '8727818269', text: '✅ Ping — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) })
         });
         res.json({ status: 'ok', latency_ms: Date.now() - start });
     } catch(e) { res.json({ status: 'error', message: e.message }); }
 });
 
-// ✅ PING ALL + KIRIM HASIL KE TELEGRAM
 app.get('/api/ping-all', async (req, res) => {
     var results = {}, start;
-
-    // GitHub
-    start = Date.now();
-    try { await fetch('https://api.github.com'); results.github = (Date.now() - start) + 'ms'; } catch(e) { results.github = 'GAGAL'; }
-
-    // Qrispy
-    start = Date.now();
-    try { await fetch(QRISPY_API_URL + '/api/health'); results.qrispy = (Date.now() - start) + 'ms'; } catch(e) { results.qrispy = 'GAGAL'; }
-
-    // Telegram
-    start = Date.now();
-    try {
-        if (TELEGRAM_BOT_TOKEN) {
-            await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: '8727818269', text: '🔍 Ping All — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) })
-            });
-            results.telegram = (Date.now() - start) + 'ms';
-        } else { results.telegram = 'No token'; }
-    } catch(e) { results.telegram = 'GAGAL'; }
-
-    // Web
-    start = Date.now();
-    try { await fetch('https://stockyanto.vercel.app/api/health'); results.web = (Date.now() - start) + 'ms'; } catch(e) { results.web = 'GAGAL'; }
-
-    // ✅ Kirim hasil ping ke Telegram
-    if (TELEGRAM_BOT_TOKEN) {
-        try {
-            await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: '8727818269',
-                    text: '📊 <b>Hasil Ping:</b>\n\nGitHub: ' + results.github + '\nQrispy: ' + results.qrispy + '\nTelegram: ' + results.telegram + '\nWeb: ' + results.web,
-                    parse_mode: 'HTML'
-                })
-            });
-        } catch(e) {}
-    }
-
+    start = Date.now(); try { await fetch('https://api.github.com'); results.github = (Date.now() - start) + 'ms'; } catch(e) { results.github = 'GAGAL'; }
+    start = Date.now(); try { await fetch(QRISPY_API_URL + '/api/health'); results.qrispy = (Date.now() - start) + 'ms'; } catch(e) { results.qrispy = 'GAGAL'; }
+    start = Date.now(); try { if (TELEGRAM_BOT_TOKEN) { await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: '8727818269', text: '🔍 Ping All — ' + new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) }) }); results.telegram = (Date.now() - start) + 'ms'; } else { results.telegram = 'No token'; } } catch(e) { results.telegram = 'GAGAL'; }
+    start = Date.now(); try { await fetch('https://stockyanto.vercel.app/api/health'); results.web = (Date.now() - start) + 'ms'; } catch(e) { results.web = 'GAGAL'; }
+    if (TELEGRAM_BOT_TOKEN) { try { await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: '8727818269', text: '📊 <b>Hasil Ping:</b>\n\nGitHub: ' + results.github + '\nQrispy: ' + results.qrispy + '\nTelegram: ' + results.telegram + '\nWeb: ' + results.web, parse_mode: 'HTML' }) }); } catch(e) {} }
     res.json({ status: 'ok', results });
 });
 
@@ -186,8 +188,8 @@ app.get('/api/public-stats', async (req, res) => {
 // ========== ADMIN AUTH ==========
 app.get('/api/admin/check-ip', async (req, res) => { try { const db = await getDB(); const ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/set-ip', async (req, res) => { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { await setAdminIP(getClientIP(req)); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, adminIPs: [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, updatedAt: new Date().toISOString() }; await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(JSON.stringify(content, null, 2)).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 app.post('/api/admin/save-qris-order', async (req, res) => {
     const { adminKey, qrisId, qrisImage, totalAmount, expiredAt, customerName } = req.body;
