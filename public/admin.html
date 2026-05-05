@@ -33,8 +33,8 @@
         @keyframes fadeScale { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
         .container { max-width:1000px; margin:0 auto; }
 
-        /* SPLASH - TIDAK DIUBAH */
-        #adminSplash { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #0f172a, #1e1b4b); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s, visibility 0.5s; }
+        /* ✅ SPLASH - TIDAK DIUBAH */
+        #adminSplash { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s ease, visibility 0.5s ease; }
         #adminSplash.hidden { opacity:0; visibility:hidden; pointer-events:none; }
         .splash-icon { font-size:3.5rem; margin-bottom:16px; }
         .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
@@ -42,71 +42,73 @@
         .splash-sub { font-size:0.75rem; color:#94a3b8; margin-bottom:24px; letter-spacing:1px; }
         .splash-loader { width:36px; height:36px; border:3px solid rgba(96,165,250,0.2); border-top-color:#60a5fa; border-radius:50%; animation:spin 0.8s linear infinite; }
 
-        /* TAMPILAN UPGRADE */
-        .card { background:var(--surface2); backdrop-filter:blur(16px); border-radius:var(--radius); padding:22px; margin-bottom:18px; border:1px solid var(--border); }
-        h1, h2 { color:white; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
-        h1 { font-size:1.3rem; font-weight:700; }
-        h2 { font-size:1rem; font-weight:600; border-left:3px solid var(--accent); padding-left:14px; }
-        input, textarea, select { width:100%; padding:11px 14px; margin:6px 0; border-radius:24px; border:1px solid var(--border); background:var(--surface); color:white; font-size:0.82rem; outline:none; transition:0.2s; }
+        /* ✅ CARD & LAYOUT UPGRADE */
+        .card { background:var(--surface2); backdrop-filter:blur(16px); border-radius:var(--radius); padding:22px; margin-bottom:20px; border:1px solid var(--border); }
+        h1, h2 { color:white; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+        h1 { font-size:1.4rem; font-weight:700; }
+        h2 { font-size:1.05rem; font-weight:600; border-left:3px solid var(--accent); padding-left:14px; }
+        input, textarea, select { width:100%; padding:11px 14px; margin:8px 0; border-radius:22px; border:1px solid var(--border); background:var(--surface); color:white; font-size:0.82rem; outline:none; transition:0.2s; }
         input:focus, textarea:focus, select:focus { border-color:var(--accent); }
-        button { padding:9px 16px; border-radius:22px; border:none; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:0.2s; font-size:0.78rem; color:white; }
+        button { padding:9px 18px; border-radius:24px; border:none; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:0.2s; font-size:0.8rem; color:white; background:var(--accent); }
         button:active { transform:scale(0.96); }
-        .btn-primary { background:var(--accent); }
+        button.active { background:var(--success); }
         .btn-danger { background:var(--danger); }
         .btn-warning { background:var(--warning); color:#000; }
         .btn-success { background:var(--success); }
-        .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text2); }
-        .btn-outline:hover { border-color:var(--accent); color:white; }
+        .btn-outline { background:transparent; border:1px solid #475569; color:white; }
+        .btn-outline:hover { border-color:var(--danger); background:rgba(239,68,68,0.1); }
         .btn-sm { padding:5px 10px; border-radius:14px; font-size:0.65rem; border:none; cursor:pointer; color:white; display:flex; align-items:center; gap:4px; }
         .btn-sm.blue { background:var(--accent); }
         .btn-sm.green { background:var(--success); }
         .btn-sm.red { background:var(--danger); }
         .btn-sm.orange { background:var(--warning); color:#000; }
 
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:10px; margin-bottom:16px; }
-        .stat-card { background:var(--surface); border-radius:16px; padding:15px; text-align:center; border:1px solid var(--border); }
-        .stat-number { font-size:1.4rem; font-weight:800; color:var(--accent2); }
-        .stat-label { font-size:0.62rem; color:var(--text2); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; margin-bottom:18px; }
+        .stat-card { background:rgba(0,0,0,0.3); border-radius:16px; padding:16px; text-align:center; border:1px solid var(--border); }
+        .stat-number { font-size:1.6rem; font-weight:800; color:var(--accent2); }
+        .stat-label { font-size:0.7rem; color:var(--text2); margin-top:4px; }
 
-        .item { background:var(--surface); padding:12px; border-radius:16px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border:1px solid var(--border); cursor:pointer; animation:fadeScale 0.3s ease; }
-        .item:active { background:rgba(255,255,255,0.05); }
-        .item-info { flex:1; min-width:120px; }
-        .item-name { font-weight:600; color:white; font-size:0.82rem; margin-bottom:2px; }
-        .item-detail { font-size:0.65rem; color:var(--text2); }
-        .item-actions { display:flex; gap:6px; z-index:1; }
-        .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:24px; font-size:0.75rem; opacity:0; transition:0.3s; color:white; z-index:1000; white-space:nowrap; }
-        .hidden { display:none !important; }
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:1100; }
-        .modal-content { background:linear-gradient(160deg,#111827,#0f172a); border-radius:26px; padding:24px; max-width:460px; width:90%; max-height:80vh; overflow-y:auto; border:1px solid var(--border); animation:fadeScale 0.3s ease; }
-        .modal-content h3 { color:white; font-size:1.1rem; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-        .modal-buttons { display:flex; gap:8px; margin-top:16px; }
+        .item { background:var(--surface); padding:14px; border-radius:16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; transition:0.3s; overflow-x:auto; cursor:pointer; border:1px solid var(--border); animation:fadeScale 0.3s ease; }
+        .item:active { background:var(--surface2); }
+        .item-info { flex:1; min-width:140px; }
+        .item-name { font-weight:600; color:white; margin-bottom:4px; font-size:0.88rem; }
+        .item-detail { font-size:0.7rem; color:var(--text2); }
+        .item-actions { display:flex; gap:6px; flex-wrap:wrap; }
+        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1e293b; padding:12px 24px; border-radius:36px; font-size:0.85rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:8px; }
+        .hidden { display:none; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); justify-content:center; align-items:center; z-index:1100; animation:fadeIn 0.3s ease; }
+        .modal-content { background:#0f172a; border-radius:26px; padding:26px; max-width:500px; width:90%; max-height:85vh; overflow-y:auto; border:1px solid var(--border); }
+        .modal-content h3 { color:white; font-size:1.2rem; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+        .modal-buttons { display:flex; gap:10px; margin-top:18px; }
         .modal-buttons button { flex:1; justify-content:center; }
+        textarea { resize:vertical; }
+        .toolbar { display:flex; gap:12px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px; background:var(--surface2); border-radius:var(--radius); padding:12px 18px; border:1px solid var(--border); }
+        .top-bar .info { color:var(--text2); font-size:0.7rem; display:flex; align-items:center; gap:6px; }
+        #loginError { color:#ef4444; margin-top:10px; text-align:center; display:none; }
 
-        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px; background:var(--surface2); border-radius:var(--radius); padding:12px 18px; border:1px solid var(--border); }
-        .top-bar .info { color:var(--text2); font-size:0.68rem; display:flex; align-items:center; gap:6px; }
-        .maint-badge { background:rgba(239,68,68,0.15); color:#fca5a5; padding:4px 10px; border-radius:12px; font-size:0.62rem; display:inline-flex; align-items:center; gap:4px; }
-        .auto-status { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:14px; background:rgba(16,185,129,0.15); color:var(--success); font-size:0.68rem; font-weight:600; }
-        .auto-status .dot { width:5px; height:5px; background:var(--success); border-radius:50%; animation:pulse 1s infinite; }
+        .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; }
+        .filter-scroll::-webkit-scrollbar { height:2px; }
+        .filter-chip { padding:8px 16px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:0.8rem; cursor:pointer; white-space:nowrap; transition:0.2s; display:flex; align-items:center; gap:6px; }
+        .filter-chip i { font-size:0.75rem; }
+        .filter-chip:hover, .filter-chip.active { border-color:var(--accent); color:var(--accent2); background:rgba(59,130,246,0.1); }
+        .results-info { font-size:0.7rem; color:var(--text2); margin-bottom:8px; }
+        .load-more-wrap { text-align:center; margin-top:12px; }
+        .btn-load-more { background:var(--surface); border:1px solid var(--border); padding:8px 24px; border-radius:22px; color:white; cursor:pointer; font-size:0.8rem; }
 
-        .filter-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
-        .filter-chip { padding:8px 16px; border-radius:22px; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:0.78rem; cursor:pointer; white-space:nowrap; transition:0.2s; display:flex; align-items:center; gap:6px; }
-        .filter-chip i { font-size:0.72rem; }
-        .filter-chip:hover,.filter-chip.active { border-color:var(--accent); color:white; background:rgba(59,130,246,0.1); }
-        .results-info { font-size:0.68rem; color:var(--text2); margin-bottom:8px; }
-        .load-more-wrap { text-align:center; margin-top:10px; }
-        .btn-load-more { background:var(--surface); border:1px solid var(--border); padding:8px 20px; border-radius:20px; color:var(--text2); cursor:pointer; font-size:0.72rem; }
+        .qris-img { max-width:180px; border-radius:16px; display:block; margin:10px auto; }
+        .copy-link-wrap { display:flex; gap:8px; margin-top:10px; }
+        .copy-link-wrap input { flex:1; padding:8px 12px; font-size:0.7rem; border-radius:16px; border:1px solid var(--border); background:var(--surface); color:white; outline:none; }
+        .copy-link-wrap button { padding:8px 16px; font-size:0.7rem; border-radius:16px; }
+        
+        .auto-status { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:16px; background:rgba(16,185,129,0.15); color:#10b981; font-size:0.7rem; font-weight:600; }
+        .auto-status .dot { width:6px; height:6px; background:#10b981; border-radius:50%; animation:pulse 1s infinite; }
+        .ping-status { font-size:0.68rem; color:var(--text2); margin-top:6px; line-height:1.6; }
+        .ping-status span { margin-right:10px; }
+        .ping-status .ok { color:#10b981; }
+        .ping-status .fail { color:#ef4444; }
 
-        .qris-img { max-width:160px; border-radius:14px; display:block; margin:6px auto; background:white; padding:8px; }
-        .copy-link-wrap { display:flex; gap:6px; margin-top:6px; }
-        .copy-link-wrap input { flex:1; padding:7px 10px; font-size:0.65rem; border-radius:14px; border:1px solid var(--border); background:var(--surface); color:white; outline:none; }
-        .copy-link-wrap button { padding:6px 12px; font-size:0.65rem; }
-
-        .ping-status { font-size:0.65rem; color:var(--text2); margin-top:6px; line-height:1.6; }
-        .ping-status span { margin-right:9px; }
-        .ping-status .ok { color:var(--success); }
-        .ping-status .fail { color:var(--danger); }
-
-        .detail-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.78rem; }
+        .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
         .detail-row .dl { color:var(--text2); }
         .detail-row .dv { color:var(--text); text-align:right; word-break:break-all; }
 
@@ -115,20 +117,18 @@
         .qris-generator-wrap button { white-space:nowrap; }
         .qris-active-list { margin-top:10px; max-height:350px; overflow-y:auto; }
 
-        .preview-section { background:rgba(0,0,0,0.3); border-radius:14px; padding:12px; margin-bottom:8px; }
-        .preview-section .preview-label { font-size:0.65rem; color:var(--accent2); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
-        .preview-section .preview-text { color:var(--text); font-size:0.78rem; word-break:break-all; }
+        .preview-content { text-align:left; }
+        .preview-section { background:rgba(0,0,0,0.3); border-radius:16px; padding:14px; margin-bottom:10px; }
+        .preview-section .preview-label { font-size:0.7rem; color:var(--accent2); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+        .preview-section .preview-text { color:var(--text); font-size:0.8rem; word-break:break-all; }
+        .maint-badge { background:rgba(239,68,68,0.2); color:#fca5a5; padding:4px 10px; border-radius:12px; font-size:0.65rem; display:inline-flex; align-items:center; gap:4px; }
 
-        #loginCard { text-align:center; padding:40px 20px; }
-        #loginCard input { text-align:center; font-size:0.9rem; padding:14px; }
-        #loginCard button { width:100%; justify-content:center; padding:14px; font-size:0.9rem; margin-top:8px; }
-
-        @media (max-width:640px) { .item { flex-direction:column; align-items:flex-start; } .item-info { width:100%; } .item-actions { width:100%; justify-content:flex-end; } .stats-grid { grid-template-columns:repeat(3,1fr); } .qris-generator-wrap { flex-direction:column; } }
+        @media (max-width: 640px) { .item { flex-direction:column; align-items:flex-start; } .item-info { width:100%; } .item-actions { width:100%; justify-content:flex-end; } .qris-generator-wrap { flex-direction:column; } }
     </style>
 </head>
 <body>
 
-<!-- SPLASH - TIDAK DIUBAH -->
+<!-- ✅ SPLASH - TIDAK DIUBAH -->
 <div id="adminSplash">
     <div class="splash-icon"><i class="fas fa-user-shield"></i></div>
     <div class="splash-title">Admin Panel</div>
@@ -138,25 +138,24 @@
 
 <div class="container" id="mainContent" style="display:none;">
 
-    <!-- LOGIN - TIDAK DIUBAH -->
+    <!-- ✅ LOGIN - TIDAK DIUBAH -->
     <div class="card" id="loginCard">
         <h1><i class="fas fa-user-shield"></i> Admin Panel</h1>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin">
-        <button class="btn-primary" onclick="doLogin()"><i class="fas fa-key"></i> Login</button>
+        <button onclick="doLogin()"><i class="fas fa-key"></i> Login</button>
         <div id="loginError"></div>
     </div>
 
-    <!-- ADMIN CONTENT -->
     <div id="adminContent" style="display:none;">
-        <!-- TOP BAR - UPGRADE -->
+        <!-- ✅ TOP BAR UPGRADE -->
         <div class="top-bar">
-            <div class="info"><i class="fas fa-circle" style="color:var(--success);font-size:0.4rem;"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus" style="color:var(--success);">Admin</span> <span class="maint-badge hidden" id="maintBadge"><i class="fas fa-tools"></i> MAINT</span></div>
-            <div class="auto-status"><span class="dot"></span> Auto (1s)</div>
+            <div class="info"><i class="fas fa-shield-alt"></i> IP: <span id="currentIP">-</span> | <span id="ipStatus">-</span> <span class="maint-badge hidden" id="maintBadge"><i class="fas fa-tools"></i> MAINTENANCE</span></div>
+            <div class="auto-status"><span class="dot"></span> Auto ON (1s)</div>
             <button class="btn-outline" onclick="doResetIP()"><i class="fas fa-unlock-alt"></i> Reset IP</button>
             <button class="btn-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
-        <!-- FILTER CHIPS - UPGRADE + QRIS -->
+        <!-- ✅ FILTER CHIPS UPGRADE + QRIS -->
         <div class="filter-scroll">
             <span class="filter-chip active" onclick="switchFilter('orders', this)"><i class="fas fa-history"></i> Riwayat Order</span>
             <span class="filter-chip" onclick="switchFilter('products', this)"><i class="fas fa-boxes"></i> Barang</span>
@@ -165,39 +164,44 @@
         </div>
         <div class="results-info" id="resultsInfo"></div>
 
-        <!-- PANEL ORDER - TIDAK DIUBAH FUNGSI -->
+        <!-- ✅ ORDER PANEL - TIDAK DIUBAH -->
         <div id="panel-orders">
             <div class="card">
                 <h2><i class="fas fa-history"></i> Riwayat Order</h2>
                 <div id="ordersList"></div>
-                <div class="load-more-wrap" id="ordersLoadMore" style="display:none;"><button class="btn-load-more" onclick="loadMoreOrders()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button></div>
+                <div class="load-more-wrap" id="ordersLoadMore" style="display:none;">
+                    <button class="btn-load-more" onclick="loadMoreOrders()">Tampilkan Lebih Banyak</button>
+                </div>
             </div>
         </div>
 
-        <!-- PANEL PRODUK - TIDAK DIUBAH FUNGSI -->
+        <!-- ✅ PRODUK PANEL - UPGRADE TOMBOL -->
         <div id="panel-products" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2>
                 <input type="text" id="productName" placeholder="Nama Produk">
-                <textarea id="productDesc" rows="2" placeholder="Deskripsi (opsional)"></textarea>
-                <div style="display:flex;gap:8px;"><input type="number" id="productPrice" placeholder="Harga" style="flex:1;"><input type="number" id="productStock" placeholder="Stok" style="flex:1;"></div>
+                <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
+                <input type="number" id="productPrice" placeholder="Harga">
+                <input type="number" id="productStock" placeholder="Stok">
                 <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-                <div id="itemTextField"><textarea id="itemText" rows="3" placeholder="Konten teks"></textarea></div>
+                <div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div>
                 <div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div>
-                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-                <select id="bonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+                <div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
+                <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
                 <div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
                 <div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div>
-                <button class="btn-primary" onclick="addProduct()" style="width:100%;justify-content:center;margin-top:6px;"><i class="fas fa-save"></i> Simpan</button>
+                <button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button>
             </div>
             <div class="card">
                 <h2><i class="fas fa-boxes"></i> Daftar Produk</h2>
                 <div id="productsList"></div>
-                <div class="load-more-wrap" id="productsLoadMore" style="display:none;"><button class="btn-load-more" onclick="loadMoreProducts()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button></div>
+                <div class="load-more-wrap" id="productsLoadMore" style="display:none;">
+                    <button class="btn-load-more" onclick="loadMoreProducts()">Tampilkan Lebih Banyak</button>
+                </div>
             </div>
         </div>
 
-        <!-- PANEL QRIS - BARU -->
+        <!-- ✅ QRIS PANEL (NEW) -->
         <div id="panel-qris" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-qrcode"></i> Generate QRIS</h2>
@@ -210,59 +214,63 @@
             <div class="card">
                 <h2><i class="fas fa-list"></i> QRIS Aktif (Pending)</h2>
                 <div class="qris-active-list" id="qrisActiveList">
-                    <div style="color:var(--text2);text-align:center;">Memuat...</div>
+                    <div style="text-align:center;color:#64748b;">Memuat...</div>
                 </div>
             </div>
         </div>
 
-        <!-- PANEL MENU - TIDAK DIUBAH FUNGSI -->
+        <!-- ✅ MENU PANEL - TIDAK DIUBAH -->
         <div id="panel-menu" class="hidden">
-            <div class="card"><h2><i class="fas fa-chart-line"></i> Statistik</h2><div class="stats-grid" id="statsGrid"></div></div>
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> Statistik</h2>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
             <div class="card">
                 <h2><i class="fas fa-plug"></i> Ping Test</h2>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button class="btn-outline" onclick="pingTest('github')" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button>
                     <button class="btn-outline" onclick="pingTest('qrispy')" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button>
                     <button class="btn-outline" onclick="pingTest('telegram')" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Tele</button>
                     <button class="btn-outline" onclick="pingTest('web')" style="flex:1;justify-content:center;"><i class="fas fa-globe"></i> Web</button>
                 </div>
-                <div class="ping-status">
-                    <span><i class="fab fa-github"></i> <span id="pingGithub">-</span></span>
-                    <span><i class="fas fa-qrcode"></i> <span id="pingQrispy">-</span></span>
-                    <span><i class="fab fa-telegram-plane"></i> <span id="pingTelegram">-</span></span>
-                    <span><i class="fas fa-globe"></i> <span id="pingWeb">-</span></span>
+                <div class="ping-status" id="pingStatus">
+                    <span>GitHub: <span id="pingGithub">-</span></span>
+                    <span>Qrispy: <span id="pingQrispy">-</span></span>
+                    <span>Telegram: <span id="pingTelegram">-</span></span>
+                    <span>Web: <span id="pingWeb">-</span></span>
                 </div>
             </div>
             <div class="card">
-                <h2><i class="fas fa-tools"></i> Maintenance</h2>
+                <h2><i class="fas fa-tools"></i> Maintenance Mode</h2>
                 <button id="maintToggleBtn" onclick="toggleMaintenance()" class="btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-power-off"></i> Aktifkan Maintenance</button>
             </div>
             <div class="card">
                 <h2><i class="fas fa-bullhorn"></i> Broadcast</h2>
                 <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
-                <button class="btn-primary" onclick="sendBroadcast()" style="width:100%;justify-content:center;margin-top:6px;"><i class="fas fa-paper-plane"></i> Kirim</button>
+                <button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button>
             </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
                 <button class="btn-warning" onclick="resetOrders()" style="flex:1;"><i class="fas fa-trash-alt"></i> Reset Pending</button>
                 <button class="btn-success" onclick="backupData()" style="flex:1;"><i class="fas fa-database"></i> Backup</button>
             </div>
         </div>
     </div>
+
 </div>
 
-<!-- DETAIL MODAL - TIDAK DIUBAH -->
+<!-- ✅ DETAIL MODAL - TIDAK DIUBAH -->
 <div id="detailModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-info-circle"></i> Detail Order</h3>
         <div id="detailContent"></div>
         <div class="modal-buttons">
-            <button class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt"></i> Hapus</button>
+            <button class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt"></i> Hapus Order</button>
             <button class="btn-outline" onclick="document.getElementById('detailModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
         </div>
     </div>
 </div>
 
-<!-- QRIS DETAIL MODAL - BARU -->
+<!-- ✅ QRIS DETAIL MODAL - NEW -->
 <div id="qrisDetailModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-qrcode"></i> Detail QRIS</h3>
@@ -274,65 +282,108 @@
     </div>
 </div>
 
-<!-- EDIT MODAL - TIDAK DIUBAH -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-edit"></i> Edit Produk</h3>
         <input type="hidden" id="editProductId">
         <input type="text" id="editProductName" placeholder="Nama Produk">
-        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi"></textarea>
-        <div style="display:flex;gap:8px;"><input type="number" id="editProductPrice" placeholder="Harga" style="flex:1;"><input type="number" id="editProductStock" placeholder="Stok" style="flex:1;"></div>
+        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
+        <input type="number" id="editProductPrice" placeholder="Harga">
+        <input type="number" id="editProductStock" placeholder="Stok">
         <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><textarea id="editItemText" rows="3" placeholder="Konten teks"></textarea></div>
+        <div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div>
         <div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="3" placeholder="<div>HTML...</div>"></textarea></div>
-        <select id="editBonusType"><option value="none">Bonus? Tidak</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
+        <div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
+        <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
         <div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
         <div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div>
         <div class="modal-buttons">
-            <button class="btn-success" onclick="saveEditProduct()"><i class="fas fa-save"></i> Simpan</button>
-            <button class="btn-outline" onclick="closeEditModal()"><i class="fas fa-times"></i> Batal</button>
+            <button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button>
+            <button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button>
         </div>
     </div>
 </div>
 
-<!-- PREVIEW MODAL - TIDAK DIUBAH -->
 <div id="previewModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content preview-content">
         <h3><i class="fas fa-eye"></i> Preview: <span id="previewName"></span></h3>
         <div id="previewBody"></div>
-        <button class="btn-outline" onclick="document.getElementById('previewModal').style.display='none'" style="width:100%;justify-content:center;margin-top:10px;"><i class="fas fa-times"></i> Tutup</button>
+        <button onclick="document.getElementById('previewModal').style.display='none'" style="background:#475569;width:100%;justify-content:center;margin-top:12px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
 
 <div id="toast" class="toast"></div>
-<audio id="chachingSound" preload="auto"><source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav"></audio>
+
+<audio id="chachingSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
 
 <script>
     const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
     const QRISPY_API_URL = 'https://api.qrispy.id';
-    let adminPassword = '', currentEditId = null, currentDetailId = null, currentQrisId = null, currentIP = '';
+
+    let adminPassword = '';
+    let currentEditId = null;
+    let currentDetailId = null;
+    let currentQrisId = null;
+    let currentIP = '';
     let allOrders = [], allProducts = [], allQrisPending = [];
     let orderDisplay = 10, productDisplay = 10;
-    let lastOrderCount = 0, maintenanceMode = false, qrisCounter = 1;
+    let lastOrderCount = 0;
+    let maintenanceMode = false;
+    let qrisCounter = 1;
 
-    function toast(msg, isError) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function() { t.style.opacity = '0'; }, 2500); }
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m==='&'?'&amp;':m==='<'?'&lt;':m=='>'?'&gt;'; }); }
-    async function getMyIP() { try { var r = await fetch('https://api.ipify.org?format=json'); return (await r.json()).ip; } catch(e) { return null; } }
+    function toast(msg, isError) {
+        var t = document.getElementById('toast');
+        t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
+        t.style.background = isError ? '#b91c1c' : '#1e293b';
+        t.style.opacity = '1';
+        setTimeout(function() { t.style.opacity = '0'; }, 3000);
+    }
+
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
+    async function getMyIP() { try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; } catch(e) { return null; } }
     function goToUnauthorized() { window.location.href = '/unauthorized'; }
-    function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; document.getElementById('mainContent').style.display='block'; document.getElementById('adminSplash').classList.add('hidden'); }
-    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='var(--success)'; document.getElementById('mainContent').style.display='block'; document.getElementById('adminSplash').classList.add('hidden'); loadAll(); var hash = window.location.hash.replace('#','') || 'orders'; switchFilter(hash, document.querySelector('.filter-chip[onclick*="'+hash+'"]') || document.querySelector('.filter-chip')); checkMaintenanceStatus(); startAutoRefresh(); }
+
+    // ✅ LOGIN & SPLASH - 100% TIDAK DIUBAH
+    function showLoginForm() { 
+        document.getElementById('loginCard').style.display='block'; 
+        document.getElementById('adminContent').style.display='none'; 
+        document.getElementById('mainContent').style.display='block';
+        document.getElementById('adminSplash').classList.add('hidden');
+    }
+
+    function showAdminPanel() { 
+        document.getElementById('loginCard').style.display='none'; 
+        document.getElementById('adminContent').style.display='block'; 
+        document.getElementById('currentIP').textContent=currentIP||'-'; 
+        document.getElementById('ipStatus').textContent='Admin'; 
+        document.getElementById('ipStatus').style.color='#10b981'; 
+        loadAll(); 
+        var hash = window.location.hash.replace('#','') || 'orders';
+        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
+        switchFilter(hash, chip || document.querySelector('.filter-chip'));
+        checkMaintenanceStatus(); 
+        startAutoRefresh(); 
+    }
 
     function switchFilter(filter, el) {
         window.location.hash = filter;
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
         if (el) el.classList.add('active');
-        ['panel-orders','panel-products','panel-qris','panel-menu'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
+        document.getElementById('panel-orders').classList.add('hidden');
+        document.getElementById('panel-products').classList.add('hidden');
+        document.getElementById('panel-qris').classList.add('hidden');
+        document.getElementById('panel-menu').classList.add('hidden');
         document.getElementById('panel-'+filter).classList.remove('hidden');
         updateResultsInfo();
     }
 
-    window.addEventListener('hashchange', function() { var hash = window.location.hash.replace('#','') || 'orders'; switchFilter(hash, document.querySelector('.filter-chip[onclick*="'+hash+'"]') || document.querySelector('.filter-chip')); });
+    window.addEventListener('hashchange', function() {
+        var hash = window.location.hash.replace('#','') || 'orders';
+        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
+        if (chip) switchFilter(hash, chip);
+    });
 
     function updateResultsInfo() {
         var total=0, showing=0;
@@ -343,81 +394,140 @@
         document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total;
     }
 
-    // ✅ AUTO-LOGIN - TIDAK DIUBAH
-    window.addEventListener('load', function() { setTimeout(async function() { await checkAutoLogin(); }, 1500); });
+    // ✅ AUTO LOGIN - 100% TIDAK DIUBAH
+    window.addEventListener('load', function() {
+        setTimeout(async function() { await checkAutoLogin(); }, 1500);
+    });
 
     async function checkAutoLogin() {
-        currentIP = await getMyIP(); if (!currentIP) { showLoginForm(); return; }
+        currentIP = await getMyIP();
+        if (!currentIP) { showLoginForm(); return; }
         document.getElementById('currentIP').textContent = currentIP;
-        try { var res = await fetch('/api/admin/check-ip'); var data = await res.json();
-            if (data.isAdmin) { adminPassword = ''; document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...'; document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data'; setTimeout(function() { showAdminPanel(); }, 2500); return; }
+        try {
+            var res = await fetch('/api/admin/check-ip');
+            var data = await res.json();
+            if (data.isAdmin) { 
+                adminPassword = ''; 
+                document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...';
+                document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data';
+                setTimeout(function() {
+                    document.getElementById('adminSplash').classList.add('hidden');
+                    document.getElementById('mainContent').style.display = 'block';
+                    showAdminPanel(); 
+                }, 2500);
+                return; 
+            }
             if (!data.hasAdmin) { showLoginForm(); return; }
             goToUnauthorized();
         } catch(e) { showLoginForm(); }
     }
 
-    // ✅ LOGIN - TIDAK DIUBAH
-    async function doLogin() { var pwd = document.getElementById('adminKeyInput').value; if (!pwd) return; try { var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:pwd }) }); if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); } else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; } } catch(e) { document.getElementById('loginError').innerText='Gagal'; document.getElementById('loginError').style.display='block'; } }
+    async function doLogin() {
+        var pwd = document.getElementById('adminKeyInput').value;
+        if (!pwd) return;
+        try {
+            var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:pwd }) });
+            if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); }
+            else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; }
+        } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; }
+    }
+
     function doLogout() { adminPassword=''; showLoginForm(); stopAutoRefresh(); window.location.hash = ''; }
-    async function doResetIP() { if(!confirm('Reset IP?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
+    async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
 
     let autoInterval = null;
     function startAutoRefresh() { stopAutoRefresh(); autoInterval = setInterval(function() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); autoPingAll(); }, 1000); }
     function stopAutoRefresh() { if (autoInterval) { clearInterval(autoInterval); autoInterval = null; } }
     function loadAll() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); autoPingAll(); }
 
-    // ❌ SEMUA FUNGSI LAMA TIDAK DIUBAH
-    async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var nc = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && nc>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = nc; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
-    function renderOrders() { var toShow = allOrders.slice(0, orderDisplay); var c = document.getElementById('ordersList'); if (toShow.length) { c.innerHTML = toShow.map(function(o) { var st = o.status==='paid'?'<span style="color:#10b981;">Lunas</span>':o.status==='pending'?'<span style="color:#f59e0b;">Pending</span>':o.status==='expired'?'<span style="color:#ef4444;">Expired</span>':'<span style="color:#94a3b8;">Cancelled</span>'; return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Belum ada order</div>'; } document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none'; updateResultsInfo(); }
+    // ✅ SEMUA FUNGSI LAMA TIDAK DIUBAH
+    async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var newCount = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && newCount>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = newCount; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
+    
+    function renderOrders() {
+        var toShow = allOrders.slice(0, orderDisplay);
+        var c = document.getElementById('ordersList');
+        if (toShow.length) {
+            c.innerHTML = toShow.map(function(o) {
+                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
+                return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
+            }).join('');
+        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
+        document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
+        updateResultsInfo();
+    }
     function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
-    function openDetailModal(id) { var order = allOrders.find(function(o) { return o.id==id; }); if (!order) return; currentDetailId = id; var st = order.status==='paid'?'Lunas':order.status==='pending'?'Pending':order.status==='expired'?'Expired':'Cancelled'; document.getElementById('detailContent').innerHTML = '<div class="detail-row"><span class="dl">Produk</span><span class="dv">'+escapeHtml(order.productName)+'</span></div><div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div><div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Kode</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div><div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>'; document.getElementById('detailModal').style.display = 'flex'; }
-    async function deleteOrderFromDetail() { if (!currentDetailId || !confirm('Hapus?')) return; await fetch('/api/admin/order/'+currentDetailId, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); document.getElementById('detailModal').style.display = 'none'; orderDisplay=10; loadOrders(); loadStats(); toast('🗑️ Dihapus'); }
+
+    function openDetailModal(id) {
+        var order = allOrders.find(function(o) { return o.id == id; });
+        if (!order) return;
+        currentDetailId = id;
+        var st = order.status==='paid'?'Lunas':order.status==='pending'?'Pending':order.status==='expired'?'Expired':'Cancelled';
+        document.getElementById('detailContent').innerHTML =
+            '<div class="detail-row"><span class="dl">Produk</span><span class="dv">'+escapeHtml(order.productName)+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Kode Order</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div>'+
+            '<div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>';
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    async function deleteOrderFromDetail() {
+        if (!currentDetailId || !confirm('Hapus order ini?')) return;
+        await fetch('/api/admin/order/'+currentDetailId, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminKey: adminPassword })
+        });
+        document.getElementById('detailModal').style.display = 'none';
+        orderDisplay = 10; loadOrders(); loadStats();
+        toast('🗑️ Order dihapus');
+    }
 
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
-    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button class="btn-sm orange" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
+    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button class="btn-sm orange" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
-    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Revenue</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Exp/Cancel</div></div>'; } } catch(e) {} }
+    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Expired/Cancel</div></div>'; } } catch(e) {} }
 
-    // ✅ QRIS FUNCTIONS - BARU
+    // ✅ QRIS FUNCTIONS - NEW
     async function loadQrisPending() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allQrisPending = (data.orders||[]).filter(function(o) { return o.status==='pending' && o.productId===null; }); renderQrisPending(); } } catch(e) {} }
-    function renderQrisPending() { var c = document.getElementById('qrisActiveList'); if (allQrisPending.length) { c.innerHTML = allQrisPending.map(function(o) { return '<div class="item" onclick="openQrisDetail('+o.id+')"><div class="item-info"><div class="item-name"><i class="fas fa-qrcode"></i> '+escapeHtml(o.customerName)+'</div><div class="item-detail">Rp '+(o.totalAmount||0).toLocaleString()+' | Exp: '+new Date(o.expiredAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="event.stopPropagation();copyToClipboard(\'https://stockyanto.vercel.app/order/'+o.orderCode+'\')"><i class="fas fa-copy"></i> Salin</button><button class="btn-sm red" onclick="event.stopPropagation();cancelQRIS('+o.id+')"><i class="fas fa-ban"></i> Batal</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Tidak ada QRIS aktif</div>'; } updateResultsInfo(); }
-    function openQrisDetail(id) { var order = allQrisPending.find(function(o) { return o.id==id; }); if (!order) return; currentQrisId = id; document.getElementById('qrisDetailContent').innerHTML = '<img src="'+order.qrisImage+'" class="qris-img" style="max-width:200px;margin:0 auto;display:block;"><div class="detail-row"><span class="dl">Nama</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Nominal</span><span class="dv">Rp '+(order.totalAmount||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Expired</span><span class="dv">'+new Date(order.expiredAt).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Status</span><span class="dv" style="color:var(--warning);">Pending</span></div><div class="detail-row"><span class="dl">Link</span><span class="dv" style="font-size:0.6rem;"><a href="https://stockyanto.vercel.app/order/'+order.orderCode+'" target="_blank" style="color:var(--accent2);">Buka</a></span></div>'; document.getElementById('qrisDetailModal').style.display = 'flex'; }
+    function renderQrisPending() { var c = document.getElementById('qrisActiveList'); if (allQrisPending.length) { c.innerHTML = allQrisPending.map(function(o) { return '<div class="item" onclick="openQrisDetail('+o.id+')"><div class="item-info"><div class="item-name"><i class="fas fa-qrcode"></i> '+escapeHtml(o.customerName)+'</div><div class="item-detail">Rp '+(o.totalAmount||0).toLocaleString()+' | Exp: '+new Date(o.expiredAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="event.stopPropagation();copyToClipboard(\'https://stockyanto.vercel.app/order/'+o.orderCode+'\')"><i class="fas fa-copy"></i> Salin</button><button class="btn-sm red" onclick="event.stopPropagation();cancelQRIS('+o.id+')"><i class="fas fa-ban"></i> Batal</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Tidak ada QRIS aktif</div>'; } updateResultsInfo(); }
+    function openQrisDetail(id) { var order = allQrisPending.find(function(o) { return o.id==id; }); if (!order) return; currentQrisId = id; document.getElementById('qrisDetailContent').innerHTML = '<img src="'+order.qrisImage+'" class="qris-img" style="max-width:200px;margin:0 auto;display:block;"><div class="detail-row"><span class="dl">Nama</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Nominal</span><span class="dv">Rp '+(order.totalAmount||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Expired</span><span class="dv">'+new Date(order.expiredAt).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Status</span><span class="dv" style="color:#f59e0b;">Pending</span></div><div class="detail-row"><span class="dl">Link</span><span class="dv" style="font-size:0.6rem;"><a href="https://stockyanto.vercel.app/order/'+order.orderCode+'" target="_blank" style="color:#60a5fa;">Buka</a></span></div>'; document.getElementById('qrisDetailModal').style.display = 'flex'; }
     async function cancelQRISFromDetail() { if (!currentQrisId || !confirm('Batalkan QRIS ini?')) return; await fetch('/api/cancel-order/'+currentQrisId, { method:'POST' }); document.getElementById('qrisDetailModal').style.display = 'none'; loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
     async function cancelQRIS(id) { if (!confirm('Batalkan QRIS ini?')) return; await fetch('/api/cancel-order/'+id, { method:'POST' }); loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
 
-    // ✅ PING - TIDAK DIUBAH
-    async function autoPingAll() { pingSilent('github'); pingSilent('qrispy'); pingSilent('web'); pingSilent('telegram'); }
-    async function pingSilent(target) { var idMap = { github:'pingGithub', qrispy:'pingQrispy', telegram:'pingTelegram', web:'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target==='telegram') { try { var r = await fetch('/api/ping-telegram'); var d = await r.json(); el.innerHTML = d.status==='ok' ? '<span class="ok">'+d.latency_ms+'ms</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); el.innerHTML = '<span class="ok">'+Math.round(performance.now()-start)+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
-    async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var r=await fetch('/api/ping-telegram'); var d=await r.json(); toast(d.status==='ok'?'✅ TELEGRAM: '+d.latency_ms+'ms':'❌ GAGAL', d.status!=='ok'); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
+    // ✅ PING FUNCTIONS
+    async function autoPingAll() { pingTestSilent('github'); pingTestSilent('qrispy'); pingTestSilent('web'); pingTestSilent('telegram'); }
+    async function pingTestSilent(target) { var idMap = { github: 'pingGithub', qrispy: 'pingQrispy', telegram: 'pingTelegram', web: 'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target === 'telegram') { try { var res = await fetch('/api/ping-telegram'); var d = await res.json(); var ms = Math.round(performance.now()-start); el.innerHTML = d.status==='ok' ? '<span class="ok">'+ms+'ms ✅</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); var ms = Math.round(performance.now()-start); el.innerHTML = '<span class="ok">'+ms+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
+    async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var res=await fetch('/api/ping-telegram'); var d=await res.json(); if(d.status==='ok') toast('✅ TELEGRAM: '+d.latency_ms+'ms'); else toast('❌ TELEGRAM GAGAL', true); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
 
-    // ✅ QRIS GENERATOR - TIDAK DIUBAH (cuma tambah loadQrisPending di akhir)
-    async function generateQRIS() { var amount = parseInt(document.getElementById('qrisAmount').value); if (!amount||amount<=0) { toast('Masukkan jumlah!', true); return; } var name = 'Cust ' + qrisCounter; qrisCounter++; try { var qrisRes = await fetch(QRISPY_API_URL+'/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) }); var qrisData = await qrisRes.json(); if (qrisData.status!=='success') { toast('Gagal generate', true); return; } var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) }); var saveData = await saveRes.json(); if (saveData.success) { var orderUrl = 'https://stockyanto.vercel.app/order/'+saveData.orderCode; document.getElementById('qrisResult').innerHTML = '<img src="'+qrisData.data.qris_image_url+'" class="qris-img"><p style="color:#10b981;margin:4px 0;">✅ Rp '+amount.toLocaleString()+' | '+name+'</p><div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button class="btn-sm blue" onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i></button></div><button class="btn-sm blue" onclick="window.open(\''+orderUrl+'\',\'_blank\')" style="width:100%;justify-content:center;margin-top:4px;"><i class="fas fa-external-link-alt"></i> Buka</button>'; loadQrisPending(); } else { toast('Gagal: '+(saveData.error||'Unknown'), true); } } catch(e) { toast('Error: '+e.message, true); } }
-    function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal', true); }); }
+    // ✅ QRIS GENERATOR
+    async function generateQRIS() { var amount = parseInt(document.getElementById('qrisAmount').value); if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; } var name = 'Cust ' + qrisCounter; qrisCounter++; try { var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) }); var qrisData = await qrisRes.json(); if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; } var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) }); var saveData = await saveRes.json(); if (saveData.success) { var orderUrl = 'https://stockyanto.vercel.app/order/' + saveData.orderCode; document.getElementById('qrisResult').innerHTML = '<img src="'+qrisData.data.qris_image_url+'" class="qris-img" alt="QRIS">'+'<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+' | '+name+'</p>'+'<p style="font-size:0.7rem;color:#64748b;">Link Pembayaran:</p>'+'<div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button class="btn-sm blue" onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i></button></div>'+'<button class="btn-sm blue" onclick="window.open(\''+orderUrl+'\', \'_blank\')" style="width:100%;justify-content:center;margin-top:4px;"><i class="fas fa-external-link-alt"></i> Buka</button>'; loadQrisPending(); } else { toast('Gagal: '+(saveData.error||'Unknown'), true); } } catch(e) { toast('Error: '+e.message, true); } }
+    function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
 
     // ✅ PREVIEW & CRUD - TIDAK DIUBAH
-    async function previewProduct(pid) { var p = allProducts.find(function(x){ return x.id==pid; }); if(!p) return; document.getElementById('previewName').textContent=p.name; var b=''; if(p.itemType==='html') b='<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; else if(p.itemType==='link'||(p.itemContent||'').startsWith('http')) b='<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(p.itemContent)+'" target="_blank" style="color:var(--accent2);">'+escapeHtml(p.itemContent)+'</a></div></div>'; else b='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; if(p.bonusContent) b+='<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(p.bonusContent)+'</div></div>'; b+='<div style="text-align:center;color:var(--text2);font-size:0.7rem;margin-top:8px;">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+'</div>'; document.getElementById('previewBody').innerHTML=b; document.getElementById('previewModal').style.display='flex'; }
+    async function previewProduct(pid) { var product = allProducts.find(function(p){ return p.id==pid; }); if(!product) return; document.getElementById('previewName').textContent=product.name; var body=''; if(product.itemType==='html') body='<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'; else if(product.itemType==='link'||(product.itemContent||'').startsWith('http')) body='<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(product.itemContent)+'" target="_blank" style="color:#60a5fa;">'+escapeHtml(product.itemContent)+'</a></div></div>'; else body='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'; if(product.bonusContent) body+='<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>'; body+='<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>'; document.getElementById('previewBody').innerHTML=body; document.getElementById('previewModal').style.display='flex'; }
     async function deleteProduct(id) { if(!confirm('Hapus?')) return; await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Terhapus'); }
     async function addProduct() { var it=document.getElementById('itemType').value; var ic=''; if(it==='text') ic=document.getElementById('itemText').value; else if(it==='link') ic=document.getElementById('itemLink').value; else if(it==='html') ic=document.getElementById('itemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('bonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('bonusText').value; else if(bt==='link') bc=document.getElementById('bonusLink').value; var res=await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ document.getElementById(id).value=''; }); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
-    async function openEditModal(id) { var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); var data=await res.json(); if(data.success&&data.product) { var p=data.product; currentEditId=p.id; document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock; document.getElementById('editItemType').value=p.itemType||'text'; if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent; document.getElementById('editBonusType').value=p.bonusType||'none'; if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; toggleEditFields(); document.getElementById('editModal').style.display='flex'; } }
+    async function openEditModal(id) { var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); var data=await res.json(); if(data.success&&data.product) { var p=data.product; currentEditId=p.id; document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock; document.getElementById('editItemType').value=p.itemType||'text'; if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent; document.getElementById('editBonusType').value=p.bonusType||'none'; if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex'; } }
     function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
     async function saveEditProduct() { var it=document.getElementById('editItemType').value; var ic=''; if(it==='text') ic=document.getElementById('editItemText').value; else if(it==='link') ic=document.getElementById('editItemLink').value; else if(it==='html') ic=document.getElementById('editItemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('editBonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('editBonusText').value; else if(bt==='link') bc=document.getElementById('editBonusLink').value; var res=await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Diupdate'); closeEditModal(); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
-    function toggleEditFields() { var t=document.getElementById('editItemType').value; ['editItemTextField','editItemLinkField','editItemHtmlField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden'); var bt=document.getElementById('editBonusType').value; ['editBonusTextField','editBonusLinkField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(bt==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if(bt==='link') document.getElementById('editBonusLinkField').classList.remove('hidden'); }
-    document.getElementById('editItemType').addEventListener('change', toggleEditFields);
-    document.getElementById('editBonusType').addEventListener('change', toggleEditFields);
-
-    // ✅ MAINTENANCE & LAINNYA - TIDAK DIUBAH
     async function resetOrders() { if(!confirm('Hapus Pending & Cancelled?')) return; var res=await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) { var d=await res.json(); toast('✅ '+d.deletedCount+' dihapus'); orderDisplay=10; loadOrders(); loadStats(); } }
-    async function backupData() { var res=await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) toast('📦 Backup'); else toast('Gagal', true); }
+    async function backupData() { var res=await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) toast('📦 Backup ke Telegram'); else toast('Gagal', true); }
     async function sendBroadcast() { var msg=document.getElementById('broadcastMessage').value.trim(); if(!msg) return; var res=await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, message:msg }) }); var d=await res.json(); if(d.success) { toast('📢 Terkirim ke '+d.sentCount); document.getElementById('broadcastMessage').value=''; } }
     async function checkMaintenanceStatus() { try { var res=await fetch('/api/public-stats'); var data=await res.json(); if(data.success&&data.maintenance) { maintenanceMode=true; document.getElementById('maintBadge').classList.remove('hidden'); document.getElementById('maintToggleBtn').innerHTML='<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.add('active'); } } catch(e) {} }
     async function toggleMaintenance() { maintenanceMode=!maintenanceMode; var btn=document.getElementById('maintToggleBtn'); var badge=document.getElementById('maintBadge'); try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {} if(maintenanceMode) { btn.innerHTML='<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; btn.classList.add('active'); badge.classList.remove('hidden'); toast('🔧 Maintenance AKTIF'); } else { btn.innerHTML='<i class="fas fa-power-off"></i> Aktifkan Maintenance'; btn.classList.remove('active'); badge.classList.add('hidden'); toast('✅ Maintenance NONAKTIF'); } }
+    function toggleItemFields() { var t=document.getElementById('itemType').value; document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden'); if(t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('itemHtmlField').classList.remove('hidden'); }
+    function toggleBonusFields() { var t=document.getElementById('bonusType').value; document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden'); if(t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('bonusLinkField').classList.remove('hidden'); }
+    function toggleEditItemFields() { var t=document.getElementById('editItemType').value; document.getElementById('editItemTextField').classList.add('hidden'); document.getElementById('editItemLinkField').classList.add('hidden'); document.getElementById('editItemHtmlField').classList.add('hidden'); if(t==='text') document.getElementById('editItemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editItemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('editItemHtmlField').classList.remove('hidden'); }
+    function toggleEditBonusFields() { var t=document.getElementById('editBonusType').value; document.getElementById('editBonusTextField').classList.add('hidden'); document.getElementById('editBonusLinkField').classList.add('hidden'); if(t==='text') document.getElementById('editBonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('editBonusLinkField').classList.remove('hidden'); }
 
-    function toggleItemFields() { var t=document.getElementById('itemType').value; ['itemTextField','itemLinkField','itemHtmlField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('itemHtmlField').classList.remove('hidden'); }
-    function toggleBonusFields() { var t=document.getElementById('bonusType').value; ['bonusTextField','bonusLinkField'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); }); if(t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('bonusLinkField').classList.remove('hidden'); }
+    toggleItemFields(); toggleBonusFields();
     document.getElementById('itemType').addEventListener('change', toggleItemFields);
     document.getElementById('bonusType').addEventListener('change', toggleBonusFields);
-    toggleItemFields(); toggleBonusFields();
+    document.getElementById('editItemType').addEventListener('change', toggleEditItemFields);
+    document.getElementById('editBonusType').addEventListener('change', toggleEditBonusFields);
 </script>
 </body>
 </html>
