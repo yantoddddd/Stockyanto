@@ -108,7 +108,6 @@
         .detail-row .dl { color:var(--text2); }
         .detail-row .dv { color:var(--text); text-align:right; word-break:break-all; }
 
-        /* QRIS GENERATOR UPGRADE */
         .qris-generator-wrap { display:flex; gap:10px; align-items:center; }
         .qris-generator-wrap input { flex:1; margin:0; }
         .qris-generator-wrap button { white-space:nowrap; }
@@ -188,7 +187,7 @@
             </div>
         </div>
 
-        <!-- QRIS PANEL (NEW) -->
+        <!-- QRIS PANEL -->
         <div id="panel-qris" class="hidden">
             <div class="card">
                 <h2><i class="fas fa-qrcode"></i> Generate QRIS</h2>
@@ -311,7 +310,7 @@
     async function getMyIP() { try { var r = await fetch('https://api.ipify.org?format=json'); return (await r.json()).ip; } catch(e) { return null; } }
     function goToUnauthorized() { window.location.href = '/unauthorized'; }
     function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; document.getElementById('mainContent').style.display='block'; document.getElementById('adminSplash').classList.add('hidden'); }
-    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='var(--success)'; loadAll(); var hash = window.location.hash.replace('#','') || 'orders'; switchFilter(hash, document.querySelector('.filter-chip[onclick*="'+hash+'"]') || document.querySelector('.filter-chip')); checkMaintenanceStatus(); startAutoRefresh(); }
+    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='var(--success)'; document.getElementById('mainContent').style.display='block'; document.getElementById('adminSplash').classList.add('hidden'); loadAll(); var hash = window.location.hash.replace('#','') || 'orders'; switchFilter(hash, document.querySelector('.filter-chip[onclick*="'+hash+'"]') || document.querySelector('.filter-chip')); checkMaintenanceStatus(); startAutoRefresh(); }
 
     function switchFilter(filter, el) {
         window.location.hash = filter;
@@ -339,7 +338,7 @@
         currentIP = await getMyIP(); if (!currentIP) { showLoginForm(); return; }
         document.getElementById('currentIP').textContent = currentIP;
         try { var res = await fetch('/api/admin/check-ip'); var data = await res.json();
-            if (data.isAdmin) { adminPassword = ''; document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...'; document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data'; setTimeout(function() { document.getElementById('adminSplash').classList.add('hidden'); document.getElementById('mainContent').style.display = 'block'; showAdminPanel(); }, 2500); return; }
+            if (data.isAdmin) { adminPassword = ''; document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...'; document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data'; setTimeout(function() { showAdminPanel(); }, 2500); return; }
             if (!data.hasAdmin) { showLoginForm(); return; }
             goToUnauthorized();
         } catch(e) { showLoginForm(); }
@@ -354,75 +353,31 @@
     function stopAutoRefresh() { if (autoInterval) { clearInterval(autoInterval); autoInterval = null; } }
     function loadAll() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); autoPingAll(); }
 
-    // ✅ LOAD QRIS PENDING
-    async function loadQrisPending() {
-        try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json();
-            if (data.success) { allQrisPending = (data.orders||[]).filter(function(o) { return o.status==='pending' && o.productId===null; }); renderQrisPending(); }
-        } catch(e) {}
-    }
+    async function loadQrisPending() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allQrisPending = (data.orders||[]).filter(function(o) { return o.status==='pending' && o.productId===null; }); renderQrisPending(); } } catch(e) {} }
+    function renderQrisPending() { var c = document.getElementById('qrisActiveList'); if (allQrisPending.length) { c.innerHTML = allQrisPending.map(function(o) { return '<div class="item" onclick="openQrisDetail('+o.id+')"><div class="item-info"><div class="item-name"><i class="fas fa-qrcode"></i> '+escapeHtml(o.customerName)+'</div><div class="item-detail">Rp '+(o.totalAmount||0).toLocaleString()+' | Exp: '+new Date(o.expiredAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="event.stopPropagation();copyToClipboard(\'https://stockyanto.vercel.app/order/'+o.orderCode+'\')"><i class="fas fa-copy"></i> Salin</button><button class="btn-sm red" onclick="event.stopPropagation();cancelQRIS('+o.id+')"><i class="fas fa-ban"></i> Batal</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Tidak ada QRIS aktif</div>'; } updateResultsInfo(); }
+    function openQrisDetail(id) { var order = allQrisPending.find(function(o) { return o.id==id; }); if (!order) return; currentQrisId = id; document.getElementById('qrisDetailContent').innerHTML = '<img src="'+order.qrisImage+'" class="qris-img" style="max-width:200px;margin:0 auto;display:block;"><div class="detail-row"><span class="dl">Nama</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Nominal</span><span class="dv">Rp '+(order.totalAmount||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Expired</span><span class="dv">'+new Date(order.expiredAt).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Status</span><span class="dv" style="color:var(--warning);">Pending</span></div><div class="detail-row"><span class="dl">Link</span><span class="dv" style="font-size:0.6rem;"><a href="https://stockyanto.vercel.app/order/'+order.orderCode+'" target="_blank" style="color:var(--accent2);">Buka</a></span></div>'; document.getElementById('qrisDetailModal').style.display = 'flex'; }
+    async function cancelQRISFromDetail() { if (!currentQrisId || !confirm('Batalkan QRIS ini?')) return; await fetch('/api/cancel-order/'+currentQrisId, { method:'POST' }); document.getElementById('qrisDetailModal').style.display = 'none'; loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
+    async function cancelQRIS(id) { if (!confirm('Batalkan QRIS ini?')) return; await fetch('/api/cancel-order/'+id, { method:'POST' }); loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
 
-    function renderQrisPending() {
-        var c = document.getElementById('qrisActiveList');
-        if (allQrisPending.length) {
-            c.innerHTML = allQrisPending.map(function(o) {
-                return '<div class="item" onclick="openQrisDetail('+o.id+')"><div class="item-info"><div class="item-name"><i class="fas fa-qrcode"></i> '+escapeHtml(o.customerName)+'</div><div class="item-detail">Rp '+(o.totalAmount||0).toLocaleString()+' | Exp: '+new Date(o.expiredAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="event.stopPropagation();copyToClipboard(\'https://stockyanto.vercel.app/order/'+o.orderCode+'\')"><i class="fas fa-copy"></i> Salin</button><button class="btn-sm red" onclick="event.stopPropagation();cancelQRIS('+o.id+')"><i class="fas fa-ban"></i> Batal</button></div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Tidak ada QRIS aktif</div>'; }
-        updateResultsInfo();
-    }
-
-    // ✅ QRIS DETAIL MODAL
-    function openQrisDetail(id) {
-        var order = allQrisPending.find(function(o) { return o.id==id; }); if (!order) return;
-        currentQrisId = id;
-        document.getElementById('qrisDetailContent').innerHTML =
-            '<img src="'+order.qrisImage+'" class="qris-img" style="max-width:200px;margin:0 auto;display:block;">'+
-            '<div class="detail-row"><span class="dl">Nama</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Nominal</span><span class="dv">Rp '+(order.totalAmount||0).toLocaleString()+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Expired</span><span class="dv">'+new Date(order.expiredAt).toLocaleString()+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Status</span><span class="dv" style="color:var(--warning);">Pending</span></div>'+
-            '<div class="detail-row"><span class="dl">Link</span><span class="dv" style="font-size:0.6rem;"><a href="https://stockyanto.vercel.app/order/'+order.orderCode+'" target="_blank" style="color:var(--accent2);">Buka</a></span></div>';
-        document.getElementById('qrisDetailModal').style.display = 'flex';
-    }
-
-    async function cancelQRISFromDetail() {
-        if (!currentQrisId || !confirm('Batalkan QRIS ini?')) return;
-        await fetch('/api/cancel-order/'+currentQrisId, { method:'POST' });
-        document.getElementById('qrisDetailModal').style.display = 'none';
-        loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan');
-    }
-
-    async function cancelQRIS(id) {
-        if (!confirm('Batalkan QRIS ini?')) return;
-        await fetch('/api/cancel-order/'+id, { method:'POST' });
-        loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan');
-    }
-
-    // ✅ ORDER FUNCTIONS (SAMA SEPERTI SEBELUMNYA)
     async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var nc = (data.orders||[]).filter(function(o){ return o.status==='paid'; }).length; if (lastOrderCount>0 && nc>lastOrderCount) { try{document.getElementById('chachingSound').play();}catch(e){} } lastOrderCount = nc; allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
     function renderOrders() { var toShow = allOrders.slice(0, orderDisplay); var c = document.getElementById('ordersList'); if (toShow.length) { c.innerHTML = toShow.map(function(o) { var st = o.status==='paid'?'<span style="color:#10b981;">Lunas</span>':o.status==='pending'?'<span style="color:#f59e0b;">Pending</span>':o.status==='expired'?'<span style="color:#ef4444;">Expired</span>':'<span style="color:#94a3b8;">Cancelled</span>'; return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | #'+o.id+'</div></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Belum ada order</div>'; } document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
     function openDetailModal(id) { var order = allOrders.find(function(o) { return o.id==id; }); if (!order) return; currentDetailId = id; var st = order.status==='paid'?'Lunas':order.status==='pending'?'Pending':order.status==='expired'?'Expired':'Cancelled'; document.getElementById('detailContent').innerHTML = '<div class="detail-row"><span class="dl">Produk</span><span class="dv">'+escapeHtml(order.productName)+'</span></div><div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div><div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Kode</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div><div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>'; document.getElementById('detailModal').style.display = 'flex'; }
     async function deleteOrderFromDetail() { if (!currentDetailId || !confirm('Hapus?')) return; await fetch('/api/admin/order/'+currentDetailId, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); document.getElementById('detailModal').style.display = 'none'; orderDisplay=10; loadOrders(); loadStats(); toast('🗑️ Dihapus'); }
 
-    // ✅ PRODUCT FUNCTIONS
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
     function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="event.stopPropagation();previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button class="btn-sm orange" onclick="event.stopPropagation();openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="event.stopPropagation();deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="color:var(--text2);text-align:center;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
-    // ✅ STATS
     async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Revenue</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div><div class="stat-card"><div class="stat-number">'+s.paidCount+'</div><div class="stat-label">Paid</div></div><div class="stat-card"><div class="stat-number">'+(s.expiredCount+s.cancelledCount)+'</div><div class="stat-label">Exp/Cancel</div></div>'; } } catch(e) {} }
 
-    // ✅ PING
     async function autoPingAll() { pingSilent('github'); pingSilent('qrispy'); pingSilent('web'); pingSilent('telegram'); }
     async function pingSilent(target) { var idMap = { github:'pingGithub', qrispy:'pingQrispy', telegram:'pingTelegram', web:'pingWeb' }; var el = document.getElementById(idMap[target]); if (!el) return; var start = performance.now(); if (target==='telegram') { try { var r = await fetch('/api/ping-telegram'); var d = await r.json(); el.innerHTML = d.status==='ok' ? '<span class="ok">'+d.latency_ms+'ms</span>' : '<span class="fail">GAGAL</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } return; } try { var url = target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'; await fetch(url); el.innerHTML = '<span class="ok">'+Math.round(performance.now()-start)+'ms</span>'; } catch(e) { el.innerHTML = '<span class="fail">GAGAL</span>'; } }
     async function pingTest(target) { var start = performance.now(); if (target==='telegram') { try { var r=await fetch('/api/ping-telegram'); var d=await r.json(); toast(d.status==='ok'?'✅ TELEGRAM: '+d.latency_ms+'ms':'❌ GAGAL', d.status!=='ok'); } catch(e) { toast('❌ GAGAL', true); } return; } try { await fetch(target==='github'?'https://api.github.com':target==='qrispy'?(QRISPY_API_URL+'/api/health'):'https://stockyanto.vercel.app/api/health'); toast('✅ '+target.toUpperCase()+': '+Math.round(performance.now()-start)+'ms'); } catch(e) { toast('❌ GAGAL', true); } }
 
-    // ✅ QRIS GENERATOR
     async function generateQRIS() { var amount = parseInt(document.getElementById('qrisAmount').value); if (!amount||amount<=0) { toast('Masukkan jumlah!', true); return; } var name = 'Cust ' + qrisCounter; qrisCounter++; try { var qrisRes = await fetch(QRISPY_API_URL+'/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) }); var qrisData = await qrisRes.json(); if (qrisData.status!=='success') { toast('Gagal generate', true); return; } var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) }); var saveData = await saveRes.json(); if (saveData.success) { var orderUrl = 'https://stockyanto.vercel.app/order/'+saveData.orderCode; document.getElementById('qrisResult').innerHTML = '<img src="'+qrisData.data.qris_image_url+'" class="qris-img"><p style="color:#10b981;margin:4px 0;">✅ Rp '+amount.toLocaleString()+' | '+name+'</p><div class="copy-link-wrap"><input type="text" value="'+orderUrl+'" readonly><button class="btn-sm blue" onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i></button></div><button class="btn-sm blue" onclick="window.open(\''+orderUrl+'\',\'_blank\')" style="width:100%;justify-content:center;margin-top:4px;"><i class="fas fa-external-link-alt"></i> Buka</button>'; loadQrisPending(); } else { toast('Gagal: '+(saveData.error||'Unknown'), true); } } catch(e) { toast('Error: '+e.message, true); } }
     function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal', true); }); }
 
-    // ✅ PREVIEW
     async function previewProduct(pid) { var p = allProducts.find(function(x){ return x.id==pid; }); if(!p) return; document.getElementById('previewName').textContent=p.name; var b=''; if(p.itemType==='html') b='<div class="preview-section"><div class="preview-label">HTML</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; else if(p.itemType==='link'||(p.itemContent||'').startsWith('http')) b='<div class="preview-section"><div class="preview-label">Link</div><div class="preview-text"><a href="'+escapeHtml(p.itemContent)+'" target="_blank" style="color:var(--accent2);">'+escapeHtml(p.itemContent)+'</a></div></div>'; else b='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(p.itemContent)+'</div></div>'; if(p.bonusContent) b+='<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(p.bonusContent)+'</div></div>'; b+='<div style="text-align:center;color:var(--text2);font-size:0.7rem;margin-top:8px;">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+'</div>'; document.getElementById('previewBody').innerHTML=b; document.getElementById('previewModal').style.display='flex'; }
     async function deleteProduct(id) { if(!confirm('Hapus?')) return; await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Terhapus'); }
     async function addProduct() { var it=document.getElementById('itemType').value; var ic=''; if(it==='text') ic=document.getElementById('itemText').value; else if(it==='link') ic=document.getElementById('itemLink').value; else if(it==='html') ic=document.getElementById('itemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('bonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('bonusText').value; else if(bt==='link') bc=document.getElementById('bonusLink').value; var res=await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ document.getElementById(id).value=''; }); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
@@ -433,7 +388,6 @@
     document.getElementById('editItemType').addEventListener('change', toggleEditFields);
     document.getElementById('editBonusType').addEventListener('change', toggleEditFields);
 
-    // ✅ MAINTENANCE
     async function resetOrders() { if(!confirm('Hapus Pending & Cancelled?')) return; var res=await fetch('/api/admin/reset-orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) { var d=await res.json(); toast('✅ '+d.deletedCount+' dihapus'); orderDisplay=10; loadOrders(); loadStats(); } }
     async function backupData() { var res=await fetch('/api/admin/backup', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); if(res.ok) toast('📦 Backup'); else toast('Gagal', true); }
     async function sendBroadcast() { var msg=document.getElementById('broadcastMessage').value.trim(); if(!msg) return; var res=await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, message:msg }) }); var d=await res.json(); if(d.success) { toast('📢 Terkirim ke '+d.sentCount); document.getElementById('broadcastMessage').value=''; } }
