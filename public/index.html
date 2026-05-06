@@ -4,274 +4,317 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Yanto Store | Beli Digital</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Yanto Store">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Shared Stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+    
     <style>
-        :root {
-            --bg: #06080d;
-            --surface: rgba(255,255,255,0.03);
-            --surface2: rgba(255,255,255,0.06);
-            --border: rgba(255,255,255,0.06);
-            --accent: #3b82f6;
-            --accent2: #60a5fa;
-            --text: #e8eaed;
-            --text2: #8b8fa3;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 20px;
-            --radius-sm: 12px;
-        }
-
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { 
-            background: var(--bg);
-            font-family: 'Inter', sans-serif; 
-            min-height: 100vh; 
-            padding: 20px 16px 40px; 
-            color: var(--text);
-            background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(96,165,250,0.05) 0%, transparent 50%);
-        }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
-        @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
-        .container { max-width:1100px; margin:0 auto; }
-
-        /* SPLASH */
-        #splashScreen {
-            position:fixed; top:0; left:0; width:100%; height:100%;
-            background: var(--bg); z-index:9999;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-            background-image: radial-gradient(ellipse at center, rgba(59,130,246,0.1) 0%, transparent 70%);
-        }
-        #splashScreen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-        .splash-icon { font-size:3.5rem; margin-bottom:20px; }
-        .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .splash-title { font-size:1.6rem; font-weight:800; letter-spacing:-0.5px; color:white; margin-bottom:4px; }
-        .splash-sub { font-size:0.8rem; color:var(--text2); letter-spacing:1px; margin-bottom:28px; }
-        .splash-loader { width:40px; height:40px; border:3px solid rgba(96,165,250,0.2); border-top-color:#60a5fa; border-radius:50%; animation:spin 0.8s linear infinite; }
-
+        /* ========== INDEX-SPECIFIC STYLES ========== */
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+        
         /* HEADER */
         .header { 
-            display:flex; justify-content:space-between; align-items:center; 
-            margin-bottom:28px; padding:14px 22px;
-            background:var(--surface2); backdrop-filter:blur(20px);
-            border-radius:60px; border:1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 28px; padding: 14px 22px;
+            background: var(--surface2); backdrop-filter: blur(20px);
+            border-radius: 60px; border: 1px solid var(--border);
+            position: sticky; top: 16px; z-index: 100;
+            transition: all var(--transition);
         }
-        .logo-wrap { display:flex; align-items:center; gap:12px; }
-        .logo-icon { width:38px; height:38px; border-radius:14px; background:linear-gradient(135deg, var(--accent), #6366f1); display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; }
-        .logo-text h1 { font-size:1.15rem; font-weight:700; color:white; letter-spacing:-0.3px; }
-        .logo-text span { font-size:0.65rem; color:var(--text2); letter-spacing:1px; }
-        .menu-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+        .header.scrolled {
+            box-shadow: var(--shadow-md);
+            background: rgba(10,12,18,0.95);
+        }
+        .logo-wrap { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { 
+            width: 38px; height: 38px; border-radius: 14px; 
+            background: var(--accent-gradient); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1rem; color: white;
+            animation: pulse 3s infinite;
+        }
+        .logo-text h1 { font-size: 1.15rem; font-weight: 700; color: white; letter-spacing: -0.3px; }
+        .logo-text span { font-size: 0.65rem; color: var(--text-secondary); letter-spacing: 1px; }
+        
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .theme-btn, .menu-btn { 
+            width: 40px; height: 40px; border-radius: 50%; 
+            border: 1px solid var(--border); background: var(--surface); 
+            color: var(--text-secondary); cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.1rem; transition: var(--transition);
+        }
+        .theme-btn:hover, .menu-btn:hover { color: var(--text); border-color: var(--accent); }
 
         /* SEARCH & FILTER */
-        .search-filter-wrap { margin-bottom:22px; display:none; }
-        .search-row { display:flex; gap:10px; margin-bottom:14px; }
+        .search-filter-wrap { margin-bottom: 22px; display: none; animation: slideDown 0.4s ease; }
+        .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
         .search-input { 
-            flex:1; padding:14px 20px; border-radius:var(--radius-sm); 
-            border:1px solid var(--border); background:var(--surface2); 
-            color:white; font-size:0.85rem; outline:none; transition:0.3s; 
+            flex: 1; padding: 14px 20px; border-radius: var(--radius-sm); 
+            border: 1px solid var(--border); background: var(--surface2); 
+            color: var(--text); font-size: 0.85rem; outline: none; transition: var(--transition);
         }
-        .search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
-        .search-input::placeholder { color:var(--text2); }
-        .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
-        .filter-scroll::-webkit-scrollbar { height:2px; }
-        .filter-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-        .filter-chip { 
-            padding:8px 16px; border-radius:24px; border:1px solid var(--border);
-            background:var(--surface); color:var(--text2); font-size:0.78rem;
-            cursor:pointer; white-space:nowrap; transition:0.25s; font-weight:500;
-        }
-        .filter-chip:hover { border-color:var(--accent2); color:white; }
-        .filter-chip.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
-        .results-info { font-size:0.7rem; color:var(--text2); margin-top:10px; }
-
-        /* SIDEBAR */
-        .sidebar { position:fixed; top:0; right:-310px; width:290px; height:100%; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); z-index:1000; transition:0.35s cubic-bezier(0.4,0,0.2,1); padding:70px 22px 22px; border-left:1px solid var(--border); overflow-y:auto; }
-        .sidebar.open { right:0; animation:slideRight 0.3s ease; }
-        .sidebar .close-btn { position:absolute; top:20px; right:18px; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; }
-        .sidebar-title { color:var(--text2); font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; margin:22px 0 10px; font-weight:700; }
-        .sidebar .menu-item { display:flex; align-items:center; gap:12px; padding:12px 0; color:var(--text2); text-decoration:none; font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s; cursor:pointer; background:none; width:100%; text-align:left; border-left:none; border-right:none; border-top:none; }
-        .sidebar .menu-item:hover { color:white; padding-left:6px; }
-        .sidebar .menu-item i { width:22px; text-align:center; }
-        .sidebar-stat { background:var(--surface); border-radius:var(--radius-sm); padding:16px; margin-bottom:8px; border:1px solid var(--border); }
-        .sidebar-stat .stat-num { font-size:1.3rem; font-weight:800; color:var(--accent2); }
-        .sidebar-stat .stat-label { font-size:0.68rem; color:var(--text2); }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        .search-input::placeholder { color: var(--text-muted); }
         
-        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; display:none; }
-        .overlay.show { display:block; }
+        .view-toggle { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius-full); padding: 4px; }
+        .view-btn { 
+            width: 36px; height: 36px; border-radius: 50%; border: none; 
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: var(--transition);
+        }
+        .view-btn.active { background: var(--accent); color: white; }
+        
+        .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        .filter-scroll::-webkit-scrollbar { height: 2px; }
+        .filter-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .filter-chip { 
+            padding: 8px 16px; border-radius: 24px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text-secondary); font-size: 0.78rem;
+            cursor: pointer; white-space: nowrap; transition: 0.25s; font-weight: 500;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .filter-chip .count { 
+            background: var(--surface3); padding: 2px 8px; border-radius: 12px; 
+            font-size: 0.65rem; font-weight: 700;
+        }
+        .filter-chip:hover { border-color: var(--accent2); color: white; }
+        .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+        .filter-chip.active .count { background: rgba(255,255,255,0.2); }
+        
+        .results-info { font-size: 0.7rem; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .sort-select { 
+            background: transparent; border: 1px solid var(--border); 
+            color: var(--text-secondary); padding: 6px 12px; border-radius: var(--radius-full);
+            font-size: 0.7rem; cursor: pointer; font-family: var(--font);
+        }
 
         /* PRODUCT GRID */
         .products-grid { 
-            display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); 
-            gap:18px; margin-bottom:24px; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 18px; margin-bottom: 24px; 
         }
+        .products-grid.list-view { grid-template-columns: 1fr; max-width: 600px; margin: 0 auto 24px; }
+        .products-grid.list-view .product-card { display: flex; gap: 16px; align-items: center; }
+        .products-grid.list-view .product-icon { font-size: 1.5rem; margin-bottom: 0; }
+        .products-grid.list-view .product-info { flex: 1; }
+        
         .product-card { 
-            background:var(--surface2); border:1px solid var(--border);
-            border-radius:var(--radius); padding:22px; 
-            transition:0.3s; cursor:pointer; position:relative;
-            animation:fadeScale 0.4s ease; animation-fill-mode:both;
-            backdrop-filter:blur(10px); overflow:hidden;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 22px; 
+            transition: 0.3s; cursor: pointer; position: relative;
+            animation: fadeScale 0.4s ease; animation-fill-mode: both;
+            backdrop-filter: blur(10px); overflow: hidden;
+            display: flex; flex-direction: column;
         }
         .product-card::before {
-            content:''; position:absolute; top:0; left:0; width:100%; height:3px;
-            background:linear-gradient(90deg, var(--accent), #6366f1);
-            opacity:0; transition:0.3s;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: var(--accent-gradient); opacity: 0; transition: 0.3s;
         }
-        .product-card:hover::before { opacity:1; }
-        .product-card:hover { transform:translateY(-4px); border-color:rgba(59,130,246,0.3); box-shadow:0 12px 30px rgba(0,0,0,0.3); }
-        .product-card:active { transform:scale(0.98); }
+        .product-card:hover::before { opacity: 1; }
+        .product-card:hover { transform: translateY(-4px); border-color: rgba(59,130,246,0.3); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+        .product-card:active { transform: scale(0.98); }
+        
         .product-badge { 
-            position:absolute; top:16px; right:16px;
-            padding:5px 10px; border-radius:20px; font-size:0.65rem; font-weight:600;
-            background:rgba(59,130,246,0.15); color:var(--accent2);
-            letter-spacing:0.3px;
+            position: absolute; top: 16px; right: 16px;
+            padding: 5px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600;
+            background: rgba(59,130,246,0.15); color: var(--accent2);
+            letter-spacing: 0.3px; z-index: 2;
         }
-        .product-badge.hot { background:rgba(239,68,68,0.15); color:#fca5a5; }
-        .product-badge.new { background:rgba(16,185,129,0.15); color:#6ee7b7; }
-        .product-icon { font-size:2rem; margin-bottom:14px; opacity:0.8; }
-        .product-name { font-size:1.1rem; font-weight:700; color:white; margin-bottom:6px; }
-        .product-desc { font-size:0.75rem; color:var(--text2); margin-bottom:14px; line-height:1.5; }
-        .product-price-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-        .product-price { font-size:1.5rem; font-weight:800; color:var(--accent2); }
-        .product-stock { font-size:0.68rem; color:var(--text2); display:flex; align-items:center; gap:4px; }
+        .product-badge.hot { background: rgba(239,68,68,0.15); color: #fca5a5; animation: pulse 2s infinite; }
+        .product-badge.new { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+        
+        .product-icon { font-size: 2rem; margin-bottom: 14px; opacity: 0.8; }
+        .product-name { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 6px; }
+        .product-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5; flex: 1; }
+        .product-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .product-price { font-size: 1.5rem; font-weight: 800; color: var(--accent2); }
+        .product-stock { font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+        .product-stock.low { color: var(--danger); }
+        
         .btn-buy { 
-            background:linear-gradient(135deg, var(--accent), #2563eb); 
-            border:none; width:100%; padding:13px; border-radius:14px; 
-            font-weight:600; color:white; cursor:pointer; 
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            transition:0.25s; font-size:0.85rem; letter-spacing:-0.2px;
+            background: var(--accent-gradient); 
+            border: none; width: 100%; padding: 13px; border-radius: 14px; 
+            font-weight: 600; color: white; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.25s; font-size: 0.85rem; letter-spacing: -0.2px;
+            font-family: var(--font);
         }
-        .btn-buy:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); transform:translateY(-1px); }
-        .btn-buy:active { transform:scale(0.97); }
-        .btn-buy:disabled { background:#334155; cursor:not-allowed; opacity:0.5; transform:none; box-shadow:none; }
+        .btn-buy:hover { box-shadow: 0 6px 20px rgba(37,99,235,0.35); transform: translateY(-1px); }
+        .btn-buy:active { transform: scale(0.97); }
+        .btn-buy:disabled { background: #334155; cursor: not-allowed; opacity: 0.5; transform: none; box-shadow: none; }
 
-        .load-more-wrap { text-align:center; margin-bottom:30px; display:none; }
+        /* LOAD MORE */
+        .load-more-wrap { text-align: center; margin-bottom: 30px; display: none; }
         .btn-load-more { 
-            background:var(--surface); border:1px solid var(--border);
-            padding:12px 32px; border-radius:30px; color:var(--text2);
-            cursor:pointer; font-size:0.8rem; transition:0.25s; font-weight:500;
+            background: var(--surface); border: 1px solid var(--border);
+            padding: 12px 32px; border-radius: 30px; color: var(--text-secondary);
+            cursor: pointer; font-size: 0.8rem; transition: 0.25s; font-weight: 500;
+            font-family: var(--font);
         }
-        .btn-load-more:hover { background:var(--surface2); border-color:var(--accent); color:white; }
+        .btn-load-more:hover { background: var(--surface2); border-color: var(--accent); color: white; }
 
-        .empty-state { text-align:center; padding:80px 20px; color:var(--text2); animation:fadeScale 0.5s ease; }
-        .empty-state i { font-size:4rem; margin-bottom:16px; opacity:0.3; }
-        .empty-state p { font-size:0.9rem; }
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); animation: fadeScale 0.5s ease; }
+        .empty-state i { font-size: 4rem; margin-bottom: 16px; opacity: 0.3; }
+        .empty-state p { font-size: 0.9rem; }
 
-        /* MODAL */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); justify-content:center; align-items:center; z-index:1100; }
-        .modal-content { 
-            background:linear-gradient(160deg, #111827, #0f172a); border-radius:28px; padding:32px; 
-            max-width:420px; width:90%; border:1px solid var(--border);
-            animation:fadeScale 0.3s ease;
+        /* RECENTLY VIEWED */
+        .recently-viewed { margin-top: 32px; }
+        .recently-viewed h2 { 
+            font-size: 1rem; color: var(--text-secondary); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .modal-content h3 { font-size:1.3rem; font-weight:700; color:white; margin-bottom:6px; }
-        .modal-desc { color:var(--text2); font-size:0.78rem; margin-bottom:16px; }
-        .modal-price { font-size:1.6rem; font-weight:800; color:var(--accent2); margin-bottom:16px; }
-        input { 
-            width:100%; padding:14px 18px; margin:8px 0; border-radius:14px;
-            border:1px solid var(--border); background:var(--surface); 
-            color:white; font-size:0.9rem; outline:none; transition:0.3s;
+        .recent-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .recent-item {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px; cursor: pointer;
+            min-width: 180px; transition: var(--transition); flex-shrink: 0;
         }
-        input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
-        .btn-primary { 
-            background:linear-gradient(135deg, var(--accent), #2563eb); 
-            width:100%; padding:15px; border:none; border-radius:14px;
-            font-weight:600; color:white; cursor:pointer; margin-top:14px;
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            transition:0.25s; font-size:0.9rem;
-        }
-        .btn-primary:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
-        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
-        .btn-secondary { 
-            background:var(--surface2); width:100%; padding:13px; border:none; border-radius:14px;
-            font-weight:500; color:var(--text2); cursor:pointer; margin-top:8px;
-            display:flex; align-items:center; justify-content:center; gap:8px; transition:0.2s;
-            border:1px solid var(--border);
-        }
-        .btn-secondary:hover { background:var(--border); color:white; }
-        .toast { 
-            position:fixed; bottom:30px; left:50%; transform:translateX(-50%); 
-            background:#1e293b; padding:12px 24px; border-radius:30px; font-size:0.8rem;
-            opacity:0; transition:0.3s; z-index:1200; color:white; 
-            display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
-        }
-        .loading-spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
-        .site-footer { text-align:center; padding:20px; color:var(--text2); font-size:0.65rem; border-top:1px solid var(--border); margin-top:20px; }
-        .site-footer a { color:var(--text2); text-decoration:none; margin:0 8px; transition:0.2s; }
-        .site-footer a:hover { color:var(--accent2); }
+        .recent-item:hover { border-color: var(--accent); background: var(--surface2); }
+        .recent-item .name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .recent-item .price { font-size: 0.7rem; color: var(--accent2); margin-top: 4px; }
 
-        @media (max-width:640px) { .products-grid { grid-template-columns:1fr; } .header { padding:12px 16px; } }
+        /* FOOTER */
+        .site-footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.65rem; border-top: 1px solid var(--border); margin-top: 20px; }
+        .site-footer a { color: var(--text-muted); text-decoration: none; margin: 0 8px; transition: 0.2s; }
+        .site-footer a:hover { color: var(--accent2); }
+
+        .skeleton-card {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 22px;
+        }
+
+        @media (max-width: 640px) { 
+            .products-grid { grid-template-columns: 1fr; } 
+            .header { padding: 12px 16px; }
+            .products-grid.list-view .product-card { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
+<!-- SKIP LINK -->
+<a href="#productsGrid" class="skip-link">Langsung ke produk</a>
+
 <!-- SPLASH -->
-<div id="splashScreen">
-    <div class="splash-icon"><i class="fas fa-store-alt"></i></div>
-    <div class="splash-title">Yanto Store</div>
-    <div class="splash-sub">AutoOrder Digital</div>
-    <div class="splash-loader"></div>
+<div id="splashScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease,visibility 0.4s ease;background-image:radial-gradient(ellipse at center,rgba(59,130,246,0.1) 0%,transparent 70%);">
+    <div style="font-size:3.5rem;margin-bottom:20px;"><i class="fas fa-store-alt" style="background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i></div>
+    <div style="font-size:1.6rem;font-weight:800;letter-spacing:-0.5px;color:white;margin-bottom:4px;">Yanto Store</div>
+    <div style="font-size:0.8rem;color:var(--text-muted);letter-spacing:1px;margin-bottom:28px;">AutoOrder Digital</div>
+    <div style="width:40px;height:40px;border:3px solid rgba(96,165,250,0.2);border-top-color:#60a5fa;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
 </div>
 
 <div class="container" id="mainContainer" style="display:none;">
-    <div class="header">
+    <!-- HEADER -->
+    <header class="header" id="mainHeader">
         <div class="logo-wrap">
             <div class="logo-icon"><i class="fas fa-bolt"></i></div>
             <div class="logo-text"><h1>Yanto Store</h1><span>AutoOrder Digital</span></div>
         </div>
-        <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-    </div>
+        <div class="header-actions">
+            <button class="theme-btn" onclick="Theme.toggle()" aria-label="Ganti tema" title="Ganti tema">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu" title="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
 
+    <!-- SEARCH & FILTER -->
     <div class="search-filter-wrap" id="searchFilterWrap">
-        <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="renderProducts()"></div>
+        <div class="search-row">
+            <input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="debouncedRender()">
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="setView('grid')" aria-label="Tampilan grid" title="Grid"><i class="fas fa-th"></i></button>
+                <button class="view-btn" onclick="setView('list')" aria-label="Tampilan list" title="List"><i class="fas fa-list"></i></button>
+            </div>
+        </div>
         <div class="filter-scroll" id="filterScroll"></div>
-        <div class="results-info" id="resultsInfo"></div>
+        <div class="results-info">
+            <span id="resultsText"></span>
+            <select class="sort-select" id="sortSelect" onchange="renderProducts()">
+                <option value="popular">Paling Laris</option>
+                <option value="newest">Terbaru</option>
+                <option value="cheapest">Termurah</option>
+                <option value="expensive">Termahal</option>
+            </select>
+        </div>
     </div>
 
-    <div class="products-grid" id="productsGrid"></div>
+    <!-- PRODUCTS -->
+    <div class="products-grid" id="productsGrid" role="list" aria-label="Daftar produk"></div>
     <div class="load-more-wrap" id="loadMoreWrap">
         <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
     </div>
 
+    <!-- RECENTLY VIEWED -->
+    <div class="recently-viewed hidden" id="recentlyViewed">
+        <h2><i class="fas fa-history"></i> Terakhir Dilihat</h2>
+        <div class="recent-scroll" id="recentScroll"></div>
+    </div>
+
+    <!-- FOOTER -->
     <div class="site-footer">
         <span>&copy; 2026 Yanto Store</span>
         <a href="/ketentuan">Ketentuan</a>
+        <a href="#" onclick="installPWA()" id="installLink" class="hidden"><i class="fas fa-download"></i> Install Aplikasi</a>
     </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-<div class="sidebar" id="sidebar">
-    <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-    <div class="sidebar-title">Status</div>
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="toggleMenu()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:999;"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" style="position:fixed;top:0;right:-310px;width:290px;height:100%;background:rgba(10,12,18,0.97);backdrop-filter:blur(24px);z-index:1000;transition:0.35s cubic-bezier(0.4,0,0.2,1);padding:70px 22px 22px;border-left:1px solid var(--border);overflow-y:auto;">
+    <button onclick="toggleMenu()" style="position:absolute;top:20px;right:18px;background:none;border:none;color:var(--text-secondary);font-size:1.4rem;cursor:pointer;"><i class="fas fa-times"></i></button>
+    <div style="color:var(--text-secondary);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;margin:22px 0 10px;font-weight:700;">Status</div>
     <div class="sidebar-stat"><div class="stat-num" id="menuProducts">-</div><div class="stat-label">Produk Tersedia</div></div>
     <div class="sidebar-stat"><div class="stat-num" id="menuTodayOrders">-</div><div class="stat-label">Order Hari Ini</div></div>
-    <div class="sidebar-title">Menu</div>
-    <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
-    <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
-    <a href="/ketentuan" class="menu-item"><i class="fas fa-file-contract"></i> Ketentuan</a>
-    <div class="sidebar-title">Bantuan</div>
-    <a href="https://t.me/Yantoidiotbruh" target="_blank" class="menu-item"><i class="fab fa-telegram-plane"></i> Telegram</a>
-    <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-</div>
+    <div style="color:var(--text-secondary);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;margin:22px 0 10px;font-weight:700;">Menu</div>
+    <button class="menu-item" onclick="lacakOrder()" style="display:flex;align-items:center;gap:12px;padding:12px 0;color:var(--text-secondary);background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.04);width:100%;text-align:left;cursor:pointer;font-size:0.9rem;font-family:var(--font);"><i class="fas fa-search" style="width:22px;text-align:center;"></i> Lacak Pesanan</button>
+    <a href="/" class="menu-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;color:var(--text-secondary);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.9rem;"><i class="fas fa-home" style="width:22px;text-align:center;"></i> Beranda</a>
+    <a href="/ketentuan" class="menu-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;color:var(--text-secondary);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.9rem;"><i class="fas fa-file-contract" style="width:22px;text-align:center;"></i> Ketentuan</a>
+    <div style="color:var(--text-secondary);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;margin:22px 0 10px;font-weight:700;">Bantuan</div>
+    <a href="https://t.me/Yantoidiotbruh" target="_blank" rel="noopener noreferrer" class="menu-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;color:var(--text-secondary);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.9rem;"><i class="fab fa-telegram-plane" style="width:22px;text-align:center;"></i> Telegram</a>
+    <a href="https://wa.me/6289676041776" target="_blank" rel="noopener noreferrer" class="menu-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;color:var(--text-secondary);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.9rem;"><i class="fab fa-whatsapp" style="width:22px;text-align:center;"></i> WhatsApp</a>
+</aside>
 
-<div id="modal" class="modal">
+<style>
+    .sidebar-stat { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 8px; border: 1px solid var(--border); }
+    .sidebar-stat .stat-num { font-size: 1.3rem; font-weight: 800; color: var(--accent2); }
+    .sidebar-stat .stat-label { font-size: 0.68rem; color: var(--text-secondary); }
+</style>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
     <div class="modal-content">
-        <h3 id="modalProductName"></h3>
-        <div class="modal-desc" id="modalProductDesc"></div>
-        <div class="modal-price" id="modalPrice"></div>
-        <input type="text" id="customerName" placeholder="Nama lengkap kamu..." required>
-        <button class="btn-primary" id="createOrderBtn"><i class="fas fa-qrcode"></i> Buat Pesanan QRIS</button>
-        <button class="btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Tutup</button>
-        <div id="loadingIndicator" style="display:none;text-align:center;margin-top:15px;color:var(--text2);"><span class="loading-spinner"></span> Membuat pesanan...</div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Tutup"><i class="fas fa-times"></i></button>
+        <h3 id="modalProductName" style="font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:6px;"></h3>
+        <div class="modal-desc" id="modalProductDesc" style="color:var(--text-secondary);font-size:0.78rem;margin-bottom:16px;"></div>
+        <div class="modal-price" id="modalPrice" style="font-size:1.6rem;font-weight:800;color:var(--accent2);margin-bottom:16px;"></div>
+        <input type="text" class="input" id="customerName" placeholder="Nama lengkap kamu..." required>
+        <button class="btn btn-primary w-full mt-md" id="createOrderBtn"><i class="fas fa-qrcode"></i> Buat Pesanan QRIS</button>
+        <button class="btn btn-secondary w-full mt-sm" onclick="closeModal()"><i class="fas fa-times"></i> Tutup</button>
+        <div id="loadingIndicator" style="display:none;text-align:center;margin-top:15px;color:var(--text-secondary);"><span class="loading-spinner"></span> Membuat pesanan...</div>
     </div>
 </div>
-<div id="toast" class="toast"></div>
+
+<!-- Shared Scripts -->
+<script src="/script.js"></script>
 
 <script>
     const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
@@ -282,44 +325,122 @@
     let currentFilter = 'all';
     let displayCount = 6;
     let categories = [];
+    let currentView = 'grid';
+    let deferredPrompt = null;
 
-    // ✅ SPLASH TETEP ADA, PRODUK LOAD DI BACKGROUND
+    // ========== INIT ==========
     window.addEventListener('load', function() {
-        loadProducts(); // Load di background pas splash muncul
+        loadProducts();
         setTimeout(function() {
-            // Splash ilang setelah 1.5 detik (atau setelah produk siap)
-            document.getElementById('splashScreen').classList.add('hidden');
+            document.getElementById('splashScreen').style.opacity = '0';
+            document.getElementById('splashScreen').style.visibility = 'hidden';
             document.getElementById('mainContainer').style.display = 'block';
+            loadRecentlyViewed();
+            updateThemeIcon();
         }, 1500);
+        
+        // Scroll event for sticky header
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 20) header.classList.add('scrolled');
+            else header.classList.remove('scrolled');
+        });
     });
 
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-    function toast(msg, isError) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
-    function lacakOrder() { var code = prompt('Masukkan kode order kamu:'); if (code && code.trim()) { window.location.href = '/order/' + code.trim(); } toggleMenu(); }
+    // ========== PWA INSTALL ==========
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installLink').classList.remove('hidden');
+    });
 
+    function installPWA() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(result => {
+                if (result.outcome === 'accepted') {
+                    document.getElementById('installLink').classList.add('hidden');
+                    Toast.success('Aplikasi terpasang!');
+                }
+                deferredPrompt = null;
+            });
+        }
+    }
+
+    window.addEventListener('appinstalled', () => {
+        document.getElementById('installLink').classList.add('hidden');
+        deferredPrompt = null;
+    });
+
+    // ========== THEME ==========
+    function updateThemeIcon() {
+        const icon = document.getElementById('themeIcon');
+        if (Theme.get() === 'dark') {
+            icon.className = 'fas fa-moon';
+        } else {
+            icon.className = 'fas fa-sun';
+        }
+    }
+    
+    // Watch theme changes
+    const themeObserver = new MutationObserver(updateThemeIcon);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // ========== MENU ==========
+    function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        if (sidebar.style.right === '0px') {
+            sidebar.style.right = '-310px';
+            overlay.style.display = 'none';
+        } else {
+            sidebar.style.right = '0px';
+            overlay.style.display = 'block';
+        }
+    }
+
+    function lacakOrder() {
+        const code = prompt('Masukkan kode order kamu:');
+        if (code && code.trim()) window.location.href = '/order/' + code.trim();
+        toggleMenu();
+    }
+
+    // ========== VIEW TOGGLE ==========
+    function setView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        event.target.closest('.view-btn').classList.add('active');
+        const grid = document.getElementById('productsGrid');
+        if (view === 'list') grid.classList.add('list-view');
+        else grid.classList.remove('list-view');
+    }
+
+    // ========== PRODUCTS ==========
     async function loadProducts() {
         try {
-            var res = await fetch('/api/products');
-            var data = await res.json();
+            const res = await fetchWithRetry('/api/products');
+            const data = await res.json();
             if (!data.products || data.products.length === 0) {
                 document.getElementById('productsGrid').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada produk nih</p></div>';
                 return;
             }
             allProducts = data.products;
 
+            // Load stats
             try {
-                var orderRes = await fetch('/api/public-stats');
-                var orderData = await orderRes.json();
+                const orderRes = await fetch('/api/public-stats');
+                const orderData = await orderRes.json();
                 if (orderData.success) {
                     document.getElementById('menuTodayOrders').innerText = orderData.todayOrders + ' order';
-                    if (orderData.soldMap) { soldMap = orderData.soldMap; }
+                    if (orderData.soldMap) soldMap = orderData.soldMap;
                 }
             } catch(e) {}
 
-            var catSet = new Set();
-            allProducts.forEach(function(p) {
-                var name = p.name.toLowerCase();
+            // Build categories
+            const catSet = new Set();
+            catSet.add('all');
+            allProducts.forEach(p => {
+                const name = p.name.toLowerCase();
                 if (name.includes('qris')) catSet.add('QRIS');
                 else if (name.includes('web') || name.includes('suntik')) catSet.add('Web Tools');
                 else if (name.includes('apk')) catSet.add('APK');
@@ -327,26 +448,55 @@
                 else if (name.includes('nokos')) catSet.add('Nokos');
                 else catSet.add('Lainnya');
             });
-            categories = ['all'].concat(Array.from(catSet));
-            document.getElementById('filterScroll').innerHTML = categories.map(function(cat) {
-                return '<span class="filter-chip' + (cat === 'all' ? ' active' : '') + '" onclick="setFilter(\'' + cat + '\')">' + (cat === 'all' ? 'Semua' : cat) + '</span>';
+            categories = Array.from(catSet);
+
+            // Render filter chips
+            document.getElementById('filterScroll').innerHTML = categories.map(cat => {
+                const count = cat === 'all' ? allProducts.filter(p => p.stock > 0).length : getFilteredProductsForCount(cat);
+                return `<span class="filter-chip ${cat === 'all' ? 'active' : ''}" onclick="setFilter('${cat}')" role="button" tabindex="0">
+                    ${cat === 'all' ? 'Semua' : cat} <span class="count">${count}</span>
+                </span>`;
             }).join('');
 
-            document.getElementById('menuProducts').innerText = allProducts.filter(function(p) { return p.stock > 0; }).length;
+            document.getElementById('menuProducts').innerText = allProducts.filter(p => p.stock > 0).length;
             document.getElementById('searchFilterWrap').style.display = 'block';
             displayCount = 6;
             renderProducts();
-        } catch(e) { toast('Gagal load produk', true); }
+        } catch(e) {
+            document.getElementById('productsGrid').innerHTML = '<div class="empty-state"><i class="fas fa-wifi-slash"></i><p>Gagal memuat produk. Periksa koneksi kamu.</p></div>';
+            Toast.error('Gagal load produk');
+        }
     }
 
-    function setFilter(cat) { currentFilter = cat; displayCount = 6; document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); }); event.target.classList.add('active'); renderProducts(); }
+    function getFilteredProductsForCount(cat) {
+        return allProducts.filter(p => {
+            const name = p.name.toLowerCase();
+            if (cat === 'QRIS') return name.includes('qris');
+            if (cat === 'Web Tools') return name.includes('web') || name.includes('suntik');
+            if (cat === 'APK') return name.includes('apk');
+            if (cat === 'Script') return name.includes('script') || name.includes('jpm');
+            if (cat === 'Nokos') return name.includes('nokos');
+            if (cat === 'Lainnya') return !name.includes('qris') && !name.includes('web') && !name.includes('suntik') && !name.includes('apk') && !name.includes('script') && !name.includes('jpm') && !name.includes('nokos');
+            return true;
+        }).length;
+    }
+
+    function setFilter(cat) {
+        currentFilter = cat;
+        displayCount = 6;
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        event.target.closest('.filter-chip').classList.add('active');
+        renderProducts();
+    }
 
     function getFilteredProducts() {
-        var query = (document.getElementById('searchInput').value || '').toLowerCase();
-        var filtered = allProducts.filter(function(p) {
-            var matchSearch = !query || p.name.toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query);
-            var matchFilter = currentFilter === 'all' || (function() {
-                var name = p.name.toLowerCase();
+        const query = (document.getElementById('searchInput').value || '').toLowerCase();
+        const sort = document.getElementById('sortSelect').value;
+        
+        let filtered = allProducts.filter(p => {
+            const matchSearch = !query || p.name.toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query);
+            const matchFilter = currentFilter === 'all' || (() => {
+                const name = p.name.toLowerCase();
                 if (currentFilter === 'QRIS') return name.includes('qris');
                 if (currentFilter === 'Web Tools') return name.includes('web') || name.includes('suntik');
                 if (currentFilter === 'APK') return name.includes('apk');
@@ -357,86 +507,172 @@
             })();
             return matchSearch && matchFilter;
         });
-        filtered.sort(function(a, b) { return (soldMap[b.id] || 0) - (soldMap[a.id] || 0); });
+
+        // Sort
+        if (sort === 'popular') filtered.sort((a, b) => (soldMap[b.id] || 0) - (soldMap[a.id] || 0));
+        else if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        else if (sort === 'cheapest') filtered.sort((a, b) => a.price - b.price);
+        else if (sort === 'expensive') filtered.sort((a, b) => b.price - a.price);
+
         return filtered;
     }
 
     function renderProducts() {
-        var filtered = getFilteredProducts();
-        var toShow = filtered.slice(0, displayCount);
-        var grid = document.getElementById('productsGrid');
+        const filtered = getFilteredProducts();
+        const toShow = filtered.slice(0, displayCount);
+        const grid = document.getElementById('productsGrid');
+        
         if (toShow.length === 0) {
             grid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>Produk tidak ditemukan</p></div>';
         } else {
-            grid.innerHTML = toShow.map(function(p, i) {
-                var sold = soldMap[p.id] || 0;
-                var badgeHtml = '';
+            grid.innerHTML = toShow.map((p, i) => {
+                const sold = soldMap[p.id] || 0;
+                let badgeHtml = '';
                 if (sold >= 20) badgeHtml = '<span class="product-badge hot"><i class="fas fa-fire"></i> Best Seller</span>';
                 else if (sold >= 10) badgeHtml = '<span class="product-badge hot">Laris (' + sold + 'x)</span>';
                 else if (sold >= 3) badgeHtml = '<span class="product-badge">Terjual ' + sold + 'x</span>';
                 else if (Date.now() - new Date(p.createdAt).getTime() < 7*24*3600*1000) badgeHtml = '<span class="product-badge new">Baru</span>';
-                var desc = p.description || '';
+                
+                let desc = p.description || '';
                 if (desc.length > 60) desc = desc.substring(0, 60) + '...';
-                return '<div class="product-card" style="animation-delay:' + (i * 0.04) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' +
-                    badgeHtml +
-                    '<div class="product-icon"><i class="fas ' + (p.itemType==='link'?'fa-link':p.itemType==='html'?'fa-code':'fa-file-alt') + '"></i></div>' +
-                    '<div class="product-name">' + escapeHtml(p.name) + '</div>' +
-                    '<div class="product-desc">' + escapeHtml(desc) + '</div>' +
-                    '<div class="product-price-row"><span class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</span><span class="product-stock"><i class="fas fa-database"></i> ' + p.stock + '</span></div>' +
-                    '<div class="btn-buy">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis') + '</div>' +
-                '</div>';
+                
+                const stockClass = p.stock <= 5 ? ' low' : '';
+                const stockText = p.stock <= 5 ? `<i class="fas fa-exclamation-circle"></i> Sisa ${p.stock}` : `<i class="fas fa-database"></i> ${p.stock}`;
+                
+                const escapedProduct = escapeHtml(JSON.stringify(p));
+                
+                return `<div class="product-card" style="animation-delay:${i * 0.04}s" onclick='openModal(${escapedProduct})' role="button" tabindex="0">
+                    ${badgeHtml}
+                    <div class="product-icon"><i class="fas ${p.itemType==='link'?'fa-link':p.itemType==='html'?'fa-code':'fa-file-alt'}"></i></div>
+                    <div class="product-name">${escapeHtml(p.name)}</div>
+                    <div class="product-desc">${escapeHtml(desc)}</div>
+                    <div class="product-price-row">
+                        <span class="product-price">${formatCurrency(p.price)}</span>
+                        <span class="product-stock${stockClass}">${stockText}</span>
+                    </div>
+                    <button class="btn-buy" ${p.stock <= 0 ? 'disabled' : ''}>
+                        ${p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis'}
+                    </button>
+                </div>`;
             }).join('');
         }
-        document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk';
-        if (displayCount < filtered.length) {
-            document.getElementById('loadMoreWrap').style.display = 'block';
-        } else {
-            document.getElementById('loadMoreWrap').style.display = 'none';
-        }
+        
+        document.getElementById('resultsText').textContent = `Menampilkan ${toShow.length} dari ${filtered.length} produk`;
+        document.getElementById('loadMoreWrap').style.display = displayCount < filtered.length ? 'block' : 'none';
     }
 
-    function loadMore() { displayCount += 6; renderProducts(); }
+    const debouncedRender = debounce(renderProducts, 300);
 
-    function openModal(product) { if (product.stock <= 0) { toast('Stok habis!', true); return; } currentProduct = product; document.getElementById('modalProductName').innerText = product.name; document.getElementById('modalProductDesc').innerText = product.description || ''; document.getElementById('modalPrice').innerHTML = 'Rp ' + product.price.toLocaleString(); document.getElementById('customerName').value = ''; document.getElementById('modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; currentProduct = null; }
+    function loadMore() {
+        displayCount += 6;
+        renderProducts();
+    }
 
+    // ========== RECENTLY VIEWED ==========
+    function loadRecentlyViewed() {
+        const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        if (recent.length === 0) return;
+        
+        document.getElementById('recentlyViewed').classList.remove('hidden');
+        document.getElementById('recentScroll').innerHTML = recent.map(p => 
+            `<div class="recent-item" onclick='openModal(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
+                <div class="name">${escapeHtml(p.name)}</div>
+                <div class="price">${formatCurrency(p.price)}</div>
+            </div>`
+        ).join('');
+    }
+
+    function addToRecentlyViewed(product) {
+        let recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        recent = recent.filter(p => p.id !== product.id);
+        recent.unshift({ id: product.id, name: product.name, price: product.price });
+        if (recent.length > 8) recent.pop();
+        localStorage.setItem('recentlyViewed', JSON.stringify(recent));
+        loadRecentlyViewed();
+    }
+
+    // ========== MODAL ==========
+    function openModal(product) {
+        if (product.stock <= 0) {
+            Toast.error('Stok habis!');
+            return;
+        }
+        currentProduct = product;
+        addToRecentlyViewed(product);
+        document.getElementById('modalProductName').innerText = product.name;
+        document.getElementById('modalProductDesc').innerText = product.description || '';
+        document.getElementById('modalPrice').innerHTML = formatCurrency(product.price);
+        document.getElementById('customerName').value = '';
+        document.getElementById('modal').classList.add('active');
+        document.getElementById('customerName').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+        currentProduct = null;
+    }
+
+    // ========== ORDER ==========
     async function generateQRIS(amount) {
-        var response = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
+        const response = await fetchWithRetry(QRISPY_API_URL + '/api/payment/qris/generate', {
             method: 'POST',
             headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: amount })
+            body: JSON.stringify({ amount })
         });
-        var data = await response.json();
+        const data = await response.json();
         if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS');
         return data.data;
     }
 
     document.getElementById('createOrderBtn').onclick = async function() {
-        var name = document.getElementById('customerName').value.trim();
-        if (!name) { toast('Nama wajib diisi', true); return; }
-        var btn = document.getElementById('createOrderBtn');
-        var loading = document.getElementById('loadingIndicator');
+        const name = document.getElementById('customerName').value.trim();
+        if (!name) {
+            Toast.warning('Nama wajib diisi');
+            return;
+        }
+        
+        const btn = document.getElementById('createOrderBtn');
+        const loading = document.getElementById('loadingIndicator');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spinner"></span> Memproses...';
         loading.style.display = 'block';
+        
         try {
-            var totalAmount = currentProduct.price;
-            var qrisData = await generateQRIS(totalAmount);
-            var orderRes = await fetch('/api/create-order', {
+            LoadingBar.show();
+            const totalAmount = currentProduct.price;
+            const qrisData = await generateQRIS(totalAmount);
+            
+            const orderRes = await fetchWithRetry('/api/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: currentProduct.id, customerName: name, customerEmail: '-', qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at })
+                body: JSON.stringify({
+                    productId: currentProduct.id,
+                    customerName: name,
+                    customerEmail: '-',
+                    qrisId: qrisData.qris_id,
+                    qrisImage: qrisData.qris_image_url,
+                    totalAmount: totalAmount,
+                    expiredAt: qrisData.expired_at
+                })
             });
-            var orderData = await orderRes.json();
+            
+            const orderData = await orderRes.json();
             if (!orderData.success) throw new Error(orderData.error);
+            
+            LoadingBar.hide();
             window.location.href = '/order/' + orderData.orderCode;
         } catch (err) {
-            toast(err.message, true);
+            LoadingBar.hide();
+            Toast.error(err.message);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-qrcode"></i> Buat Pesanan QRIS';
             loading.style.display = 'none';
         }
     };
+
+    // ========== SHORTCUTS ==========
+    Shortcuts.register('ctrl+k', () => document.getElementById('searchInput').focus(), 'Cari produk');
 </script>
+
 </body>
 </html>
