@@ -16,9 +16,8 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
-const ENCRYPT_KEY = process.env.ENCRYPT_KEY; // ✅ WAJIB dari env, gak ada fallback
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
 
-// ✅ ENKRIPSI DATABASE
 function encrypt(text) {
     if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
     const iv = crypto.randomBytes(16);
@@ -65,27 +64,20 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false, encrypted: false };
+        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         let parsed;
-        // ✅ Auto-detect: kalau encrypted, decrypt dulu
-        if (content.includes('{"products":') || content.includes('{"products": [')) {
+        try {
             parsed = JSON.parse(content);
-        } else {
-            try {
-                const decrypted = decrypt(content);
-                parsed = JSON.parse(decrypted);
-                parsed.encrypted = true;
-            } catch(e) {
-                // Kalau decrypt gagal, mungkin masih plain text lama
-                parsed = JSON.parse(content);
-            }
+        } catch(e) {
+            const decrypted = decrypt(content);
+            parsed = JSON.parse(decrypted);
         }
         dbCache = { ...parsed, sha: data.sha };
         dbCacheTime = now;
         return { ...dbCache, sha: data.sha };
-    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false, encrypted: false }; }
+    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
 }
 
 async function setDB(products, orders, oldSha, retryCount) {
@@ -101,9 +93,7 @@ async function setDB(products, orders, oldSha, retryCount) {
         encrypted: true,
         updatedAt: new Date().toISOString()
     };
-    // ✅ Enkripsi sebelum simpan
-    const jsonString = JSON.stringify(content);
-    const encryptedContent = encrypt(jsonString);
+    const encryptedContent = encrypt(JSON.stringify(content));
     const updatedContent = Buffer.from(encryptedContent).toString('base64');
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT',
@@ -213,7 +203,57 @@ app.delete('/api/admin/order/:id', async (req, res) => { if (!isAdmin(req, req.b
 // ========== ORDER & PRODUCT ==========
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id }); });
-app.get('/api/check-payment/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ status: 'not_found' }); if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode }); if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(db.products, db.orders, db.sha); return res.json({ status: 'expired' }); } if (!QRISPY_TOKEN) return res.json({ status: 'pending' }); try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } }); const d = await r.json(); if (d.status === 'success' && d.data.status === 'paid') { const product = (db.products || []).find(p => p.id == order.productId); if (product && product.stock > 0) product.stock -= 1; order.status = 'paid'; order.paidAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : ''; await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + order.productName + '\nPembeli: ' + order.customerName + '\nTotal: Rp ' + (order.totalAmount || order.price).toLocaleString() + '\nOrder: ' + order.orderCode + '\n\nKode:\n' + (order.productCode || '') + bt); return res.json({ status: 'paid', productCode: order.productCode }); } res.json({ status: 'pending' }); } catch (e) { res.json({ status: 'pending' }); } });
+
+// ✅ CHECK PAYMENT - FRESH DB CHECK + RETRY
+app.get('/api/check-payment/:orderCode', async (req, res) => {
+    const db = await getDB();
+    const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
+    if (!order) return res.json({ status: 'not_found' });
+    if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode });
+    if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(db.products, db.orders, db.sha); return res.json({ status: 'expired' }); }
+    if (!QRISPY_TOKEN) return res.json({ status: 'pending' });
+    try {
+        const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } });
+        const d = await r.json();
+        if (d.status === 'success' && d.data.status === 'paid') {
+            // ✅ BACA DB FRESH (BYPASS CACHE)
+            dbCacheTime = 0;
+            const freshDB = await getDB();
+            const freshOrder = (freshDB.orders || []).find(o => o.orderCode === req.params.orderCode);
+            if (freshOrder && freshOrder.status === 'paid') {
+                return res.json({ status: 'paid', productCode: freshOrder.productCode });
+            }
+
+            const product = (freshDB.products || []).find(p => p.id == order.productId);
+            if (product && product.stock > 0) product.stock -= 1;
+            freshOrder.status = 'paid';
+            freshOrder.paidAt = new Date().toISOString();
+
+            let saved = false;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    await setDB(freshDB.products, freshDB.orders, freshDB.sha);
+                    saved = true;
+                    break;
+                } catch(e) {
+                    console.error('Check-payment save failed attempt ' + attempt, e.message);
+                    if (attempt < 3) {
+                        await new Promise(r => setTimeout(r, 800));
+                        const retryDB = await getDB();
+                        freshDB.sha = retryDB.sha;
+                    }
+                }
+            }
+            if (!saved) console.error('GAGAL SIMPAN ORDER PAID: ' + req.params.orderCode);
+
+            const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : '';
+            await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + freshOrder.productName + '\nPembeli: ' + freshOrder.customerName + '\nTotal: Rp ' + (freshOrder.totalAmount || freshOrder.price).toLocaleString() + '\nOrder: ' + freshOrder.orderCode + '\n\nKode:\n' + (freshOrder.productCode || '') + bt);
+            return res.json({ status: 'paid', productCode: freshOrder.productCode });
+        }
+        res.json({ status: 'pending' });
+    } catch (e) { res.json({ status: 'pending' }); }
+});
+
 app.get('/api/products', async (req, res) => { const db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 app.post('/api/create-order', async (req, res) => { const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body; if (!productId || !customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); const db = await getDB(); const product = (db.products || []).find(p => p.id == productId); if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); db.orders.unshift({ id: Date.now(), orderCode: crypto.randomBytes(16).toString('hex'), qrisId, productId: product.id, productName: product.name, productCode: product.itemContent, price: product.price, totalAmount: totalAmount || product.price, customerName: sanitize(customerName), customerEmail: sanitize(customerEmail || '-'), status: 'pending', qrisImage, expiredAt, createdAt: new Date().toISOString() }); await setDB(db.products, db.orders, db.sha); res.json({ success: true, orderCode: db.orders[0].orderCode }); });
 
