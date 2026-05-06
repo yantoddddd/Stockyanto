@@ -27,26 +27,28 @@ function decrypt(encryptedText) {
     return decrypted;
 }
 
+function parseCookies(cookieHeader) {
+    const cookies = {};
+    if (!cookieHeader) return cookies;
+    cookieHeader.split(';').forEach(cookie => {
+        const [name, ...rest] = cookie.trim().split('=');
+        cookies[name] = rest.join('=');
+    });
+    return cookies;
+}
+
 async function getDB() {
     try {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null };
+        if (!res.ok) return { products: [], orders: [], users: [], withdrawals: [], sha: null };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         let parsed;
-        try {
-            parsed = JSON.parse(content);
-        } catch(e) {
-            const decrypted = decrypt(content);
-            parsed = JSON.parse(decrypted);
-        }
+        try { parsed = JSON.parse(content); } catch(e) { const decrypted = decrypt(content); parsed = JSON.parse(decrypted); }
         return { ...parsed, sha: data.sha };
-    } catch (err) {
-        console.error('GetDB error:', err);
-        return { products: [], orders: [], sha: null };
-    }
+    } catch (err) { console.error('GetDB error:', err); return { products: [], orders: [], users: [], withdrawals: [], sha: null }; }
 }
 
 async function setDB(products, orders, oldSha, retryCount) {
@@ -56,6 +58,8 @@ async function setDB(products, orders, oldSha, retryCount) {
     const content = {
         products: products || db.products || [],
         orders: orders || db.orders || [],
+        users: db.users || [],
+        withdrawals: db.withdrawals || [],
         adminIP: db.adminIP || null,
         adminIPs: db.adminIPs || [],
         maintenance: db.maintenance || false,
@@ -71,36 +75,37 @@ async function setDB(products, orders, oldSha, retryCount) {
     });
     if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        if (e.message?.includes('SHA')) {
-            await new Promise(r => setTimeout(r, 800));
-            const f = await getDB();
-            return setDB(products, orders, f.sha, retryCount + 1);
-        }
+        if (e.message?.includes('SHA')) { await new Promise(r => setTimeout(r, 800)); const f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); }
         throw new Error('Save failed: ' + (e.message || res.status));
     }
     const d = await res.json();
     return d.content.sha;
 }
 
+async function processReferralReward(db, cookieHeader) {
+    const refCode = parseCookies(cookieHeader)['yanto_ref'];
+    if (!refCode) return;
+    const referrer = (db.users || []).find(u => u.referralCode === refCode);
+    if (referrer) {
+        referrer.referralCount = (referrer.referralCount || 0) + 1;
+        referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+    }
+}
+
 async function sendTelegramNotification(order, bonusContent) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     try {
         let bonusText = '';
-        if (bonusContent && bonusContent !== '') {
-            bonusText = `\n\n🎁 BONUS:\n${bonusContent}`;
-        }
+        if (bonusContent && bonusContent !== '') { bonusText = `\n\n🎁 BONUS:\n${bonusContent}`; }
         const message = `✅ PEMBAYARAN BERHASIL! (via Webhook)\n\n📦 Produk: ${order.productName}\n👤 Pembeli: ${order.customerName}\n💰 Total: Rp ${(order.totalAmount || order.price || 0).toLocaleString()}\n🆔 Order: ${order.orderCode}\n📅 Waktu: ${new Date().toLocaleString('id-ID')}\n\n🔑 Kode Item:\n${order.productCode || 'Tidak ada kode'}${bonusText}`;
         const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML' })
         });
         const result = await response.json();
         if (result.ok) console.log('✅ Telegram notifikasi terkirim');
         else console.error('❌ Telegram error:', result);
-    } catch (err) {
-        console.error('❌ Telegram exception:', err);
-    }
+    } catch (err) { console.error('❌ Telegram exception:', err); }
 }
 
 module.exports = async (req, res) => {
@@ -108,19 +113,13 @@ module.exports = async (req, res) => {
     console.log('📨 Webhook received at:', new Date().toISOString());
     console.log('📦 Body:', JSON.stringify(req.body, null, 2));
 
-    if (!WEBHOOK_SECRET) {
-        console.log('⚠️ WEBHOOK_SECRET belum diset');
-        return res.status(500).json({ error: 'Webhook secret not configured' });
-    }
+    if (!WEBHOOK_SECRET) { console.log('⚠️ WEBHOOK_SECRET belum diset'); return res.status(500).json({ error: 'Webhook secret not configured' }); }
 
     const signature = req.headers['x-qrispy-signature'];
     const payload = JSON.stringify(req.body);
     const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
     
-    if (signature !== expected) {
-        console.log('⚠️ Invalid signature!');
-        return res.status(401).json({ error: 'Invalid signature' });
-    }
+    if (signature !== expected) { console.log('⚠️ Invalid signature!'); return res.status(401).json({ error: 'Invalid signature' }); }
     console.log('✅ Signature valid');
 
     try {
@@ -130,36 +129,35 @@ module.exports = async (req, res) => {
             console.log(`💰 Payment received for qrisId: ${qrisId}`);
             const db = await getDB();
             const order = (db.orders || []).find(o => o.qrisId === qrisId);
-            if (!order) {
-                console.log('❌ Order tidak ditemukan');
-                return res.status(200).end();
-            }
-            if (order.status === 'paid') {
-                console.log('✅ Order sudah paid');
-                return res.status(200).end();
-            }
+            if (!order) { console.log('❌ Order tidak ditemukan'); return res.status(200).end(); }
+            if (order.status === 'paid') { console.log('✅ Order sudah paid'); return res.status(200).end(); }
             console.log('✅ Order ditemukan:', order.orderCode);
-            const product = (db.products || []).find(p => p.id == order.productId);
-            if (product && product.stock > 0) {
-                product.stock -= 1;
-                console.log(`📦 Stok ${product.name} berkurang jadi ${product.stock}`);
+
+            if (order.items && order.items.length > 0) {
+                for (const item of order.items) {
+                    const product = (db.products || []).find(p => p.id == item.productId);
+                    if (product && product.stock > 0) product.stock -= (item.quantity || 1);
+                }
+            } else {
+                const product = (db.products || []).find(p => p.id == order.productId);
+                if (product && product.stock > 0) { product.stock -= 1; console.log(`📦 Stok ${product.name} berkurang jadi ${product.stock}`); }
             }
+
             order.status = 'paid';
             order.paidAt = data.paid_at || new Date().toISOString();
+
+            // ✅ KOMISI REFERRAL DI WEBHOOK
+            await processReferralReward(db, req.headers.cookie);
+
             let bonusContent = '';
-            if (product && product.bonusContent && product.bonusContent !== '') {
-                bonusContent = product.bonusContent;
-            }
+            const product = (db.products || []).find(p => p.id == order.productId);
+            if (product && product.bonusContent && product.bonusContent !== '') { bonusContent = product.bonusContent; }
+
             await setDB(db.products, db.orders, db.sha);
             console.log('💾 Database updated');
             await sendTelegramNotification(order, bonusContent);
             console.log(`🎉 Order ${order.orderCode} completed!`);
-        } else {
-            console.log('📌 Unhandled event type:', event);
-        }
+        } else { console.log('📌 Unhandled event type:', event); }
         res.status(200).end();
-    } catch (err) {
-        console.error('❌ Webhook error:', err);
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { console.error('❌ Webhook error:', err); res.status(500).json({ error: err.message }); }
 };
