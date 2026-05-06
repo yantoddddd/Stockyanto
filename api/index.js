@@ -168,6 +168,20 @@ function calculateCartDiscount(itemCount) {
     return Math.max(0, (itemCount - 1) * 500);
 }
 
+function getRefFromCookie(cookieHeader) {
+    const cookies = parseCookies(cookieHeader);
+    return cookies['yanto_ref'] || null;
+}
+
+async function processReferralReward(db, refCode) {
+    if (!refCode) return;
+    const referrer = (db.users || []).find(u => u.referralCode === refCode);
+    if (referrer) {
+        referrer.referralCount = (referrer.referralCount || 0) + 1;
+        referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+    }
+}
+
 // Auto tasks
 setInterval(async () => { try { await fetch('https://stockyanto.vercel.app/api/health'); } catch (e) {} }, 20000);
 setInterval(async () => { try { const db = await getDB(); const n = new Date(); let c = 0; for (const o of db.orders) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; c++; } } if (c > 0) await setDB(db.products, db.orders, db.sha); } catch (e) {} }, 30000);
@@ -209,7 +223,7 @@ app.get('/api/public-stats', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// ========== REFERRAL APPLY ==========
+// ========== REFERRAL APPLY (hanya simpan cookie, tanpa komisi) ==========
 app.get('/api/referral/apply', async (req, res) => {
     const { ref } = req.query;
     if (!ref) return res.json({ success: false });
@@ -382,6 +396,7 @@ app.put('/api/admin/withdrawal/:id', async (req, res) => { if (!isAdmin(req, req
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '', discountAmount: order.discountAmount || 0, originalAmount: order.originalAmount || 0 }); });
 
+// CHECK PAYMENT — KOMISI REFERRAL DI SINI
 app.get('/api/check-payment/:orderCode', async (req, res) => {
     const db = await getDB();
     const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
@@ -411,12 +426,17 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
             freshOrder.status = 'paid';
             freshOrder.paidAt = new Date().toISOString();
 
+            // ✅ KOMISI REFERRAL HANYA PAS PAID
+            const refCode = getRefFromCookie(req.headers.cookie);
+            await processReferralReward(freshDB, refCode);
+
             let saved = false;
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try { await setDB(freshDB.products, freshDB.orders, freshDB.sha); saved = true; break; } catch(e) { console.error('Check-payment save failed attempt ' + attempt, e.message); if (attempt < 3) { await new Promise(r => setTimeout(r, 800)); const retryDB = await getDB(); freshDB.sha = retryDB.sha; } }
             }
             if (!saved) console.error('GAGAL SIMPAN ORDER PAID: ' + req.params.orderCode);
 
+            const product = (freshDB.products || []).find(p => p.id == order.productId);
             const bt = product?.bonusContent ? '\n\nBonus:\n' + product.bonusContent : '';
             await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\nProduk: ' + freshOrder.productName + '\nPembeli: ' + freshOrder.customerName + '\nTotal: Rp ' + (freshOrder.totalAmount || freshOrder.price).toLocaleString() + '\nOrder: ' + freshOrder.orderCode + '\n\nKode:\n' + (freshOrder.productCode || '') + bt);
             return res.json({ status: 'paid', productCode: freshOrder.productCode });
@@ -427,11 +447,6 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
 
 app.get('/api/products', async (req, res) => { const db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 
-function getRefFromCookie(cookieHeader) {
-    const cookies = parseCookies(cookieHeader);
-    return cookies['yanto_ref'] || null;
-}
-
 app.post('/api/create-order', async (req, res) => {
     const { productId, customerName, qrisId, qrisImage, totalAmount, expiredAt } = req.body;
     if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
@@ -441,16 +456,8 @@ app.post('/api/create-order', async (req, res) => {
     if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
 
     const finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
-    const refCode = getRefFromCookie(req.headers.cookie);
 
-    if (refCode) {
-        const referrer = (db.users || []).find(u => u.referralCode === refCode);
-        if (referrer) {
-            referrer.referralCount = (referrer.referralCount || 0) + 1;
-            referrer.discountBalance = (referrer.discountBalance || 0) + 500;
-        }
-    }
-
+    // JANGAN kasih komisi di sini — simpan cookie aja buat nanti pas PAID
     db.orders.unshift({
         id: Date.now(), orderCode: crypto.randomBytes(16).toString('hex'),
         qrisId, productId: product.id, productName: product.name,
@@ -484,17 +491,7 @@ app.post('/api/create-cart-order', async (req, res) => {
 
             const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
             let discountAmount = calculateCartDiscount(totalItems);
-            const refCode = getRefFromCookie(req.headers.cookie);
-            let finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
-
-            if (refCode) {
-                const referrer = (db.users || []).find(u => u.referralCode === refCode);
-                if (referrer) {
-                    referrer.referralCount = (referrer.referralCount || 0) + 1;
-                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
-                }
-            }
-
+            const finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
             const finalAmount = Math.max(0, cartTotal - discountAmount);
 
             for (const item of orderItems) {
@@ -503,6 +500,7 @@ app.post('/api/create-cart-order', async (req, res) => {
             }
 
             const orderCode = crypto.randomBytes(16).toString('hex');
+            // JANGAN kasih komisi di sini — simpan cookie aja buat nanti pas PAID
             db.orders.unshift({
                 id: Date.now(), orderCode, qrisId,
                 items: orderItems,
@@ -542,28 +540,18 @@ app.post('/api/gacha', async (req, res) => {
             const availableProducts = (db.products || []).filter(p => p.stock > 0 && p.price > 0);
             if (availableProducts.length === 0) return res.status(400).json({ error: 'Stok habis semua' });
 
-            const sorted = [...availableProducts].sort((a, b) => a.price - b.price);
-            const median = sorted[Math.floor(sorted.length / 2)].price;
-            const cheap = sorted.filter(p => p.price <= median);
-            const expensive = sorted.filter(p => p.price > median);
-            const roll = Math.random() * 100;
-            let pool;
-            if (roll < 70) pool = cheap;
-            else if (roll < 95) pool = expensive;
-            else pool = sorted;
-
+            // JACKPOT FIX: pool = semua produk, winner random dari pool
+            const pool = availableProducts;
             const winner = pool[Math.floor(Math.random() * pool.length)];
+            
+            // Jackpot = produk termahal
+            const maxPrice = Math.max(...pool.map(p => p.price));
+            const isJackpot = winner.price === maxPrice;
+            
             winner.stock -= 1;
 
             const finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
-            const refCode = getRefFromCookie(req.headers.cookie);
-            if (refCode) {
-                const referrer = (db.users || []).find(u => u.referralCode === refCode);
-                if (referrer) {
-                    referrer.referralCount = (referrer.referralCount || 0) + 1;
-                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
-                }
-            }
+            // JANGAN kasih komisi di sini
 
             const orderCode = crypto.randomBytes(16).toString('hex');
             db.orders.unshift({
@@ -579,7 +567,7 @@ app.post('/api/gacha', async (req, res) => {
             });
 
             await setDB(db.products, db.orders, db.sha);
-            return res.json({ success: true, orderCode, gachaResult: winner.name, originalPrice: winner.price, isJackpot: roll >= 95 });
+            return res.json({ success: true, orderCode, gachaResult: winner.name, originalPrice: winner.price, isJackpot });
         } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
     }
     res.status(500).json({ error: 'Save failed: ' + lastError });
