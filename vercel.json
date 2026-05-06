@@ -39,6 +39,10 @@
       "src": "/ketentuan",
       "dest": "public/ketentuan.html"
     },
+    { 
+      "src": "/gacha",
+      "dest": "public/gacha.html"
+    },
     {
       "src": "/(.*)",
       "dest": "public/index.html"
