@@ -43,6 +43,10 @@
       "src": "/gacha",
       "dest": "public/gacha.html"
     },
+    { 
+      "src": "/profile", 
+      "dest": "public/profile.html" 
+    }
     {
       "src": "/(.*)",
       "dest": "public/index.html"
