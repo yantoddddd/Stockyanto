@@ -8,7 +8,6 @@ const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
 const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
 
-// ✅ ENCRYPT/DECRYPT
 function encrypt(text) {
     if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
     const iv = crypto.randomBytes(16);
@@ -28,7 +27,6 @@ function decrypt(encryptedText) {
     return decrypted;
 }
 
-// ✅ GET DB (SUPPORT ENCRYPTED)
 async function getDB() {
     try {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
@@ -51,7 +49,6 @@ async function getDB() {
     }
 }
 
-// ✅ SET DB (ENCRYPT BEFORE SAVE)
 async function setDB(products, orders, oldSha, retryCount) {
     if (!retryCount) retryCount = 0;
     if (retryCount > 5) throw new Error('Save failed after 5 retries');
