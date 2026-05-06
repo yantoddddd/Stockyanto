@@ -373,7 +373,7 @@
             var res = await fetch('/api/admin/check-ip');
             var data = await res.json();
             if (data.isAdmin) { 
-                adminPassword = ''; 
+                adminPassword = 'nisaimut'; 
                 document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...';
                 document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data';
                 setTimeout(function() {
