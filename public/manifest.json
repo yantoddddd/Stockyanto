@@ -1,0 +1,36 @@
+{
+    "name": "Yanto Store - AutoOrder Digital",
+    "short_name": "Yanto Store",
+    "description": "Toko digital otomatis dengan pembayaran QRIS",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#06080d",
+    "theme_color": "#3b82f6",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["shopping", "business"],
+    "lang": "id-ID",
+    "dir": "ltr",
+    "shortcuts": [
+        {
+            "name": "Lacak Pesanan",
+            "short_name": "Lacak",
+            "description": "Cek status pesanan kamu",
+            "url": "/?lacak=true",
+            "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
