@@ -39,6 +39,7 @@
         @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes slideRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
+        @keyframes bounceIn { 0% { transform:scale(0.3); opacity:0; } 50% { transform:scale(1.05); } 70% { transform:scale(0.9); } 100% { transform:scale(1); opacity:1; } }
         .container { max-width:1100px; margin:0 auto; }
 
         /* SPLASH */
@@ -106,6 +107,24 @@
         .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; display:none; }
         .overlay.show { display:block; }
 
+        /* CART FLOAT */
+        .cart-float {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #3b82f6; width: 56px; height: 56px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.5rem; cursor: pointer; z-index: 500;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.4);
+            transition: 0.3s; border: none;
+        }
+        .cart-float:active { transform: scale(0.9); }
+        .cart-count {
+            position: absolute; top: -4px; right: -4px;
+            background: #ef4444; color: white; border-radius: 50%;
+            width: 22px; height: 22px; font-size: 0.7rem;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+
         /* PRODUCT GRID */
         .products-grid { 
             display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); 
@@ -140,9 +159,10 @@
         .product-price-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
         .product-price { font-size:1.5rem; font-weight:800; color:var(--accent2); }
         .product-stock { font-size:0.68rem; color:var(--text2); display:flex; align-items:center; gap:4px; }
+        .product-actions { display:flex; gap:8px; }
         .btn-buy { 
             background:linear-gradient(135deg, var(--accent), #2563eb); 
-            border:none; width:100%; padding:13px; border-radius:14px; 
+            border:none; flex:1; padding:13px; border-radius:14px; 
             font-weight:600; color:white; cursor:pointer; 
             display:flex; align-items:center; justify-content:center; gap:8px;
             transition:0.25s; font-size:0.85rem; letter-spacing:-0.2px;
@@ -150,6 +170,14 @@
         .btn-buy:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); transform:translateY(-1px); }
         .btn-buy:active { transform:scale(0.97); }
         .btn-buy:disabled { background:#334155; cursor:not-allowed; opacity:0.5; transform:none; box-shadow:none; }
+        .btn-cart {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:14px; padding:13px 16px; color:var(--text2);
+            cursor:pointer; transition:0.25s; font-size:0.85rem;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .btn-cart:hover { background:var(--surface2); border-color:var(--accent); color:white; }
+        .btn-cart:active { transform:scale(0.97); }
 
         .load-more-wrap { text-align:center; margin-bottom:30px; display:none; }
         .btn-load-more { 
@@ -163,14 +191,23 @@
         .empty-state i { font-size:4rem; margin-bottom:16px; opacity:0.3; }
         .empty-state p { font-size:0.9rem; }
 
+        /* GACHA CARD */
+        #gachaCard {
+            text-align: center; margin-bottom: 24px;
+            animation: bounceIn 0.5s ease;
+            background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.1));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: var(--radius); padding: 28px;
+        }
+
         /* MODAL */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); justify-content:center; align-items:center; z-index:1100; }
         .modal-content { 
             background:linear-gradient(160deg, #111827, #0f172a); border-radius:28px; padding:32px; 
             max-width:420px; width:90%; border:1px solid var(--border);
-            animation:fadeScale 0.3s ease;
+            animation:fadeScale 0.3s ease; max-height:85vh; overflow-y:auto;
         }
-        .modal-content h3 { font-size:1.3rem; font-weight:700; color:white; margin-bottom:6px; }
+        .modal-content h3 { font-size:1.3rem; font-weight:700; color:white; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
         .modal-desc { color:var(--text2); font-size:0.78rem; margin-bottom:16px; }
         .modal-price { font-size:1.6rem; font-weight:800; color:var(--accent2); margin-bottom:16px; }
         input { 
@@ -206,7 +243,21 @@
         .site-footer a { color:var(--text2); text-decoration:none; margin:0 8px; transition:0.2s; }
         .site-footer a:hover { color:var(--accent2); }
 
-        @media (max-width:640px) { .products-grid { grid-template-columns:1fr; } .header { padding:12px 16px; } }
+        .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
+        .detail-row .dl { color:#64748b; }
+        .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; }
+
+        /* ORDER HISTORY IN SIDEBAR */
+        .order-history-item {
+            background: var(--surface); border-radius: 10px; padding: 10px 12px;
+            margin-bottom: 6px; font-size: 0.72rem; cursor: pointer; transition: 0.2s;
+            border: 1px solid var(--border);
+        }
+        .order-history-item:hover { border-color: var(--accent); }
+        .order-history-item .oh-name { color: white; font-weight: 600; }
+        .order-history-item .oh-detail { color: var(--text2); font-size: 0.62rem; margin-top: 2px; }
+
+        @media (max-width:640px) { .products-grid { grid-template-columns:1fr; } .header { padding:12px 16px; } .product-actions { flex-direction:column; } .btn-cart { width:100%; } }
     </style>
 </head>
 <body>
@@ -234,6 +285,19 @@
         <div class="results-info" id="resultsInfo"></div>
     </div>
 
+    <!-- GACHA CARD -->
+    <div class="card" id="gachaCard" style="display:none;">
+        <div style="font-size:3rem;margin-bottom:10px;">🎰</div>
+        <h2 style="color:#f59e0b;">Gacha Machine</h2>
+        <p style="color:#94a3b8;font-size:0.8rem;">Dapetin produk random! Bisa dapet produk mahal dengan harga miring!</p>
+        <div class="detail-row"><span class="dl">Harga Gacha</span><span class="dv" style="color:#f59e0b;font-weight:700;" id="gachaPrice">-</span></div>
+        <div class="detail-row"><span class="dl">Jackpot Chance</span><span class="dv">5%</span></div>
+        <button class="btn-primary" onclick="spinGacha()" style="background:linear-gradient(135deg, #f59e0b, #ef4444);margin-top:16px;">
+            <i class="fas fa-dice"></i> SPIN GACHA!
+        </button>
+        <p style="font-size:0.6rem;color:#94a3b8;margin-top:8px;">*Hadiah random, gacha tidak bisa refund</p>
+    </div>
+
     <div class="products-grid" id="productsGrid"></div>
     <div class="load-more-wrap" id="loadMoreWrap">
         <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
@@ -245,6 +309,12 @@
     </div>
 </div>
 
+<!-- CART FLOATING BUTTON -->
+<button class="cart-float" onclick="openCart()" aria-label="Keranjang belanja">
+    <i class="fas fa-shopping-cart"></i>
+    <span class="cart-count" id="cartCount" style="display:none;">0</span>
+</button>
+
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 <div class="sidebar" id="sidebar">
     <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
@@ -252,14 +322,20 @@
     <div class="sidebar-stat"><div class="stat-num" id="menuProducts">-</div><div class="stat-label">Produk Tersedia</div></div>
     <div class="sidebar-stat"><div class="stat-num" id="menuTodayOrders">-</div><div class="stat-label">Order Hari Ini</div></div>
     <div class="sidebar-title">Menu</div>
+    <button class="menu-item" id="menuLoginBtn" onclick="openLoginModal()"><i class="fas fa-user"></i> Login / Akun</button>
     <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
     <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
     <a href="/ketentuan" class="menu-item"><i class="fas fa-file-contract"></i> Ketentuan</a>
+    <div id="sidebarOrderHistory" style="display:none;">
+        <div class="sidebar-title">Riwayat Order</div>
+        <div id="sidebarOrderList"></div>
+    </div>
     <div class="sidebar-title">Bantuan</div>
     <a href="https://t.me/Yantoidiotbruh" target="_blank" class="menu-item"><i class="fab fa-telegram-plane"></i> Telegram</a>
     <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
 </div>
 
+<!-- PRODUCT MODAL -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalProductName"></h3>
@@ -271,6 +347,65 @@
         <div id="loadingIndicator" style="display:none;text-align:center;margin-top:15px;color:var(--text2);"><span class="loading-spinner"></span> Membuat pesanan...</div>
     </div>
 </div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <h3 id="loginModalTitle"><i class="fas fa-sign-in-alt"></i> Login / Daftar</h3>
+        <div id="loginForm">
+            <input type="text" id="loginName" placeholder="Nama lengkap..." autocomplete="username">
+            <input type="password" id="loginPassword" placeholder="Password..." autocomplete="current-password">
+            <button class="btn-primary" onclick="doLoginUser()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+            <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
+                Belum punya akun? <a href="#" onclick="event.preventDefault();showRegisterForm();" style="color:#60a5fa;">Daftar</a>
+            </p>
+        </div>
+        <div id="registerForm" style="display:none;">
+            <input type="text" id="regName" placeholder="Nama lengkap..." autocomplete="name">
+            <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
+            <input type="date" id="regBirthDate" onchange="checkAge()">
+            <p id="ageError" style="color:#ef4444;font-size:0.7rem;display:none;">❌ Minimal umur 12 tahun!</p>
+            <input type="password" id="regPassword" placeholder="Password..." autocomplete="new-password">
+            <input type="text" id="regReferral" placeholder="Kode referral (opsional)">
+            <button class="btn-primary" onclick="doRegister()"><i class="fas fa-user-plus"></i> Daftar</button>
+            <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
+                Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginForm();" style="color:#60a5fa;">Masuk</a>
+            </p>
+        </div>
+        <div id="userDashboard" style="display:none;">
+            <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="dashName">-</span></div>
+            <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="dashReferral">-</span></div>
+            <div class="detail-row"><span class="dl">Referral Berhasil</span><span class="dv" id="dashCount">0</span></div>
+            <div class="detail-row"><span class="dl">Saldo Diskon</span><span class="dv" id="dashBalance">Rp 0</span></div>
+            <button class="btn-secondary" onclick="doLogoutUser()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+        <button class="btn-secondary" onclick="document.getElementById('loginModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
+    </div>
+</div>
+
+<!-- CART MODAL -->
+<div id="cartModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-height:80vh;overflow-y:auto;max-width:500px;">
+        <h3><i class="fas fa-shopping-cart"></i> Keranjang Belanja</h3>
+        <div id="cartItems"></div>
+        <div id="cartEmpty" style="text-align:center;color:#94a3b8;padding:20px;">
+            <i class="fas fa-shopping-cart" style="font-size:3rem;opacity:0.3;"></i>
+            <p>Keranjang kosong</p>
+        </div>
+        <div id="cartSummary" style="display:none;">
+            <div class="detail-row"><span class="dl">Total Item</span><span class="dv" id="cartTotalItems">0</span></div>
+            <div class="detail-row"><span class="dl">Subtotal</span><span class="dv" id="cartSubtotal">Rp 0</span></div>
+            <div class="detail-row" id="cartDiscountRow" style="display:none;">
+                <span class="dl">Diskon</span><span class="dv" style="color:#10b981;" id="cartDiscount">-Rp 0</span></div>
+            <div class="detail-row" style="font-weight:700;margin-top:8px;">
+                <span class="dl">Total</span><span class="dv" style="color:#60a5fa;font-size:1.2rem;" id="cartTotal">Rp 0</span></div>
+            <input type="text" id="cartCustomerName" placeholder="Nama lengkap kamu..." style="margin-top:10px;">
+            <button class="btn-primary" onclick="checkoutCart()"><i class="fas fa-qrcode"></i> Checkout QRIS</button>
+        </div>
+        <button class="btn-secondary" onclick="document.getElementById('cartModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -283,11 +418,12 @@
     let displayCount = 6;
     let categories = [];
 
-    // ✅ SPLASH TETEP ADA, PRODUK LOAD DI BACKGROUND
+    // ========== SPLASH & INIT ==========
     window.addEventListener('load', function() {
-        loadProducts(); // Load di background pas splash muncul
+        loadProducts();
+        loadGachaInfo();
+        checkAutoLogin();
         setTimeout(function() {
-            // Splash ilang setelah 1.5 detik (atau setelah produk siap)
             document.getElementById('splashScreen').classList.add('hidden');
             document.getElementById('mainContainer').style.display = 'block';
         }, 1500);
@@ -298,6 +434,293 @@
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
     function lacakOrder() { var code = prompt('Masukkan kode order kamu:'); if (code && code.trim()) { window.location.href = '/order/' + code.trim(); } toggleMenu(); }
 
+    // ========== CART SYSTEM ==========
+    let cart = [];
+
+    function addToCart(productId) {
+        var product = allProducts.find(function(p) { return p.id == productId; });
+        if (!product || product.stock <= 0) { toast('Stok habis!', true); return; }
+        var existing = cart.find(function(item) { return item.productId == productId; });
+        if (existing) { existing.quantity++; }
+        else { cart.push({ productId: productId, name: product.name, price: product.price, quantity: 1 }); }
+        updateCartUI();
+        toast('✅ Ditambahkan ke keranjang');
+    }
+
+    function removeFromCart(productId) {
+        cart = cart.filter(function(item) { return item.productId != productId; });
+        updateCartUI();
+        updateCartModal();
+    }
+
+    function updateCartUI() {
+        var count = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0);
+        var countEl = document.getElementById('cartCount');
+        if (count > 0) { countEl.style.display = 'flex'; countEl.textContent = count; }
+        else { countEl.style.display = 'none'; }
+    }
+
+    function getCartDiscount() {
+        var totalItems = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0);
+        return Math.max(0, (totalItems - 1) * 500);
+    }
+
+    function openCart() { updateCartModal(); document.getElementById('cartModal').style.display = 'flex'; }
+
+    function updateCartModal() {
+        var cartItemsEl = document.getElementById('cartItems');
+        var cartEmptyEl = document.getElementById('cartEmpty');
+        var cartSummaryEl = document.getElementById('cartSummary');
+        if (cart.length === 0) {
+            cartItemsEl.innerHTML = '';
+            cartEmptyEl.style.display = 'block';
+            cartSummaryEl.style.display = 'none';
+        } else {
+            cartEmptyEl.style.display = 'none';
+            cartSummaryEl.style.display = 'block';
+            var subtotal = 0;
+            cartItemsEl.innerHTML = cart.map(function(item) {
+                var itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+                    '<div><div style="color:white;font-weight:600;">' + escapeHtml(item.name) + '</div><div style="color:#94a3b8;font-size:0.7rem;">Rp ' + item.price.toLocaleString() + ' x ' + item.quantity + '</div></div>' +
+                    '<button class="btn-sm red" onclick="event.stopPropagation();removeFromCart(' + item.productId + ')" aria-label="Hapus" style="background:#b91c1c;border:none;color:white;padding:6px 10px;border-radius:8px;cursor:pointer;"><i class="fas fa-trash"></i></button></div>';
+            }).join('');
+            var discount = getCartDiscount();
+            var total = Math.max(0, subtotal - discount);
+            document.getElementById('cartTotalItems').textContent = cart.reduce(function(s, i) { return s + i.quantity; }, 0);
+            document.getElementById('cartSubtotal').textContent = 'Rp ' + subtotal.toLocaleString();
+            if (discount > 0) {
+                document.getElementById('cartDiscountRow').style.display = 'flex';
+                document.getElementById('cartDiscount').textContent = '-Rp ' + discount.toLocaleString();
+            } else { document.getElementById('cartDiscountRow').style.display = 'none'; }
+            document.getElementById('cartTotal').textContent = 'Rp ' + total.toLocaleString();
+        }
+    }
+
+    async function checkoutCart() {
+        var customerName = document.getElementById('cartCustomerName').value.trim();
+        if (!customerName) { toast('Nama wajib diisi!', true); return; }
+        if (cart.length === 0) { toast('Keranjang kosong!', true); return; }
+        var subtotal = cart.reduce(function(sum, item) { return sum + item.price * item.quantity; }, 0);
+        var discount = getCartDiscount();
+        var total = Math.max(0, subtotal - discount);
+
+        var qrisData;
+        try { qrisData = await generateQRIS(total); } catch(e) { toast('Gagal generate QRIS', true); return; }
+
+        var res = await fetch('/api/create-cart-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                items: cart.map(function(item) { return { productId: item.productId, quantity: item.quantity }; }),
+                customerName: customerName,
+                qrisId: qrisData.qris_id,
+                qrisImage: qrisData.qris_image_url,
+                totalAmount: total,
+                expiredAt: qrisData.expired_at,
+                referralCode: currentUser ? currentUser.referralCode : null,
+                useDiscount: currentUser && currentUser.discountBalance > 0
+            })
+        });
+        var data = await res.json();
+        if (data.success) {
+            cart = [];
+            updateCartUI();
+            document.getElementById('cartModal').style.display = 'none';
+            window.location.href = '/order/' + data.orderCode;
+        } else { toast(data.error || 'Gagal checkout', true); }
+    }
+
+    // ========== AUTH SYSTEM ==========
+    let currentUser = null;
+
+    function openLoginModal() {
+        document.getElementById('loginModal').style.display = 'flex';
+        if (currentUser) {
+            updateUserDashboard();
+        } else {
+            showLoginForm();
+        }
+        toggleMenu();
+    }
+
+    function showLoginForm() {
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('userDashboard').style.display = 'none';
+        document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-sign-in-alt"></i> Login / Daftar';
+    }
+
+    function showRegisterForm() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+        document.getElementById('userDashboard').style.display = 'none';
+        document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> Daftar Akun';
+        var maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - 12);
+        document.getElementById('regBirthDate').max = maxDate.toISOString().split('T')[0];
+    }
+
+    function checkAge() {
+        var birthDate = document.getElementById('regBirthDate').value;
+        if (!birthDate) return;
+        var birth = new Date(birthDate);
+        var today = new Date();
+        var age = today.getFullYear() - birth.getFullYear();
+        var monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) { age--; }
+        document.getElementById('ageError').style.display = age < 12 ? 'block' : 'none';
+    }
+
+    async function doRegister() {
+        var name = document.getElementById('regName').value.trim();
+        var birthDate = document.getElementById('regBirthDate').value;
+        var password = document.getElementById('regPassword').value;
+        var referral = document.getElementById('regReferral').value.trim();
+        if (!name || !birthDate || !password) { toast('Semua field wajib diisi!', true); return; }
+
+        try {
+            var res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, birthDate: birthDate, password: password, referralCode: referral || undefined })
+            });
+            var data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                localStorage.setItem('yantoToken', '');
+                updateUserDashboard();
+                loadOrderHistory();
+                toast('✅ Pendaftaran berhasil! Kode referral: ' + data.user.referralCode);
+            } else { toast(data.error, true); }
+        } catch(e) { toast('Gagal daftar', true); }
+    }
+
+    async function doLoginUser() {
+        var name = document.getElementById('loginName').value.trim();
+        var password = document.getElementById('loginPassword').value;
+        if (!name || !password) { toast('Isi nama dan password!', true); return; }
+
+        try {
+            var res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, password: password })
+            });
+            var data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                localStorage.setItem('yantoToken', data.token);
+                updateUserDashboard();
+                loadOrderHistory();
+                toast('✅ Selamat datang, ' + data.user.name + '!');
+            } else { toast(data.error, true); }
+        } catch(e) { toast('Gagal login', true); }
+    }
+
+    function updateUserDashboard() {
+        if (!currentUser) return;
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('userDashboard').style.display = 'block';
+        document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-user"></i> Akun Saya';
+        document.getElementById('dashName').textContent = currentUser.name;
+        document.getElementById('dashReferral').textContent = currentUser.referralCode;
+        document.getElementById('dashCount').textContent = currentUser.referralCount || 0;
+        document.getElementById('dashBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+        document.getElementById('menuLoginBtn').innerHTML = '<i class="fas fa-user"></i> Akun (' + currentUser.name + ')';
+    }
+
+    function doLogoutUser() {
+        currentUser = null;
+        localStorage.removeItem('yantoToken');
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-sign-in-alt"></i> Login / Daftar';
+        document.getElementById('menuLoginBtn').innerHTML = '<i class="fas fa-user"></i> Login / Akun';
+        document.getElementById('sidebarOrderHistory').style.display = 'none';
+        showLoginForm();
+        toast('👋 Logout berhasil');
+    }
+
+    async function checkAutoLogin() {
+        var token = localStorage.getItem('yantoToken');
+        if (!token) return;
+        try {
+            var res = await fetch('/api/user/profile', { headers: { 'Authorization': token } });
+            var data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                updateUserDashboard();
+                loadOrderHistory();
+            }
+        } catch(e) {}
+    }
+
+    async function loadOrderHistory() {
+        var token = localStorage.getItem('yantoToken');
+        if (!token) return;
+        try {
+            var res = await fetch('/api/user/orders', { headers: { 'Authorization': token } });
+            var data = await res.json();
+            if (data.success && data.orders.length > 0) {
+                document.getElementById('sidebarOrderHistory').style.display = 'block';
+                document.getElementById('sidebarOrderList').innerHTML = data.orders.slice(0, 10).map(function(o) {
+                    var st = o.status === 'paid' ? '✅' : o.status === 'pending' ? '⏳' : '❌';
+                    return '<div class="order-history-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'">' +
+                        '<div class="oh-name">' + st + ' ' + escapeHtml(o.productName) + '</div>' +
+                        '<div class="oh-detail">Rp ' + (o.totalAmount || 0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleDateString() + '</div></div>';
+                }).join('');
+            }
+        } catch(e) {}
+    }
+
+    // ========== GACHA ==========
+    let gachaPrice = 0;
+
+    async function loadGachaInfo() {
+        try {
+            var res = await fetch('/api/gacha/info');
+            var data = await res.json();
+            if (data.success && data.gachaPrice > 0) {
+                gachaPrice = data.gachaPrice;
+                document.getElementById('gachaPrice').textContent = 'Rp ' + gachaPrice.toLocaleString();
+                document.getElementById('gachaCard').style.display = 'block';
+            }
+        } catch(e) {}
+    }
+
+    async function spinGacha() {
+        if (!gachaPrice || gachaPrice <= 0) { toast('Gacha belum siap', true); return; }
+        var name = prompt('Masukkan nama kamu:');
+        if (!name) return;
+
+        var qrisData;
+        try { qrisData = await generateQRIS(gachaPrice); } catch(e) { toast('Gagal generate QRIS', true); return; }
+
+        var res = await fetch('/api/gacha', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerName: name,
+                qrisId: qrisData.qris_id,
+                qrisImage: qrisData.qris_image_url,
+                totalAmount: gachaPrice,
+                expiredAt: qrisData.expired_at
+            })
+        });
+        var data = await res.json();
+        if (data.success) {
+            document.getElementById('gachaCard').innerHTML = '<div style="font-size:3rem;">🎉</div>' +
+                '<h2 style="color:#10b981;">GACHA RESULT!</h2>' +
+                '<p style="color:#f59e0b;font-size:1.2rem;font-weight:700;">' + escapeHtml(data.gachaResult) + '</p>' +
+                (data.isJackpot ? '<p style="color:#ef4444;">🔥 JACKPOT!</p>' : '') +
+                '<p style="color:#94a3b8;font-size:0.7rem;">Mengalihkan ke pembayaran...</p>';
+            setTimeout(function() { window.location.href = '/order/' + data.orderCode; }, 2000);
+        } else { toast(data.error, true); }
+    }
+
+    // ========== PRODUCTS ==========
     async function loadProducts() {
         try {
             var res = await fetch('/api/products');
@@ -377,13 +800,17 @@
                 else if (Date.now() - new Date(p.createdAt).getTime() < 7*24*3600*1000) badgeHtml = '<span class="product-badge new">Baru</span>';
                 var desc = p.description || '';
                 if (desc.length > 60) desc = desc.substring(0, 60) + '...';
-                return '<div class="product-card" style="animation-delay:' + (i * 0.04) + 's" onclick=\'openModal(' + JSON.stringify(p).replace(/'/g, "&#39;") + ')\'>' +
+                var safeProduct = { id: p.id, name: p.name, description: p.description, price: p.price, stock: p.stock, itemType: p.itemType, itemContent: p.itemContent, bonusType: p.bonusType, bonusContent: p.bonusContent, createdAt: p.createdAt };
+                return '<div class="product-card" style="animation-delay:' + (i * 0.04) + 's">' +
                     badgeHtml +
                     '<div class="product-icon"><i class="fas ' + (p.itemType==='link'?'fa-link':p.itemType==='html'?'fa-code':'fa-file-alt') + '"></i></div>' +
                     '<div class="product-name">' + escapeHtml(p.name) + '</div>' +
                     '<div class="product-desc">' + escapeHtml(desc) + '</div>' +
                     '<div class="product-price-row"><span class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</span><span class="product-stock"><i class="fas fa-database"></i> ' + p.stock + '</span></div>' +
-                    '<div class="btn-buy">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli Sekarang' : '<i class="fas fa-ban"></i> Stok Habis') + '</div>' +
+                    '<div class="product-actions">' +
+                        '<button class="btn-buy" onclick="event.stopPropagation();openModal(' + JSON.stringify(safeProduct).replace(/'/g, "&#39;") + ')">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli' : '<i class="fas fa-ban"></i> Habis') + '</button>' +
+                        (p.stock > 0 ? '<button class="btn-cart" onclick="event.stopPropagation();addToCart(' + p.id + ')" title="Tambah ke keranjang"><i class="fas fa-cart-plus"></i></button>' : '') +
+                    '</div>' +
                 '</div>';
             }).join('');
         }
