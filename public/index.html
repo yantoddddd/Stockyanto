@@ -70,10 +70,21 @@
             background:var(--surface2); backdrop-filter:blur(20px);
             border-radius:60px; border:1px solid var(--border);
         }
-        .logo-wrap { display:flex; align-items:center; gap:12px; cursor:pointer; }
-        .logo-icon { width:38px; height:38px; border-radius:14px; background:linear-gradient(135deg, var(--accent), #6366f1); display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; }
-        .logo-text h1 { font-size:1.15rem; font-weight:700; color:white; letter-spacing:-0.3px; }
-        .logo-text span { font-size:0.65rem; color:var(--text2); letter-spacing:1px; }
+        .logo-wrap { 
+            display:flex; align-items:center; gap:10px; cursor:pointer; 
+            background:linear-gradient(135deg, rgba(59,130,246,0.2), rgba(96,165,250,0.1));
+            border-radius:40px; padding:8px 18px; border:1px solid rgba(59,130,246,0.3);
+            transition:0.3s;
+        }
+        .logo-wrap:hover { border-color:var(--accent); background:rgba(59,130,246,0.3); }
+        .profile-avatar { 
+            width:34px; height:34px; border-radius:50%; 
+            background:linear-gradient(135deg, var(--accent), #6366f1); 
+            display:flex; align-items:center; justify-content:center; 
+            font-size:0.9rem; color:white;
+        }
+        .profile-text h1 { font-size:0.9rem; font-weight:700; color:white; letter-spacing:-0.3px; }
+        .profile-text span { font-size:0.6rem; color:var(--accent2); letter-spacing:0.5px; }
         .menu-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
 
         .search-filter-wrap { margin-bottom:22px; display:none; }
@@ -269,11 +280,11 @@
 <!-- HEADER STICKY -->
 <div class="header-wrap">
     <div class="header">
-        <div class="logo-wrap" onclick="openProfileModal()" title="Akun & Referral">
-            <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-            <div class="logo-text">
-                <h1>Yanto Store</h1>
-                <span id="headerUserLabel"><span id="headerUserName">Guest</span> ▾</span>
+        <div class="logo-wrap" onclick="window.location.href='/profile'">
+            <div class="profile-avatar"><i class="fas fa-user"></i></div>
+            <div class="profile-text">
+                <h1 id="headerProfileName">Profile</h1>
+                <span id="headerProfileSub">Login / Daftar</span>
             </div>
         </div>
         <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
@@ -332,38 +343,6 @@
     <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
 </div>
 
-<!-- PROFILE MODAL -->
-<div id="profileModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-content">
-        <h3><i class="fas fa-user-circle"></i> Profile</h3>
-        <div id="profileGuest" style="text-align:center;color:#94a3b8;padding:20px;">
-            <i class="fas fa-user" style="font-size:3rem;opacity:0.3;"></i>
-            <p>Login dulu buat akses pengaturan & referral</p>
-            <button class="btn-primary" onclick="openLoginModal();document.getElementById('profileModal').style.display='none'"><i class="fas fa-sign-in-alt"></i> Login / Daftar</button>
-        </div>
-        <div id="profileLoggedIn" style="display:none;">
-            <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="profileName">-</span></div>
-            <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="profileReferral">-</span></div>
-            <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="profileBalance" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
-            <div class="detail-row"><span class="dl">Referral</span><span class="dv" id="profileRefCount">0</span></div>
-            
-            <div class="sidebar-title" style="margin-top:16px;">Pengaturan Akun</div>
-            <input type="password" id="settingOldPassword" placeholder="Password lama...">
-            <input type="password" id="settingNewPassword" placeholder="Password baru...">
-            <button class="btn-primary" onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button>
-            
-            <div class="sidebar-title" style="margin-top:16px;">Referral</div>
-            <div style="font-size:0.65rem;color:var(--accent2);word-break:break-all;margin-bottom:8px;" id="profileRefLink">-</div>
-            <div style="display:flex;gap:8px;">
-                <button class="btn-primary" onclick="copyRefLink()" style="flex:1;"><i class="fas fa-copy"></i> Salin Link</button>
-                <button class="btn-primary" onclick="openWdModal();document.getElementById('profileModal').style.display='none'" style="background:#f59e0b;flex:1;"><i class="fas fa-wallet"></i> Tarik Saldo</button>
-            </div>
-            <button class="btn-secondary" onclick="doLogoutUser()" style="margin-top:8px;width:100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        </div>
-        <button class="btn-secondary" onclick="document.getElementById('profileModal').style.display='none'" style="margin-top:8px;width:100%;"><i class="fas fa-times"></i> Tutup</button>
-    </div>
-</div>
-
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
@@ -410,20 +389,6 @@
             <button class="btn-primary" onclick="checkoutCart()"><i class="fas fa-qrcode"></i> Checkout QRIS</button>
         </div>
         <button class="btn-secondary" onclick="document.getElementById('cartModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
-    </div>
-</div>
-
-<!-- WD MODAL -->
-<div id="wdModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-content">
-        <h3><i class="fas fa-wallet"></i> Tarik Saldo (WD)</h3>
-        <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBalance" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
-        <input type="number" id="wdAmount" placeholder="Jumlah (minimal Rp 2.000)">
-        <input type="text" id="wdMethod" placeholder="Metode (QRIS/DANA/GOPAY)">
-        <input type="text" id="wdNumber" placeholder="Nomor tujuan">
-        <button class="btn-primary" onclick="doWithdraw()" style="background:#f59e0b;"><i class="fas fa-paper-plane"></i> Kirim WD</button>
-        <p style="font-size:0.6rem;color:#94a3b8;margin-top:8px;text-align:center;">Minimal WD Rp 2.000</p>
-        <button class="btn-secondary" onclick="document.getElementById('wdModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
 
@@ -631,95 +596,31 @@
             var data = await res.json();
             if (data.success) {
                 currentUser = data.user;
-                updateHeaderLabel();
+                updateHeaderUI();
                 document.getElementById('loginModal').style.display = 'none';
                 toast('✅ Selamat datang, ' + data.user.name + '!');
-                loadProducts();
             } else { toast(data.error, true); }
         } catch(e) { toast('Gagal login', true); }
     }
 
-    async function doLogoutUser() {
-        currentUser = null;
-        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('profileModal').style.display = 'none';
-        updateHeaderLabel();
-        loadProducts();
-        toast('👋 Logout berhasil');
-    }
-
-    function updateHeaderLabel() {
-        var nameEl = document.getElementById('headerUserName');
-        if (currentUser) { nameEl.textContent = currentUser.name; }
-        else { nameEl.textContent = 'Guest'; }
+    function updateHeaderUI() {
+        var nameEl = document.getElementById('headerProfileName');
+        var subEl = document.getElementById('headerProfileSub');
+        if (currentUser) {
+            nameEl.textContent = currentUser.name;
+            subEl.textContent = 'Lihat Profile ▸';
+        } else {
+            nameEl.textContent = 'Profile';
+            subEl.textContent = 'Login / Daftar';
+        }
     }
 
     async function checkAutoLogin() {
         try {
             var res = await fetch('/api/user/profile', { credentials: 'include' });
             var data = await res.json();
-            if (data.success) { currentUser = data.user; updateHeaderLabel(); }
+            if (data.success) { currentUser = data.user; updateHeaderUI(); }
         } catch(e) {}
-    }
-
-    // ========== PROFILE ==========
-    function openProfileModal() {
-        document.getElementById('profileModal').style.display = 'flex';
-        if (currentUser) {
-            document.getElementById('profileGuest').style.display = 'none';
-            document.getElementById('profileLoggedIn').style.display = 'block';
-            document.getElementById('profileName').textContent = currentUser.name;
-            document.getElementById('profileReferral').textContent = currentUser.referralCode;
-            document.getElementById('profileBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-            document.getElementById('profileRefCount').textContent = currentUser.referralCount || 0;
-            document.getElementById('profileRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode;
-        } else {
-            document.getElementById('profileGuest').style.display = 'block';
-            document.getElementById('profileLoggedIn').style.display = 'none';
-        }
-    }
-
-    function copyRefLink() {
-        if (!currentUser) { toast('Login dulu!', true); return; }
-        var refLink = window.location.origin + '/?ref=' + currentUser.referralCode;
-        navigator.clipboard.writeText(refLink).then(function() { toast('📋 Link referral tersalin!'); });
-    }
-
-    async function changePassword() {
-        if (!currentUser) { toast('Login dulu!', true); return; }
-        var oldPw = document.getElementById('settingOldPassword').value;
-        var newPw = document.getElementById('settingNewPassword').value;
-        if (!oldPw || !newPw) { toast('Isi semua field!', true); return; }
-        try {
-            var res = await fetch('/api/user/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }) });
-            var data = await res.json();
-            if (data.success) { toast('✅ Password berhasil diganti!'); document.getElementById('settingOldPassword').value = ''; document.getElementById('settingNewPassword').value = ''; }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal ganti password', true); }
-    }
-
-    // ========== WD ==========
-    function openWdModal() {
-        if (!currentUser) { toast('Login dulu!', true); return; }
-        document.getElementById('wdBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-        document.getElementById('wdModal').style.display = 'flex';
-        toggleMenu();
-    }
-
-    async function doWithdraw() {
-        var amount = parseInt(document.getElementById('wdAmount').value);
-        var method = document.getElementById('wdMethod').value.trim();
-        var number = document.getElementById('wdNumber').value.trim();
-        if (!amount || amount < 2000) { toast('Minimal WD Rp 2.000!', true); return; }
-        if (!method) { toast('Isi metode!', true); return; }
-        if (!number) { toast('Isi nomor!', true); return; }
-        try {
-            var res = await fetch('/api/user/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ amount: amount, paymentMethod: method, paymentNumber: number }) });
-            var data = await res.json();
-            if (data.success) { currentUser.discountBalance -= amount; document.getElementById('wdModal').style.display = 'none'; toast('✅ ' + data.message); }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal WD', true); }
     }
 
     // ========== GACHA ==========
@@ -764,9 +665,8 @@
                 else catSet.add('Lainnya');
             });
             categories = ['all'].concat(Array.from(catSet));
-            if (currentUser) { categories.push('riwayat'); }
             document.getElementById('filterScroll').innerHTML = categories.map(function(cat) {
-                return '<span class="filter-chip' + (cat === 'all' ? ' active' : '') + '" onclick="setFilter(\'' + cat + '\')">' + (cat === 'all' ? 'Semua' : cat === 'riwayat' ? 'Riwayat' : cat) + '</span>';
+                return '<span class="filter-chip' + (cat === 'all' ? ' active' : '') + '" onclick="setFilter(\'' + cat + '\')">' + (cat === 'all' ? 'Semua' : cat) + '</span>';
             }).join('');
 
             document.getElementById('searchFilterWrap').style.display = 'block';
@@ -777,13 +677,6 @@
     }
 
     function setFilter(cat) {
-        if (cat === 'riwayat') {
-            if (!currentUser) { toast('⚠️ Login dulu buat liat riwayat!', true); openLoginModal(); return; }
-            document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-            event.target.classList.add('active');
-            renderOrderHistoryTab();
-            return;
-        }
         currentFilter = cat;
         displayCount = 6;
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -812,7 +705,6 @@
     }
 
     function renderProducts() {
-        document.getElementById('search-row') && (document.getElementById('searchFilterWrap').style.display = 'block');
         var filtered = getFilteredProducts();
         var toShow = filtered.slice(0, displayCount);
         var grid = document.getElementById('productsGrid');
@@ -844,33 +736,6 @@
         document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk';
         if (displayCount < filtered.length) { document.getElementById('loadMoreWrap').style.display = 'block'; }
         else { document.getElementById('loadMoreWrap').style.display = 'none'; }
-    }
-
-    async function renderOrderHistoryTab() {
-        document.getElementById('searchFilterWrap').style.display = 'none';
-        document.getElementById('productsGrid').innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;"><span class="loading-spinner"></span> Memuat riwayat...</div>';
-        try {
-            var res = await fetch('/api/user/orders', { credentials: 'include' });
-            var data = await res.json();
-            var grid = document.getElementById('productsGrid');
-            if (data.success && data.orders.length > 0) {
-                grid.innerHTML = data.orders.map(function(o) {
-                    var st = o.status === 'paid' ? '✅ Lunas' : o.status === 'pending' ? '⏳ Pending' : '❌ ' + o.status;
-                    return '<div class="product-card" onclick="window.location.href=\'/order/' + o.orderCode + '\'" style="cursor:pointer;">' +
-                        '<div class="product-icon"><i class="fas fa-receipt"></i></div>' +
-                        '<div class="product-name">' + escapeHtml(o.productName) + '</div>' +
-                        '<div class="product-desc">' + st + ' | Rp ' + (o.totalAmount || 0).toLocaleString() + '</div>' +
-                        '<div class="product-desc" style="font-size:0.6rem;">' + new Date(o.createdAt).toLocaleString() + '</div>' +
-                    '</div>';
-                }).join('');
-            } else {
-                grid.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada riwayat order</p></div>';
-            }
-        } catch(e) {
-            document.getElementById('productsGrid').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat riwayat</p></div>';
-        }
-        document.getElementById('resultsInfo').textContent = '';
-        document.getElementById('loadMoreWrap').style.display = 'none';
     }
 
     function loadMore() { displayCount += 6; renderProducts(); }
