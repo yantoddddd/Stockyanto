@@ -64,7 +64,7 @@ async function getDB() {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (!res.ok) return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
+        if (!res.ok) return { products: [], orders: [], users: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
         let parsed;
@@ -77,7 +77,7 @@ async function getDB() {
         dbCache = { ...parsed, sha: data.sha };
         dbCacheTime = now;
         return { ...dbCache, sha: data.sha };
-    } catch (err) { return { products: [], orders: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
+    } catch (err) { return { products: [], orders: [], users: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
 }
 
 async function setDB(products, orders, oldSha, retryCount) {
@@ -87,6 +87,7 @@ async function setDB(products, orders, oldSha, retryCount) {
     const content = {
         products: products || db.products || [],
         orders: orders || db.orders || [],
+        users: db.users || [],
         adminIP: db.adminIP || null,
         adminIPs: db.adminIPs || [],
         maintenance: db.maintenance || false,
@@ -116,7 +117,7 @@ async function setAdminIP(ip) {
     const adminIPs = db.adminIPs || [];
     if (db.adminIP && !adminIPs.includes(db.adminIP)) adminIPs.push(db.adminIP);
     if (!adminIPs.includes(ip)) adminIPs.push(ip);
-    const content = { products: db.products || [], orders: db.orders || [], adminIP: ip, adminIPs, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() };
+    const content = { products: db.products || [], orders: db.orders || [], users: db.users || [], adminIP: ip, adminIPs, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() };
     const encryptedContent = encrypt(JSON.stringify(content));
     const c = Buffer.from(encryptedContent).toString('base64');
     const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
@@ -134,6 +135,34 @@ async function sendTelegramMessage(text) {
 function sanitize(str) { if (!str) return ''; return String(str).replace(/[<>"'&]/g, m => ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' })[m]); }
 async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${qrisId}/cancel`, { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
 
+// ========== USER SYSTEM HELPERS ==========
+function generateReferralCode(name) {
+    const clean = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
+    const random = crypto.randomBytes(3).toString('hex').toUpperCase();
+    return clean + random;
+}
+
+function validateAge(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) { age--; }
+    return age >= 12;
+}
+
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password + 'YANTO_SALT').digest('hex');
+}
+
+function verifyPassword(password, hash) {
+    return hashPassword(password) === hash;
+}
+
+function calculateCartDiscount(itemCount) {
+    return Math.max(0, (itemCount - 1) * 500);
+}
+
 // Auto tasks
 setInterval(async () => { try { await fetch('https://stockyanto.vercel.app/api/health'); } catch (e) {} }, 20000);
 setInterval(async () => { try { const db = await getDB(); const n = new Date(); let c = 0; for (const o of db.orders) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; c++; } } if (c > 0) await setDB(db.products, db.orders, db.sha); } catch (e) {} }, 30000);
@@ -141,7 +170,7 @@ setInterval(async () => { try { const db = await getDB(); let d = 0; const k = [
 
 // ========== PUBLIC ==========
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
-app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length, encrypted: db.encrypted || false }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.get('/api/ping-db', async (req, res) => { try { const db = await getDB(); res.json({ status: 'ok', products: (db.products || []).length, orders: (db.orders || []).length, users: (db.users || []).length, encrypted: db.encrypted || false }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 app.get('/api/ping-telegram', async (req, res) => {
     if (!TELEGRAM_BOT_TOKEN) return res.json({ status: 'error', message: 'Token not set' });
@@ -175,11 +204,84 @@ app.get('/api/public-stats', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
+// ========== AUTH ==========
+app.post('/api/register', async (req, res) => {
+    const { name, birthDate, password } = req.body;
+    if (!name || !birthDate || !password) { return res.status(400).json({ error: 'Data tidak lengkap' }); }
+    if (!validateAge(birthDate)) { return res.status(400).json({ error: 'Minimal umur 12 tahun' }); }
+
+    let lastError = '';
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const db = await getDB();
+            if (!db.users) db.users = [];
+            if (db.users.find(u => u.name.toLowerCase() === name.toLowerCase())) { return res.status(400).json({ error: 'Nama sudah terdaftar' }); }
+
+            const user = {
+                id: Date.now(),
+                name: sanitize(name),
+                birthDate,
+                password: hashPassword(password),
+                referralCode: generateReferralCode(name),
+                referredBy: req.body.referralCode || null,
+                referralCount: 0,
+                discountBalance: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            if (user.referredBy) {
+                const referrer = db.users.find(u => u.referralCode === user.referredBy);
+                if (referrer) {
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+                }
+            }
+
+            db.users.push(user);
+            await setDB(db.products, db.orders, db.sha);
+            return res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0 } });
+        } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
+    }
+    res.status(500).json({ error: 'Save failed: ' + lastError });
+});
+
+app.post('/api/login', async (req, res) => {
+    const { name, password } = req.body;
+    const db = await getDB();
+    const user = (db.users || []).find(u => u.name.toLowerCase() === name.toLowerCase());
+    if (!user || !verifyPassword(password, user.password)) { return res.status(401).json({ error: 'Nama atau password salah' }); }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.token = token;
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true, token, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0 } });
+});
+
+app.get('/api/user/profile', async (req, res) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const db = await getDB();
+    const user = (db.users || []).find(u => u.token === token);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0 } });
+});
+
+// ========== USER ORDER HISTORY ==========
+app.get('/api/user/orders', async (req, res) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    const db = await getDB();
+    const user = (db.users || []).find(u => u.token === token);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const orders = (db.orders || []).filter(o => o.customerName.toLowerCase() === user.name.toLowerCase());
+    res.json({ success: true, orders: orders.slice(0, 50).map(o => ({ id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt, isGacha: o.isGacha || false, gachaResult: o.gachaResult || '' })) });
+});
+
 // ========== ADMIN AUTH ==========
 app.get('/api/admin/check-ip', async (req, res) => { try { const db = await getDB(); const ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch (e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/set-ip', async (req, res) => { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { await setAdminIP(getClientIP(req)); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/reset-ip', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); const content = { products: db.products, orders: db.orders, users: db.users, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/toggle-maintenance', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { const db = await getDB(); db.maintenance = req.body.maintenance === true; const content = { products: db.products, orders: db.orders, users: db.users, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; const enc = encrypt(JSON.stringify(content)); await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: Buffer.from(enc).toString('base64'), sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); } });
 
 app.post('/api/admin/save-qris-order', async (req, res) => {
     const { adminKey, qrisId, qrisImage, totalAmount, expiredAt, customerName } = req.body;
@@ -202,9 +304,9 @@ app.delete('/api/admin/order/:id', async (req, res) => { if (!isAdmin(req, req.b
 
 // ========== ORDER & PRODUCT ==========
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
-app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id }); });
+app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '', discountAmount: order.discountAmount || 0, originalAmount: order.originalAmount || 0 }); });
 
-// ✅ CHECK PAYMENT - FRESH DB CHECK + RETRY
+// CHECK PAYMENT
 app.get('/api/check-payment/:orderCode', async (req, res) => {
     const db = await getDB();
     const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
@@ -216,16 +318,21 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
         const r = await fetch(`${QRISPY_API_URL}/api/payment/qris/${order.qrisId}/status`, { headers: { 'X-API-Token': QRISPY_TOKEN } });
         const d = await r.json();
         if (d.status === 'success' && d.data.status === 'paid') {
-            // ✅ BACA DB FRESH (BYPASS CACHE)
             dbCacheTime = 0;
             const freshDB = await getDB();
             const freshOrder = (freshDB.orders || []).find(o => o.orderCode === req.params.orderCode);
-            if (freshOrder && freshOrder.status === 'paid') {
-                return res.json({ status: 'paid', productCode: freshOrder.productCode });
+            if (freshOrder && freshOrder.status === 'paid') { return res.json({ status: 'paid', productCode: freshOrder.productCode }); }
+
+            if (order.items && order.items.length > 0) {
+                for (const item of order.items) {
+                    const product = (freshDB.products || []).find(p => p.id == item.productId);
+                    if (product && product.stock > 0) product.stock -= (item.quantity || 1);
+                }
+            } else {
+                const product = (freshDB.products || []).find(p => p.id == order.productId);
+                if (product && product.stock > 0) product.stock -= 1;
             }
 
-            const product = (freshDB.products || []).find(p => p.id == order.productId);
-            if (product && product.stock > 0) product.stock -= 1;
             freshOrder.status = 'paid';
             freshOrder.paidAt = new Date().toISOString();
 
@@ -237,11 +344,7 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
                     break;
                 } catch(e) {
                     console.error('Check-payment save failed attempt ' + attempt, e.message);
-                    if (attempt < 3) {
-                        await new Promise(r => setTimeout(r, 800));
-                        const retryDB = await getDB();
-                        freshDB.sha = retryDB.sha;
-                    }
+                    if (attempt < 3) { await new Promise(r => setTimeout(r, 800)); const retryDB = await getDB(); freshDB.sha = retryDB.sha; }
                 }
             }
             if (!saved) console.error('GAGAL SIMPAN ORDER PAID: ' + req.params.orderCode);
@@ -257,17 +360,130 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
 app.get('/api/products', async (req, res) => { const db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 app.post('/api/create-order', async (req, res) => { const { productId, customerName, customerEmail, qrisId, qrisImage, totalAmount, expiredAt } = req.body; if (!productId || !customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); const db = await getDB(); const product = (db.products || []).find(p => p.id == productId); if (!product) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); db.orders.unshift({ id: Date.now(), orderCode: crypto.randomBytes(16).toString('hex'), qrisId, productId: product.id, productName: product.name, productCode: product.itemContent, price: product.price, totalAmount: totalAmount || product.price, customerName: sanitize(customerName), customerEmail: sanitize(customerEmail || '-'), status: 'pending', qrisImage, expiredAt, createdAt: new Date().toISOString() }); await setDB(db.products, db.orders, db.sha); res.json({ success: true, orderCode: db.orders[0].orderCode }); });
 
+// ========== CART ORDER ==========
+app.post('/api/create-cart-order', async (req, res) => {
+    const { items, customerName, qrisId, qrisImage, totalAmount, expiredAt, referralCode, useDiscount } = req.body;
+    if (!items || !items.length || !customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
+
+    let lastError = '';
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const db = await getDB();
+            let cartTotal = 0;
+            const orderItems = [];
+
+            for (const item of items) {
+                const product = (db.products || []).find(p => p.id == item.productId);
+                if (!product) return res.status(404).json({ error: 'Produk ' + item.productId + ' tidak ditemukan' });
+                if (product.stock <= 0) return res.status(400).json({ error: 'Stok ' + product.name + ' habis' });
+                cartTotal += product.price * (item.quantity || 1);
+                orderItems.push({ productId: product.id, productName: product.name, productCode: product.itemContent, price: product.price, quantity: item.quantity || 1 });
+            }
+
+            const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            let discountAmount = calculateCartDiscount(totalItems);
+
+            if (referralCode && useDiscount) {
+                const user = (db.users || []).find(u => u.referralCode === referralCode);
+                if (user && user.discountBalance > 0) {
+                    const maxRefDiscount = Math.min(user.discountBalance, cartTotal - discountAmount);
+                    discountAmount += maxRefDiscount;
+                    user.discountBalance -= maxRefDiscount;
+                }
+            }
+
+            const finalAmount = Math.max(0, cartTotal - discountAmount);
+
+            for (const item of orderItems) {
+                const product = (db.products || []).find(p => p.id == item.productId);
+                if (product) product.stock -= item.quantity;
+            }
+
+            const orderCode = crypto.randomBytes(16).toString('hex');
+            db.orders.unshift({
+                id: Date.now(), orderCode, qrisId,
+                items: orderItems,
+                productName: orderItems.map(i => i.productName + ' x' + i.quantity).join(', '),
+                productCode: orderItems.map(i => i.productCode).join('\n---\n'),
+                price: cartTotal, totalAmount: finalAmount,
+                originalAmount: cartTotal, discountAmount,
+                customerName: sanitize(customerName), customerEmail: '-',
+                status: 'pending', qrisImage, expiredAt,
+                createdAt: new Date().toISOString()
+            });
+
+            await setDB(db.products, db.orders, db.sha);
+            return res.json({ success: true, orderCode, cartTotal, discountAmount, finalAmount });
+        } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
+    }
+    res.status(500).json({ error: 'Save failed: ' + lastError });
+});
+
+// ========== GACHA ==========
+app.get('/api/gacha/info', async (req, res) => {
+    const db = await getDB();
+    const availableProducts = (db.products || []).filter(p => p.stock > 0);
+    const totalValue = availableProducts.reduce((sum, p) => sum + p.price, 0);
+    const avgValue = availableProducts.length > 0 ? Math.floor(totalValue / availableProducts.length) : 0;
+    res.json({ success: true, gachaPrice: Math.floor(avgValue * 0.7), totalProducts: availableProducts.length, jackpotChance: '5%', message: 'Dapetin produk random mulai dari Rp ' + Math.floor(avgValue * 0.7).toLocaleString() + '!' });
+});
+
+app.post('/api/gacha', async (req, res) => {
+    const { customerName, qrisId, qrisImage, totalAmount, expiredAt } = req.body;
+    if (!customerName || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
+
+    let lastError = '';
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const db = await getDB();
+            const availableProducts = (db.products || []).filter(p => p.stock > 0 && p.price > 0);
+            if (availableProducts.length === 0) return res.status(400).json({ error: 'Stok habis semua' });
+
+            const sorted = [...availableProducts].sort((a, b) => a.price - b.price);
+            const median = sorted[Math.floor(sorted.length / 2)].price;
+            const cheap = sorted.filter(p => p.price <= median);
+            const expensive = sorted.filter(p => p.price > median);
+            const roll = Math.random() * 100;
+            let pool;
+            if (roll < 70) pool = cheap;
+            else if (roll < 95) pool = expensive;
+            else pool = sorted;
+
+            const winner = pool[Math.floor(Math.random() * pool.length)];
+            winner.stock -= 1;
+
+            const orderCode = crypto.randomBytes(16).toString('hex');
+            db.orders.unshift({
+                id: Date.now(), orderCode, qrisId,
+                productId: winner.id,
+                productName: '🎰 GACHA: ' + winner.name,
+                productCode: winner.itemContent,
+                price: totalAmount, totalAmount,
+                customerName: sanitize(customerName), customerEmail: '-',
+                status: 'pending', qrisImage, expiredAt,
+                isGacha: true, gachaResult: winner.name,
+                createdAt: new Date().toISOString()
+            });
+
+            await setDB(db.products, db.orders, db.sha);
+            return res.json({ success: true, orderCode, gachaResult: winner.name, originalPrice: winner.price, isJackpot: roll >= 95 });
+        } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
+    }
+    res.status(500).json({ error: 'Save failed: ' + lastError });
+});
+
 // ========== ADMIN CRUD ==========
-app.get('/api/admin/stats', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const paid = (db.orders || []).filter(o => o.status === 'paid'); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalRevenue: paid.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0), pendingCount: (db.orders || []).filter(o => o.status === 'pending').length, expiredCount: (db.orders || []).filter(o => o.status === 'expired').length, cancelledCount: (db.orders || []).filter(o => o.status === 'cancelled').length, paidCount: paid.length } }); });
+app.get('/api/admin/stats', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const paid = (db.orders || []).filter(o => o.status === 'paid'); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalRevenue: paid.reduce((s, o) => s + (o.totalAmount || o.price || 0), 0), pendingCount: (db.orders || []).filter(o => o.status === 'pending').length, expiredCount: (db.orders || []).filter(o => o.status === 'expired').length, cancelledCount: (db.orders || []).filter(o => o.status === 'cancelled').length, paidCount: paid.length } }); });
 app.get('/api/admin/products', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, products: (await getDB()).products || [] }); });
 app.get('/api/admin/orders', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, orders: (await getDB()).orders || [] }); });
+app.get('/api/admin/users', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, users: (await getDB()).users || [] }); });
 app.get('/api/admin/product/:id', async (req, res) => { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const p = ((await getDB()).products || []).find(p => p.id == req.params.id); if (!p) return res.status(404).json({ error: 'Not found' }); res.json({ success: true, product: p }); });
 app.post('/api/admin/product', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent } = req.body; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); const db = await getDB(); db.products.push({ id: Date.now(), name, description: description || '', price: parseInt(price), stock: parseInt(stock) || 1, itemType: itemType || 'text', itemContent, bonusType: bonusType || 'none', bonusContent: bonusContent || '', createdAt: new Date().toISOString() }); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.put('/api/admin/product/:id', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const { name, description, price, stock, itemType, itemContent, bonusType, bonusContent } = req.body; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); const db = await getDB(); const idx = (db.products || []).findIndex(p => p.id == req.params.id); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.products[idx] = { ...db.products[idx], name, description: description || '', price: parseInt(price), stock: parseInt(stock) || 1, itemType: itemType || 'text', itemContent, bonusType: bonusType || 'none', bonusContent: bonusContent || '', updatedAt: new Date().toISOString() }; await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.delete('/api/admin/product/:id', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); db.products = (db.products || []).filter(p => p.id != req.params.id); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.post('/api/admin/reset-orders', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); const db = await getDB(); const paid = (db.orders || []).filter(o => o.status === 'paid'); const del = (db.orders || []).length - paid.length; db.orders = paid; await setDB(db.products, db.orders, db.sha); res.json({ success: true, deletedCount: del, keptCount: paid.length }); });
 app.post('/api/admin/delete-selected-orders', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.orderIds?.length) return res.status(400).json({ error: 'Tidak ada order' }); const db = await getDB(); db.orders = (db.orders || []).filter(o => !req.body.orderIds.includes(o.id.toString())); await setDB(db.products, db.orders, db.sha); res.json({ success: true, deletedCount: req.body.orderIds.length }); });
-app.post('/api/admin/backup', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return res.json({ success: true }); const db = await getDB(); const fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify({ products: db.products, orders: db.orders, adminIP: db.adminIP, adminIPs: db.adminIPs, maintenance: db.maintenance }, null, 2)], { type: 'application/json' }), 'backup_' + Date.now() + '.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
+app.post('/api/admin/backup', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return res.json({ success: true }); const db = await getDB(); const fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify({ products: db.products, orders: db.orders, users: db.users, adminIP: db.adminIP, adminIPs: db.adminIPs, maintenance: db.maintenance }, null, 2)], { type: 'application/json' }), 'backup_' + Date.now() + '.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
 app.post('/api/admin/broadcast', async (req, res) => { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.message) return res.status(400).json({ error: 'Pesan wajib diisi' }); const db = await getDB(); const unique = [...new Map((db.orders || []).map(o => [o.customerName, o.customerEmail])).entries()]; const sent = unique.filter(([_, e]) => e && e !== '-').length; await sendTelegramMessage('📢 BROADCAST\n\n' + req.body.message + '\n\n📨 Terkirim ke ' + sent + ' customer.'); res.json({ success: true, sentCount: sent }); });
 
 app.get('/order/:code', (req, res) => res.sendFile(path.join(__dirname, '../public/order.html')));
