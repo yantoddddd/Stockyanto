@@ -6,7 +6,29 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
 const GITHUB_PATH = 'database.json';
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
 
+// ✅ ENCRYPT/DECRYPT
+function encrypt(text) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
+
+function decrypt(encryptedText) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const parts = encryptedText.split(':');
+    const iv = Buffer.from(parts[0], 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let decrypted = decipher.update(parts[1], 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+
+// ✅ GET DB (SUPPORT ENCRYPTED)
 async function getDB() {
     try {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
@@ -15,41 +37,52 @@ async function getDB() {
         if (!res.ok) return { products: [], orders: [], sha: null };
         const data = await res.json();
         const content = Buffer.from(data.content, 'base64').toString('utf8');
-        return { ...JSON.parse(content), sha: data.sha };
+        let parsed;
+        try {
+            parsed = JSON.parse(content);
+        } catch(e) {
+            const decrypted = decrypt(content);
+            parsed = JSON.parse(decrypted);
+        }
+        return { ...parsed, sha: data.sha };
     } catch (err) {
         console.error('GetDB error:', err);
         return { products: [], orders: [], sha: null };
     }
 }
 
+// ✅ SET DB (ENCRYPT BEFORE SAVE)
 async function setDB(products, orders, oldSha, retryCount) {
     if (!retryCount) retryCount = 0;
-    if (retryCount > 3) throw new Error('GitHub save failed after 3 retries');
+    if (retryCount > 5) throw new Error('Save failed after 5 retries');
     const db = await getDB();
-    const content = { 
-        products: products || db.products || [], 
-        orders: orders || db.orders || [], 
+    const content = {
+        products: products || db.products || [],
+        orders: orders || db.orders || [],
         adminIP: db.adminIP || null,
-        updatedAt: new Date().toISOString() 
+        adminIPs: db.adminIPs || [],
+        maintenance: db.maintenance || false,
+        encrypted: true,
+        updatedAt: new Date().toISOString()
     };
-    const updatedContent = Buffer.from(JSON.stringify(content, null, 2)).toString('base64');
+    const encryptedContent = encrypt(JSON.stringify(content));
+    const updatedContent = Buffer.from(encryptedContent).toString('base64');
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
         method: 'PUT',
         headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Update db via webhook', content: updatedContent, sha: oldSha })
     });
     if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        if (errorData.message && (errorData.message.includes('SHA') || errorData.message.includes('does not match'))) {
-            console.log(`SHA conflict, retrying... (${retryCount + 1}/3)`);
-            await new Promise(r => setTimeout(r, 500));
-            const freshDB = await getDB();
-            return setDB(products, orders, freshDB.sha, retryCount + 1);
+        const e = await res.json().catch(() => ({}));
+        if (e.message?.includes('SHA')) {
+            await new Promise(r => setTimeout(r, 800));
+            const f = await getDB();
+            return setDB(products, orders, f.sha, retryCount + 1);
         }
-        throw new Error('GitHub save failed');
+        throw new Error('Save failed: ' + (e.message || res.status));
     }
-    const data = await res.json();
-    return data.content.sha;
+    const d = await res.json();
+    return d.content.sha;
 }
 
 async function sendTelegramNotification(order, bonusContent) {
