@@ -41,7 +41,6 @@
         .header a:hover { color:white; }
         .header h1 { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,#fff,#94a3f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-        /* TAB NAVIGASI */
         .tab-nav { 
             display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:20px;
         }
@@ -99,8 +98,8 @@
             cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); 
         }
         .order-item:hover { border-color:var(--accent); background:#1a2332; }
-        .order-item .oname { font-weight:600; color:white; font-size:0.85rem; }
-        .order-item .odetail { font-size:0.7rem; color:#94a3b8; margin-top:4px; }
+        .oname { font-weight:600; color:white; font-size:0.85rem; }
+        .odetail { font-size:0.7rem; color:#94a3b8; margin-top:4px; }
         .ostatus { display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.6rem; font-weight:600; margin-top:4px; }
         .ostatus.paid { background:rgba(16,185,129,0.15); color:var(--success); }
         .ostatus.pending { background:rgba(245,158,11,0.15); color:var(--warning); }
@@ -115,7 +114,6 @@
             font-size:0.7rem; font-weight:600; 
             background:rgba(59,130,246,0.15); color:var(--accent2);
         }
-        .badge.warning { background:rgba(245,158,11,0.15); color:var(--warning); }
 
         .toast { 
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%); 
@@ -134,7 +132,6 @@
         <h1><i class="fas fa-user-circle"></i> Profile</h1>
     </div>
 
-    <!-- GUEST -->
     <div id="guestSection">
         <div class="card" style="text-align:center;">
             <i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i>
@@ -144,10 +141,8 @@
         </div>
     </div>
 
-    <!-- LOGGED IN -->
     <div id="loggedInSection" style="display:none;">
         
-        <!-- TAB NAVIGASI -->
         <div class="tab-nav">
             <span class="tab-chip active" onclick="switchTab('info', this)"><i class="fas fa-id-card"></i> Info</span>
             <span class="tab-chip" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> Pengaturan</span>
@@ -197,6 +192,13 @@
                 <button onclick="doWd()" class="btn-warning"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button>
                 <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
             </div>
+
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Riwayat Penarikan</h2>
+                <div id="wdHistoryList">
+                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
+                </div>
+            </div>
         </div>
 
         <!-- TAB: RIWAYAT -->
@@ -212,7 +214,7 @@
 </div>
 
 <!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-sign-in-alt"></i> Login</h3>
         <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
@@ -226,13 +228,13 @@
 </div>
 
 <!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-user-plus"></i> Daftar</h3>
         <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
         <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
         <input type="date" id="regBday" onchange="checkAge()">
-        <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">❌ Minimal umur 12 tahun!</p>
+        <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Minimal umur 12 tahun!</p>
         <input type="password" id="regPw" placeholder="Password..." autocomplete="new-password">
         <button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button>
         <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
@@ -260,16 +262,17 @@
         return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
     }
 
-    // ========== TAB SWITCHER ==========
     function switchTab(tabName, el) {
         document.querySelectorAll('.tab-chip').forEach(function(c) { c.classList.remove('active'); });
         document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
         if (el) el.classList.add('active');
         document.getElementById('tab-' + tabName).classList.add('active');
         
-        // Load data pas tab dibuka
         if (tabName === 'history') loadOrders();
-        if (tabName === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); }
+        if (tabName === 'referral') { 
+            document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+            loadWdHistory(); 
+        }
     }
 
     async function checkAuth() {
@@ -322,7 +325,29 @@
         }
     }
 
-    // ========== AUTH ==========
+    async function loadWdHistory() {
+        try {
+            var res = await fetch('/api/user/withdrawals', { credentials: 'include' });
+            var data = await res.json();
+            var el = document.getElementById('wdHistoryList');
+            if (data.success && data.withdrawals.length > 0) {
+                el.innerHTML = data.withdrawals.map(function(w) {
+                    var stClass = w.status === 'success' ? 'paid' : w.status === 'pending' ? 'pending' : 'other';
+                    var stText = w.status === 'success' ? 'Sukses' : w.status === 'pending' ? 'Pending' : w.status;
+                    return '<div class="order-item">' +
+                        '<div class="oname"><span class="ostatus ' + stClass + '">' + stText + '</span> Rp ' + (w.amount || 0).toLocaleString() + '</div>' +
+                        '<div class="odetail">Ke ' + (w.paymentMethod || '-') + ' (' + (w.paymentNumber || '-') + ')</div>' +
+                        '<div class="odetail" style="font-size:0.6rem;">' + new Date(w.createdAt).toLocaleString() + '</div>' +
+                    '</div>';
+                }).join('');
+            } else {
+                el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada penarikan</p></div>';
+            }
+        } catch(e) {
+            document.getElementById('wdHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>';
+        }
+    }
+
     function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
     function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
     function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
@@ -349,7 +374,7 @@
                 currentUser = data.user;
                 document.getElementById('loginMod').style.display = 'none';
                 checkAuth();
-                toast('✅ Selamat datang, ' + data.user.name + '!');
+                toast('Selamat datang, ' + data.user.name + '!');
             } else { toast(data.error, true); }
         } catch(e) { toast('Gagal login', true); }
     }
@@ -362,14 +387,11 @@
         try {
             var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,birthDate:bday,password:pw}) });
             var data = await res.json();
-            if (data.success) {
-                document.getElementById('regMod').style.display = 'none';
-                toast('✅ Daftar berhasil! Silakan login.');
-            } else { toast(data.error, true); }
+            if (data.success) { document.getElementById('regMod').style.display = 'none'; toast('Daftar berhasil! Silakan login.'); }
+            else { toast(data.error, true); }
         } catch(e) { toast('Gagal daftar', true); }
     }
 
-    // ========== PENGATURAN ==========
     async function changePassword() {
         var oldPw = document.getElementById('oldPw').value;
         var newPw = document.getElementById('newPw').value;
@@ -377,44 +399,37 @@
         try {
             var res = await fetch('/api/user/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({oldPassword:oldPw,newPassword:newPw}) });
             var data = await res.json();
-            if (data.success) { toast('✅ Password diganti!'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; }
+            if (data.success) { toast('Password diganti!'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; }
             else { toast(data.error, true); }
         } catch(e) { toast('Gagal', true); }
     }
 
-    // ========== REFERRAL ==========
     function copyRef() {
         if (!currentUser) return;
-        navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('📋 Link referral tersalin!'); });
+        navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('Link referral tersalin!'); });
     }
 
-    // ========== WD (DANA ONLY) ==========
     async function doWd() {
         if (!currentUser) { toast('Login dulu!', true); return; }
         var amt = parseInt(document.getElementById('wdAmt').value);
         var num = document.getElementById('wdNum').value.trim();
-        
         if (!amt || amt < 2000) { toast('Minimal WD Rp 2.000!', true); return; }
         if (!num || !num.startsWith('08')) { toast('Nomor DANA harus diawali 08!', true); return; }
         if (num.length < 10) { toast('Nomor DANA tidak valid!', true); return; }
-        
         try {
-            var res = await fetch('/api/user/withdraw', { 
-                method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', 
-                body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) 
-            });
+            var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) });
             var data = await res.json();
             if (data.success) {
                 currentUser.discountBalance -= amt;
                 loadProfile();
                 document.getElementById('wdAmt').value = '';
                 document.getElementById('wdNum').value = '';
-                toast('✅ WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!');
+                loadWdHistory();
+                toast('WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!');
             } else { toast(data.error, true); }
         } catch(e) { toast('Gagal WD', true); }
     }
 
-    // ========== LOGOUT ==========
     async function doLogout() {
         await fetch('/api/logout', { method:'POST', credentials:'include' });
         window.location.href = '/';
