@@ -33,7 +33,7 @@
         .container { max-width:600px; margin:0 auto; }
 
         .header { 
-            display:flex; align-items:center; gap:16px; margin-bottom:28px;
+            display:flex; align-items:center; gap:16px; margin-bottom:24px;
             background:rgba(255,255,255,0.06); backdrop-filter:blur(12px);
             border-radius:60px; padding:14px 22px; border:1px solid rgba(255,255,255,0.08);
         }
@@ -41,11 +41,30 @@
         .header a:hover { color:white; }
         .header h1 { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,#fff,#94a3f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
+        /* TAB NAVIGASI */
+        .tab-nav { 
+            display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:20px;
+        }
+        .tab-nav::-webkit-scrollbar { height:2px; }
+        .tab-nav::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:8px; }
+        .tab-chip { 
+            padding:10px 18px; border-radius:24px; border:1px solid #334155; 
+            background:transparent; color:#94a3b8; font-size:0.8rem; 
+            cursor:pointer; white-space:nowrap; transition:0.2s; 
+            display:flex; align-items:center; gap:6px; font-weight:500;
+        }
+        .tab-chip i { font-size:0.75rem; }
+        .tab-chip:hover { border-color:var(--accent); color:var(--accent2); background:rgba(59,130,246,0.1); }
+        .tab-chip.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
+
+        .tab-content { animation:fadeScale 0.3s ease; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+
         .card { 
             background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); 
             border-radius:var(--radius); padding:24px; 
             border:1px solid rgba(255,255,255,0.08); margin-bottom:20px;
-            animation:fadeScale 0.3s ease;
         }
         .card h2 { font-size:1rem; font-weight:600; color:var(--accent2); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
         .card h2 i { width:20px; text-align:center; }
@@ -74,9 +93,6 @@
         .btn-warning:hover { box-shadow:0 6px 20px rgba(245,158,11,0.35); }
         .btn-danger { background:var(--danger); }
         .btn-danger:hover { box-shadow:0 6px 20px rgba(239,68,68,0.35); }
-        .btn-outline { background:transparent; border:1px solid #475569; color:white; }
-        .btn-outline:hover { border-color:var(--danger); background:rgba(239,68,68,0.1); box-shadow:none; }
-        .btn-sm { padding:8px 16px; font-size:0.75rem; border-radius:20px; width:auto; }
 
         .order-item { 
             background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; 
@@ -85,7 +101,7 @@
         .order-item:hover { border-color:var(--accent); background:#1a2332; }
         .order-item .oname { font-weight:600; color:white; font-size:0.85rem; }
         .order-item .odetail { font-size:0.7rem; color:#94a3b8; margin-top:4px; }
-        .order-item .ostatus { display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.6rem; font-weight:600; margin-top:4px; }
+        .ostatus { display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.6rem; font-weight:600; margin-top:4px; }
         .ostatus.paid { background:rgba(16,185,129,0.15); color:var(--success); }
         .ostatus.pending { background:rgba(245,158,11,0.15); color:var(--warning); }
         .ostatus.other { background:rgba(239,68,68,0.15); color:var(--danger); }
@@ -101,13 +117,6 @@
         }
         .badge.warning { background:rgba(245,158,11,0.15); color:var(--warning); }
 
-        /* WD Section */
-        .wd-toggle { cursor:pointer; }
-        .wd-box { 
-            background:rgba(0,0,0,0.3); border-radius:16px; padding:16px; margin-top:12px;
-            border:1px solid rgba(245,158,11,0.2);
-        }
-
         .toast { 
             position:fixed; bottom:20px; left:50%; transform:translateX(-50%); 
             background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; 
@@ -115,7 +124,7 @@
             display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
         }
 
-        @media (max-width:480px) { .card { padding:16px; } }
+        @media (max-width:480px) { .card { padding:16px; } .tab-chip { padding:8px 14px; font-size:0.7rem; } }
     </style>
 </head>
 <body>
@@ -138,63 +147,72 @@
     <!-- LOGGED IN -->
     <div id="loggedInSection" style="display:none;">
         
-        <!-- INFO AKUN -->
-        <div class="card">
-            <h2><i class="fas fa-id-card"></i> Info Akun</h2>
-            <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="profName">-</span></div>
-            <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="profRefCode" style="font-family:monospace;">-</span></div>
-            <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="profBalance" style="color:#f59e0b;font-weight:700;font-size:1rem;">Rp 0</span></div>
-            <div class="detail-row"><span class="dl">Referral Sukses</span><span class="dv"><span class="badge" id="profRefCount">0</span></span></div>
+        <!-- TAB NAVIGASI -->
+        <div class="tab-nav">
+            <span class="tab-chip active" onclick="switchTab('info', this)"><i class="fas fa-id-card"></i> Info</span>
+            <span class="tab-chip" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> Pengaturan</span>
+            <span class="tab-chip" onclick="switchTab('referral', this)"><i class="fas fa-link"></i> Referral</span>
+            <span class="tab-chip" onclick="switchTab('history', this)"><i class="fas fa-history"></i> Riwayat</span>
         </div>
 
-        <!-- PENGATURAN -->
-        <div class="card">
-            <h2><i class="fas fa-cog"></i> Pengaturan Akun</h2>
-            <input type="password" id="oldPw" placeholder="Password lama..." autocomplete="current-password">
-            <input type="password" id="newPw" placeholder="Password baru..." autocomplete="new-password">
-            <button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button>
+        <!-- TAB: INFO -->
+        <div class="tab-panel active" id="tab-info">
+            <div class="card">
+                <h2><i class="fas fa-id-card"></i> Info Akun</h2>
+                <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="profName">-</span></div>
+                <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="profRefCode" style="font-family:monospace;">-</span></div>
+                <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="profBalance" style="color:#f59e0b;font-weight:700;font-size:1rem;">Rp 0</span></div>
+                <div class="detail-row"><span class="dl">Referral Sukses</span><span class="dv"><span class="badge" id="profRefCount">0</span></span></div>
+            </div>
+            <button class="btn-danger" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
 
-        <!-- REFERRAL -->
-        <div class="card">
-            <h2><i class="fas fa-link"></i> Referral</h2>
-            <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:4px;">Link Referral Kamu:</p>
-            <div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;">
-                <span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span>
+        <!-- TAB: PENGATURAN -->
+        <div class="tab-panel" id="tab-settings">
+            <div class="card">
+                <h2><i class="fas fa-cog"></i> Ganti Password</h2>
+                <input type="password" id="oldPw" placeholder="Password lama..." autocomplete="current-password">
+                <input type="password" id="newPw" placeholder="Password baru..." autocomplete="new-password">
+                <button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button>
             </div>
-            <div style="display:flex;gap:8px;">
-                <button onclick="copyRef()" style="flex:1;"><i class="fas fa-copy"></i> Salin Link</button>
-                <button onclick="toggleWd()" class="btn-warning" style="flex:1;"><i class="fas fa-wallet"></i> Tarik Saldo</button>
+        </div>
+
+        <!-- TAB: REFERRAL -->
+        <div class="tab-panel" id="tab-referral">
+            <div class="card">
+                <h2><i class="fas fa-link"></i> Link Referral</h2>
+                <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:4px;">Bagikan link ini:</p>
+                <div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;">
+                    <span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span>
+                </div>
+                <button onclick="copyRef()"><i class="fas fa-copy"></i> Salin Link</button>
             </div>
 
-            <!-- WD Box -->
-            <div class="wd-box" id="wdBox" style="display:none;">
-                <h2 style="font-size:0.9rem;margin-bottom:12px;"><i class="fas fa-money-bill-wave"></i> Withdraw ke DANA</h2>
-                <div class="detail-row"><span class="dl">Saldo Tersedia</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
+            <div class="card">
+                <h2><i class="fas fa-wallet"></i> Tarik Saldo (WD)</h2>
+                <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
                 <input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)">
-                <p style="font-size:0.65rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p>
+                <p style="font-size:0.7rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p>
                 <input type="text" id="wdNum" placeholder="08123456789" maxlength="13">
-                <button onclick="doWd()" class="btn-warning" style="margin-top:12px;"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button>
+                <button onclick="doWd()" class="btn-warning"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button>
                 <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
             </div>
         </div>
 
-        <!-- RIWAYAT -->
-        <div class="card">
-            <h2><i class="fas fa-history"></i> Riwayat Order</h2>
-            <div id="orderHistoryList">
-                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
+        <!-- TAB: RIWAYAT -->
+        <div class="tab-panel" id="tab-history">
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Riwayat Order</h2>
+                <div id="orderHistoryList">
+                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
+                </div>
             </div>
         </div>
-
-        <!-- LOGOUT -->
-        <button class="btn-danger" onclick="doLogout()" style="margin-top:8px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        <p style="text-align:center;font-size:0.65rem;color:#475569;margin-top:12px;">Yanto Store &copy; 2026</p>
     </div>
 </div>
 
 <!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-sign-in-alt"></i> Login</h3>
         <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
@@ -208,7 +226,7 @@
 </div>
 
 <!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-user-plus"></i> Daftar</h3>
         <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
@@ -240,6 +258,18 @@
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
+    }
+
+    // ========== TAB SWITCHER ==========
+    function switchTab(tabName, el) {
+        document.querySelectorAll('.tab-chip').forEach(function(c) { c.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+        if (el) el.classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Load data pas tab dibuka
+        if (tabName === 'history') loadOrders();
+        if (tabName === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); }
     }
 
     async function checkAuth() {
@@ -359,14 +389,6 @@
     }
 
     // ========== WD (DANA ONLY) ==========
-    function toggleWd() {
-        var box = document.getElementById('wdBox');
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        if (box.style.display === 'block') {
-            document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-        }
-    }
-
     async function doWd() {
         if (!currentUser) { toast('Login dulu!', true); return; }
         var amt = parseInt(document.getElementById('wdAmt').value);
@@ -385,7 +407,6 @@
             if (data.success) {
                 currentUser.discountBalance -= amt;
                 loadProfile();
-                document.getElementById('wdBox').style.display = 'none';
                 document.getElementById('wdAmt').value = '';
                 document.getElementById('wdNum').value = '';
                 toast('✅ WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!');
