@@ -19,44 +19,101 @@
             --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
-            --radius: 20px;
+            --radius: 24px;
+            --radius-sm: 14px;
         }
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        body { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family:'Inter',sans-serif; min-height:100vh; padding:20px 16px; color:var(--text); }
-        .container { max-width:700px; margin:0 auto; }
-        
-        .header { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
-        .header a { color:var(--text2); text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:6px; transition:0.2s; }
-        .header a:hover { color:white; }
-        .header h1 { font-size:1.2rem; font-weight:700; color:white; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); 
+            font-family:'Inter',sans-serif; min-height:100vh; padding:24px 16px 40px; 
+            color:var(--text); animation:fadeIn 0.5s ease; 
+        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
+        .container { max-width:600px; margin:0 auto; }
 
-        .card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:24px; padding:24px; border:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
-        .card h2 { font-size:1rem; font-weight:600; color:var(--accent2); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .header { 
+            display:flex; align-items:center; gap:16px; margin-bottom:28px;
+            background:rgba(255,255,255,0.06); backdrop-filter:blur(12px);
+            border-radius:60px; padding:14px 22px; border:1px solid rgba(255,255,255,0.08);
+        }
+        .header a { color:var(--accent2); text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:6px; transition:0.2s; }
+        .header a:hover { color:white; }
+        .header h1 { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,#fff,#94a3f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        .card { 
+            background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); 
+            border-radius:var(--radius); padding:24px; 
+            border:1px solid rgba(255,255,255,0.08); margin-bottom:20px;
+            animation:fadeScale 0.3s ease;
+        }
+        .card h2 { font-size:1rem; font-weight:600; color:var(--accent2); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+        .card h2 i { width:20px; text-align:center; }
+
         .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
         .detail-row .dl { color:#64748b; }
-        .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; }
+        .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; font-weight:500; }
 
-        input { width:100%; padding:12px 16px; margin:8px 0; border-radius:14px; border:1px solid #334155; background:#1e293b; color:white; font-size:0.85rem; outline:none; }
-        input:focus { border-color:var(--accent); }
-        button { 
-            background:var(--accent); border:none; padding:12px 20px; border-radius:14px;
-            color:white; font-weight:500; cursor:pointer; width:100%; margin-top:8px;
-            display:flex; align-items:center; justify-content:center; gap:8px; transition:0.2s; font-size:0.85rem;
+        input { 
+            width:100%; padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm);
+            border:1px solid #334155; background:#1e293b; 
+            color:white; font-size:0.85rem; outline:none; transition:0.3s;
         }
-        button:hover { opacity:0.9; }
-        .btn-warning { background:var(--warning); }
-        .btn-danger { background:var(--danger); }
-        .btn-success { background:var(--success); }
+        input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(59,130,246,0.3); }
+        input::placeholder { color:#64748b; }
 
-        .order-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); }
-        .order-item:hover { border-color:var(--accent); }
+        button { 
+            background:var(--accent); border:none; padding:12px 20px; border-radius:40px;
+            color:white; font-weight:500; cursor:pointer; width:100%; margin-top:8px;
+            display:flex; align-items:center; justify-content:center; gap:8px; 
+            transition:0.25s; font-size:0.85rem;
+        }
+        button:active { transform:scale(0.96); }
+        button:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
+        .btn-warning { background:var(--warning); color:#000; font-weight:600; }
+        .btn-warning:hover { box-shadow:0 6px 20px rgba(245,158,11,0.35); }
+        .btn-danger { background:var(--danger); }
+        .btn-danger:hover { box-shadow:0 6px 20px rgba(239,68,68,0.35); }
+        .btn-outline { background:transparent; border:1px solid #475569; color:white; }
+        .btn-outline:hover { border-color:var(--danger); background:rgba(239,68,68,0.1); box-shadow:none; }
+        .btn-sm { padding:8px 16px; font-size:0.75rem; border-radius:20px; width:auto; }
+
+        .order-item { 
+            background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; 
+            cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); 
+        }
+        .order-item:hover { border-color:var(--accent); background:#1a2332; }
         .order-item .oname { font-weight:600; color:white; font-size:0.85rem; }
         .order-item .odetail { font-size:0.7rem; color:#94a3b8; margin-top:4px; }
+        .order-item .ostatus { display:inline-block; padding:2px 8px; border-radius:10px; font-size:0.6rem; font-weight:600; margin-top:4px; }
+        .ostatus.paid { background:rgba(16,185,129,0.15); color:var(--success); }
+        .ostatus.pending { background:rgba(245,158,11,0.15); color:var(--warning); }
+        .ostatus.other { background:rgba(239,68,68,0.15); color:var(--danger); }
 
-        .empty-state { text-align:center; padding:40px; color:#64748b; }
+        .empty-state { text-align:center; padding:40px 20px; color:#64748b; }
         .empty-state i { font-size:3rem; margin-bottom:12px; opacity:0.3; }
+        .empty-state p { font-size:0.8rem; }
 
-        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:8px; }
+        .badge { 
+            display:inline-block; padding:4px 12px; border-radius:20px; 
+            font-size:0.7rem; font-weight:600; 
+            background:rgba(59,130,246,0.15); color:var(--accent2);
+        }
+        .badge.warning { background:rgba(245,158,11,0.15); color:var(--warning); }
+
+        /* WD Section */
+        .wd-toggle { cursor:pointer; }
+        .wd-box { 
+            background:rgba(0,0,0,0.3); border-radius:16px; padding:16px; margin-top:12px;
+            border:1px solid rgba(245,158,11,0.2);
+        }
+
+        .toast { 
+            position:fixed; bottom:20px; left:50%; transform:translateX(-50%); 
+            background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; 
+            opacity:0; transition:0.3s; color:white; z-index:1000; 
+            display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
+        }
 
         @media (max-width:480px) { .card { padding:16px; } }
     </style>
@@ -64,96 +121,105 @@
 <body>
 <div class="container">
     <div class="header">
-        <a href="/"><i class="fas fa-arrow-left"></i> Kembali</a>
-        <h1>Profile</h1>
+        <a href="/"><i class="fas fa-arrow-left"></i> Beranda</a>
+        <h1><i class="fas fa-user-circle"></i> Profile</h1>
     </div>
 
+    <!-- GUEST -->
     <div id="guestSection">
         <div class="card" style="text-align:center;">
             <i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i>
-            <h2>Login Dulu</h2>
-            <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:16px;">Login buat akses pengaturan, referral, & riwayat order.</p>
+            <h2>Login Dulu, Bre</h2>
+            <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:20px;">Login buat akses pengaturan, referral, riwayat order & WD.</p>
             <button onclick="openLogin()"><i class="fas fa-sign-in-alt"></i> Login / Daftar</button>
         </div>
     </div>
 
+    <!-- LOGGED IN -->
     <div id="loggedInSection" style="display:none;">
-        <!-- PROFILE INFO -->
+        
+        <!-- INFO AKUN -->
         <div class="card">
-            <h2><i class="fas fa-user"></i> Info Akun</h2>
+            <h2><i class="fas fa-id-card"></i> Info Akun</h2>
             <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="profName">-</span></div>
-            <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="profRefCode">-</span></div>
-            <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="profBalance" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
-            <div class="detail-row"><span class="dl">Referral</span><span class="dv" id="profRefCount">0</span></div>
+            <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="profRefCode" style="font-family:monospace;">-</span></div>
+            <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="profBalance" style="color:#f59e0b;font-weight:700;font-size:1rem;">Rp 0</span></div>
+            <div class="detail-row"><span class="dl">Referral Sukses</span><span class="dv"><span class="badge" id="profRefCount">0</span></span></div>
         </div>
 
         <!-- PENGATURAN -->
         <div class="card">
             <h2><i class="fas fa-cog"></i> Pengaturan Akun</h2>
-            <input type="password" id="oldPw" placeholder="Password lama...">
-            <input type="password" id="newPw" placeholder="Password baru...">
+            <input type="password" id="oldPw" placeholder="Password lama..." autocomplete="current-password">
+            <input type="password" id="newPw" placeholder="Password baru..." autocomplete="new-password">
             <button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button>
         </div>
 
         <!-- REFERRAL -->
         <div class="card">
             <h2><i class="fas fa-link"></i> Referral</h2>
-            <div style="font-size:0.7rem;color:var(--accent2);word-break:break-all;margin-bottom:12px;" id="profRefLink">-</div>
+            <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:4px;">Link Referral Kamu:</p>
+            <div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;">
+                <span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span>
+            </div>
             <div style="display:flex;gap:8px;">
                 <button onclick="copyRef()" style="flex:1;"><i class="fas fa-copy"></i> Salin Link</button>
-                <button onclick="openWd()" class="btn-warning" style="flex:1;"><i class="fas fa-wallet"></i> Tarik Saldo</button>
+                <button onclick="toggleWd()" class="btn-warning" style="flex:1;"><i class="fas fa-wallet"></i> Tarik Saldo</button>
             </div>
-        </div>
 
-        <!-- WD MODAL (hidden) -->
-        <div id="wdBox" style="display:none;">
-            <div class="card">
-                <h2><i class="fas fa-wallet"></i> Tarik Saldo</h2>
-                <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
+            <!-- WD Box -->
+            <div class="wd-box" id="wdBox" style="display:none;">
+                <h2 style="font-size:0.9rem;margin-bottom:12px;"><i class="fas fa-money-bill-wave"></i> Withdraw ke DANA</h2>
+                <div class="detail-row"><span class="dl">Saldo Tersedia</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
                 <input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)">
-                <input type="text" id="wdMet" placeholder="Metode (QRIS/DANA/GOPAY)">
-                <input type="text" id="wdNum" placeholder="Nomor tujuan">
-                <button onclick="doWd()" class="btn-warning"><i class="fas fa-paper-plane"></i> Kirim WD</button>
-                <p style="font-size:0.6rem;color:#94a3b8;margin-top:8px;text-align:center;">Minimal WD Rp 2.000</p>
+                <p style="font-size:0.65rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p>
+                <input type="text" id="wdNum" placeholder="08123456789" maxlength="13">
+                <button onclick="doWd()" class="btn-warning" style="margin-top:12px;"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button>
+                <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
             </div>
         </div>
 
-        <!-- RIWAYAT ORDER -->
+        <!-- RIWAYAT -->
         <div class="card">
             <h2><i class="fas fa-history"></i> Riwayat Order</h2>
             <div id="orderHistoryList">
-                <div class="empty-state"><span style="font-size:0.8rem;">Memuat...</span></div>
+                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
             </div>
         </div>
 
         <!-- LOGOUT -->
-        <button class="btn-danger" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <button class="btn-danger" onclick="doLogout()" style="margin-top:8px;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <p style="text-align:center;font-size:0.65rem;color:#475569;margin-top:12px;">Yanto Store &copy; 2026</p>
     </div>
 </div>
 
 <!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:24px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;">
-        <h3 style="color:white;margin-bottom:16px;"><i class="fas fa-sign-in-alt"></i> Login</h3>
-        <input type="text" id="loginNm" placeholder="Nama lengkap...">
-        <input type="password" id="loginPw" placeholder="Password...">
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
+        <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-sign-in-alt"></i> Login</h3>
+        <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
+        <input type="password" id="loginPw" placeholder="Password..." autocomplete="current-password">
         <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="showReg()" style="color:#60a5fa;">Daftar</a></p>
+        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
+            Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a>
+        </p>
         <button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
 
 <!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:24px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;">
-        <h3 style="color:white;margin-bottom:16px;"><i class="fas fa-user-plus"></i> Daftar</h3>
-        <input type="text" id="regNm" placeholder="Nama lengkap...">
-        <label style="color:#94a3b8;font-size:0.8rem;">Tanggal Lahir (min 12 tahun)</label>
-        <input type="date" id="regBday">
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
+        <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-user-plus"></i> Daftar</h3>
+        <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
+        <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
+        <input type="date" id="regBday" onchange="checkAge()">
         <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">❌ Minimal umur 12 tahun!</p>
-        <input type="password" id="regPw" placeholder="Password...">
+        <input type="password" id="regPw" placeholder="Password..." autocomplete="new-password">
         <button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="showLoginMod()" style="color:#60a5fa;">Masuk</a></p>
+        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
+            Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a>
+        </p>
         <button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
@@ -171,6 +237,11 @@
         setTimeout(function(){ t.style.opacity = '0'; }, 3000);
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
+    }
+
     async function checkAuth() {
         try {
             var res = await fetch('/api/user/profile', { credentials: 'include' });
@@ -181,6 +252,9 @@
                 document.getElementById('loggedInSection').style.display = 'block';
                 loadProfile();
                 loadOrders();
+            } else {
+                document.getElementById('guestSection').style.display = 'block';
+                document.getElementById('loggedInSection').style.display = 'none';
             }
         } catch(e) {}
     }
@@ -192,6 +266,7 @@
         document.getElementById('profBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
         document.getElementById('profRefCount').textContent = currentUser.referralCount || 0;
         document.getElementById('profRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode;
+        document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
     }
 
     async function loadOrders() {
@@ -201,33 +276,50 @@
             var el = document.getElementById('orderHistoryList');
             if (data.success && data.orders.length > 0) {
                 el.innerHTML = data.orders.map(function(o) {
-                    var st = o.status === 'paid' ? '✅' : o.status === 'pending' ? '⏳' : '❌';
-                    return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'"><div class="oname">' + st + ' ' + o.productName + '</div><div class="odetail">Rp ' + (o.totalAmount||0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div></div>';
+                    var stClass = o.status === 'paid' ? 'paid' : o.status === 'pending' ? 'pending' : 'other';
+                    var stText = o.status === 'paid' ? 'Lunas' : o.status === 'pending' ? 'Pending' : o.status;
+                    return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'">' +
+                        '<div class="oname">' + escapeHtml(o.productName) + '</div>' +
+                        '<div class="odetail">Rp ' + (o.totalAmount||0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div>' +
+                        '<span class="ostatus ' + stClass + '">' + stText + '</span>' +
+                    '</div>';
                 }).join('');
             } else {
                 el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada order</p></div>';
             }
         } catch(e) {
-            document.getElementById('orderHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>';
+            document.getElementById('orderHistoryList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>';
         }
     }
 
+    // ========== AUTH ==========
     function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
-    function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; }
+    function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
     function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
+    function setMaxDate() { var maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 12); document.getElementById('regBday').max = maxDate.toISOString().split('T')[0]; }
+
+    function checkAge() {
+        var bday = document.getElementById('regBday').value;
+        if (!bday) return;
+        var birth = new Date(bday); var today = new Date();
+        var age = today.getFullYear() - birth.getFullYear();
+        var m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
+        document.getElementById('ageErr').style.display = age < 12 ? 'block' : 'none';
+    }
 
     async function doLogin() {
         var name = document.getElementById('loginNm').value.trim();
         var pw = document.getElementById('loginPw').value;
         if (!name || !pw) { toast('Isi semua!', true); return; }
         try {
-            var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name,pw}) });
+            var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,password:pw}) });
             var data = await res.json();
             if (data.success) {
                 currentUser = data.user;
                 document.getElementById('loginMod').style.display = 'none';
                 checkAuth();
-                toast('✅ Selamat datang!');
+                toast('✅ Selamat datang, ' + data.user.name + '!');
             } else { toast(data.error, true); }
         } catch(e) { toast('Gagal login', true); }
     }
@@ -238,7 +330,7 @@
         var pw = document.getElementById('regPw').value;
         if (!name || !bday || !pw) { toast('Isi semua!', true); return; }
         try {
-            var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name,birthDate:bday,password:pw}) });
+            var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,birthDate:bday,password:pw}) });
             var data = await res.json();
             if (data.success) {
                 document.getElementById('regMod').style.display = 'none';
@@ -247,6 +339,7 @@
         } catch(e) { toast('Gagal daftar', true); }
     }
 
+    // ========== PENGATURAN ==========
     async function changePassword() {
         var oldPw = document.getElementById('oldPw').value;
         var newPw = document.getElementById('newPw').value;
@@ -259,31 +352,48 @@
         } catch(e) { toast('Gagal', true); }
     }
 
+    // ========== REFERRAL ==========
     function copyRef() {
         if (!currentUser) return;
-        navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('📋 Tersalin!'); });
+        navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('📋 Link referral tersalin!'); });
     }
 
-    function openWd() { document.getElementById('wdBox').style.display = document.getElementById('wdBox').style.display === 'none' ? 'block' : 'none'; document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); }
+    // ========== WD (DANA ONLY) ==========
+    function toggleWd() {
+        var box = document.getElementById('wdBox');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        if (box.style.display === 'block') {
+            document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+        }
+    }
 
     async function doWd() {
+        if (!currentUser) { toast('Login dulu!', true); return; }
         var amt = parseInt(document.getElementById('wdAmt').value);
-        var met = document.getElementById('wdMet').value.trim();
         var num = document.getElementById('wdNum').value.trim();
-        if (!amt || amt < 2000) { toast('Minimal Rp 2.000!', true); return; }
-        if (!met || !num) { toast('Isi semua!', true); return; }
+        
+        if (!amt || amt < 2000) { toast('Minimal WD Rp 2.000!', true); return; }
+        if (!num || !num.startsWith('08')) { toast('Nomor DANA harus diawali 08!', true); return; }
+        if (num.length < 10) { toast('Nomor DANA tidak valid!', true); return; }
+        
         try {
-            var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:amt,paymentMethod:met,paymentNumber:num}) });
+            var res = await fetch('/api/user/withdraw', { 
+                method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', 
+                body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) 
+            });
             var data = await res.json();
             if (data.success) {
                 currentUser.discountBalance -= amt;
                 loadProfile();
                 document.getElementById('wdBox').style.display = 'none';
-                toast('✅ ' + data.message);
+                document.getElementById('wdAmt').value = '';
+                document.getElementById('wdNum').value = '';
+                toast('✅ WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!');
             } else { toast(data.error, true); }
-        } catch(e) { toast('Gagal', true); }
+        } catch(e) { toast('Gagal WD', true); }
     }
 
+    // ========== LOGOUT ==========
     async function doLogout() {
         await fetch('/api/logout', { method:'POST', credentials:'include' });
         window.location.href = '/';
