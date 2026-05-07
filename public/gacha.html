@@ -23,7 +23,7 @@
             --radius-sm: 12px;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body { 
             background: var(--bg);
             font-family: 'Inter', sans-serif; 
@@ -31,16 +31,22 @@
             display:flex; flex-direction:column; align-items:center; justify-content:center;
             padding: 20px; color: var(--text);
             background-image: 
-                radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.08) 0%, transparent 50%);
+                radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.1) 0%, transparent 50%);
         }
         @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slotBlur { 0%,100% { filter: blur(0); } 50% { filter: blur(3px); } }
         @keyframes jackpotGlow { 0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.5); } 50% { box-shadow: 0 0 60px rgba(245,158,11,1), 0 0 100px rgba(239,68,68,0.8); } }
-        @keyframes coinDrop { 0% { transform: translateY(-100vh) rotate(0deg); opacity:1; } 100% { transform: translateY(100vh) rotate(720deg); opacity:0; } }
+        @keyframes coinDrop { 
+            0% { transform: translateY(-100vh) rotate(0deg); opacity:1; } 
+            100% { transform: translateY(100vh) rotate(720deg); opacity:0; } 
+        }
+        @keyframes reelSpin {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(0); }
+        }
 
         .container { text-align:center; max-width:500px; width:100%; animation:fadeIn 0.5s ease; }
 
@@ -54,72 +60,101 @@
         .header a:hover { color:white; }
         .header h1 { font-size:1.2rem; font-weight:700; color:var(--warning); }
 
+        /* SLOT MACHINE */
         .slot-machine {
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 32px; padding: 32px 24px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0d1b2a 50%, #16213e 100%);
+            border-radius: 32px; padding: 28px 20px;
             border: 2px solid rgba(245,158,11,0.3);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.05);
             position: relative; overflow: hidden;
         }
         .slot-machine::before {
             content:''; position:absolute; top:0; left:0; right:0; height:4px;
+            background:linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b, #ef4444, #f59e0b);
+            animation: pulse 1s infinite;
+        }
+        .slot-machine::after {
+            content:''; position:absolute; bottom:0; left:0; right:0; height:4px;
             background:linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
         }
-        .slot-title { font-size:1.4rem; font-weight:800; color:var(--warning); margin-bottom:4px; }
+        .slot-title { 
+            font-size:1.6rem; font-weight:800; 
+            background:linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b); 
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            margin-bottom:4px; letter-spacing:2px; text-transform:uppercase;
+        }
         .slot-subtitle { font-size:0.7rem; color:var(--text2); margin-bottom:20px; letter-spacing:1px; }
 
-        .slot-window {
-            background: #000; border-radius: 20px; padding: 20px;
+        /* REELS */
+        .reels-container {
+            display:flex; gap:8px; justify-content:center; margin-bottom:20px;
+            background: #000; border-radius: 20px; padding: 16px 12px;
             border: 3px solid rgba(245,158,11,0.4);
-            margin-bottom: 20px; position: relative; overflow: hidden;
-            min-height: 100px; display:flex; align-items:center; justify-content:center;
+            position: relative; overflow: hidden;
         }
-        .slot-reel {
-            font-size: 2.5rem; font-weight:800; color: var(--warning);
-            transition: all 0.1s ease; text-align:center;
+        .reel-wrapper {
+            flex:1; max-width: 100px; height: 120px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a15 100%);
+            border-radius: 12px; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
         }
-        .slot-reel.spinning { animation: slotBlur 0.1s infinite; color: #fbbf24; }
+        .reel-strip {
+            transition: transform 0.1s ease;
+        }
+        .reel-strip.spinning {
+            animation: reelSpin 0.15s linear infinite;
+        }
+        .reel-item {
+            height: 120px; display:flex; align-items:center; justify-content:center;
+            font-size: 3rem; color: white;
+        }
+        
+        /* Glow line di tengah reel */
+        .reel-wrapper::after {
+            content:''; position:absolute; top:50%; left:0; right:0; height:2px;
+            background:rgba(245,158,11,0.5); transform:translateY(-50%);
+            box-shadow:0 0 10px rgba(245,158,11,0.3);
+            pointer-events:none; z-index:1;
+        }
 
-        .slot-info { margin-bottom: 20px; }
-        .slot-info .detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
-        .slot-info .dl { color:var(--text2); }
-        .slot-info .dv { color:var(--text); text-align:right; font-weight:600; }
-
+        /* SPIN BUTTON */
         .btn-spin {
-            background:linear-gradient(135deg, #f59e0b, #ef4444);
-            width:100%; padding:18px; border:none; border-radius:20px;
+            background:linear-gradient(135deg, #f59e0b, #dc2626);
+            width:100%; padding:16px; border:none; border-radius:20px;
             font-weight:700; color:white; cursor:pointer;
             font-size:1.1rem; letter-spacing:1px;
             display:flex; align-items:center; justify-content:center; gap:10px;
             transition:0.3s; text-transform:uppercase;
+            box-shadow: 0 8px 30px rgba(245,158,11,0.3);
         }
-        .btn-spin:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(245,158,11,0.4); }
+        .btn-spin:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(245,158,11,0.5); }
         .btn-spin:active { transform:scale(0.96); }
         .btn-spin:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; background:#334155; }
 
+        /* RESULT */
         .result-card {
             background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3);
-            border-radius:16px; padding:20px; margin-top:20px; display:none;
+            border-radius:16px; padding:20px; margin-top:16px; display:none;
             animation:fadeScale 0.4s ease;
         }
-        .result-card.jackpot { background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.5); animation:jackpotGlow 1s infinite; }
+        .result-card.jackpot { 
+            background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.5); 
+            animation:jackpotGlow 1s infinite; 
+        }
         .result-name { font-size:1.2rem; font-weight:700; color:var(--success); margin-bottom:8px; }
         .result-name.jackpot { color:var(--warning); font-size:1.5rem; }
-        .result-price { font-size:1.5rem; font-weight:800; color:var(--accent2); }
-        .btn-claim { 
-            background:var(--success); border:none; width:100%; padding:14px; border-radius:14px;
-            font-weight:600; color:white; cursor:pointer; margin-top:12px;
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            transition:0.3s; font-size:0.9rem;
-        }
-        .btn-claim:hover { box-shadow:0 6px 20px rgba(16,185,129,0.4); }
+        .result-price { font-size:1.3rem; font-weight:800; color:var(--accent2); margin-bottom:4px; }
 
         .gacha-price-tag {
             background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3);
-            border-radius:16px; padding:12px 20px; margin-bottom:20px; display:inline-block;
+            border-radius:16px; padding:10px 20px; margin-bottom:16px; display:inline-block;
         }
         .gacha-price-tag .price { font-size:1.5rem; font-weight:800; color:var(--warning); }
         .gacha-price-tag .label { font-size:0.65rem; color:var(--text2); }
+
+        .slot-info { display:flex; justify-content:space-around; margin:12px 0; font-size:0.7rem; color:var(--text2); }
+        .slot-info span { color:var(--warning); font-weight:600; }
 
         .toast { 
             position:fixed; bottom:30px; left:50%; transform:translateX(-50%); 
@@ -129,38 +164,60 @@
         }
         .loading-spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
 
+        /* Confetti */
+        #confettiContainer { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; overflow:hidden; }
+        .confetti-piece { position:absolute; width:10px; height:20px; top:-30px; animation:coinDrop 3s linear forwards; }
+
         @media (max-width:480px) {
-            .slot-reel { font-size:1.8rem; }
-            .slot-machine { padding:24px 16px; }
+            .reel-wrapper { height: 100px; }
+            .reel-item { height: 100px; font-size: 2.2rem; }
+            .slot-machine { padding:20px 14px; }
         }
     </style>
 </head>
 <body>
 
+<div id="confettiContainer"></div>
+
 <div class="container">
     <div class="header">
         <a href="/"><i class="fas fa-arrow-left"></i> Kembali</a>
-        <h1><i class="fas fa-dice"></i> Gacha</h1>
+        <h1><i class="fas fa-dice"></i> GACHA</h1>
         <div style="width:60px;"></div>
     </div>
 
     <div class="slot-machine">
-        <div class="slot-title">🎰 GACHA MACHINE</div>
-        <div class="slot-subtitle">SPIN & DAPETKAN PRODUK RANDOM!</div>
+        <div class="slot-title">&#127920; SLOT MACHINE</div>
+        <div class="slot-subtitle">SPIN & DAPATKAN PRODUK RANDOM!</div>
 
         <div class="gacha-price-tag">
-            <span class="label">HARGA SPIN</span><br>
+            <span class="label">HARGA PER SPIN</span><br>
             <span class="price" id="gachaPriceDisplay">-</span>
         </div>
 
-        <div class="slot-window">
-            <div class="slot-reel" id="slotReel">?</div>
+        <!-- REELS -->
+        <div class="reels-container">
+            <div class="reel-wrapper">
+                <div class="reel-strip" id="reel1">
+                    <div class="reel-item">&#127920;</div>
+                </div>
+            </div>
+            <div class="reel-wrapper">
+                <div class="reel-strip" id="reel2">
+                    <div class="reel-item">&#127920;</div>
+                </div>
+            </div>
+            <div class="reel-wrapper">
+                <div class="reel-strip" id="reel3">
+                    <div class="reel-item">&#127920;</div>
+                </div>
+            </div>
         </div>
 
         <div class="slot-info">
-            <div class="detail-row"><span class="dl">Produk Tersedia</span><span class="dv" id="totalProducts">-</span></div>
-            <div class="detail-row"><span class="dl">Jackpot Chance</span><span class="dv" style="color:#f59e0b;">5%</span></div>
-            <div class="detail-row"><span class="dl">Status</span><span class="dv" id="spinStatus">Siap spin</span></div>
+            <span>Produk: <b id="totalProducts">-</b></span>
+            <span>Jackpot: <b style="color:#f59e0b;">5%</b></span>
+            <span id="spinStatus">Siap!</span>
         </div>
 
         <button class="btn-spin" id="btnSpin" onclick="startSpin()">
@@ -170,7 +227,7 @@
         <div class="result-card" id="resultCard">
             <div class="result-name" id="resultName"></div>
             <div class="result-price" id="resultPrice"></div>
-            <button class="btn-claim" onclick="claimGacha()">
+            <button class="btn-spin" onclick="claimGacha()" style="margin-top:12px;background:var(--success);">
                 <i class="fas fa-qrcode"></i> BAYAR & KLAIM!
             </button>
         </div>
@@ -184,10 +241,24 @@
     const QRISPY_API_URL = 'https://api.qrispy.id';
     
     let gachaPrice = 0;
-    let gachaResult = null;
+    let gachaResultData = null;
     let orderCode = null;
     let isSpinning = false;
     let currentUser = null;
+
+    // Simbol slot (pake kode HTML entity biar bukan emoji native)
+    const symbols = [
+        '&#127920;', // 🎰
+        '&#128142;', // 💎
+        '&#127873;', // 🎁
+        '&#128293;', // 🔥
+        '&#9889;',   // ⚡
+        '&#127775;', // 🌟
+        '&#128176;', // 💰
+        '&#127894;', // 🎖
+        '&#128165;', // 💥
+        '&#128081;', // 👑
+    ];
 
     function toast(msg, isError) {
         var t = document.getElementById('toast');
@@ -200,6 +271,24 @@
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
+    }
+
+    function launchConfetti() {
+        var container = document.getElementById('confettiContainer');
+        var colors = ['#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#a78bfa', '#fbbf24'];
+        for (var i = 0; i < 60; i++) {
+            var piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            piece.style.animationDelay = Math.random() * 0.5 + 's';
+            piece.style.width = (Math.random() * 8 + 6) + 'px';
+            piece.style.height = (Math.random() * 14 + 10) + 'px';
+            piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            container.appendChild(piece);
+            setTimeout(function(p) { p.remove(); }, 3500, piece);
+        }
     }
 
     async function checkLogin() {
@@ -221,24 +310,22 @@
             if (data.success && data.gachaPrice > 0) {
                 gachaPrice = data.gachaPrice;
                 document.getElementById('gachaPriceDisplay').textContent = 'Rp ' + gachaPrice.toLocaleString();
-                document.getElementById('totalProducts').textContent = data.totalProducts + ' produk';
+                document.getElementById('totalProducts').textContent = data.totalProducts;
             } else {
-                document.getElementById('gachaPriceDisplay').textContent = 'Gacha belum siap';
+                document.getElementById('gachaPriceDisplay').textContent = 'Belum siap';
                 document.getElementById('btnSpin').disabled = true;
             }
         } catch(e) {
             document.getElementById('gachaPriceDisplay').textContent = 'Error';
-            document.getElementById('btnSpin').disabled = true;
         }
     }
 
     async function startSpin() {
-        // Cek login dulu
         if (!currentUser) {
             var loggedIn = await checkLogin();
             if (!loggedIn) {
-                toast('⚠️ Login dulu buat spin gacha!', true);
-                window.location.href = '/';
+                toast('&#9888;&#65039; Login dulu buat spin gacha!', true);
+                setTimeout(function() { window.location.href = '/profile'; }, 1000);
                 return;
             }
         }
@@ -249,21 +336,26 @@
         isSpinning = true;
         document.getElementById('btnSpin').disabled = true;
         document.getElementById('btnSpin').innerHTML = '<span class="loading-spinner"></span> SPINNING...';
-        document.getElementById('spinStatus').textContent = 'Spinning...';
+        document.getElementById('spinStatus').innerHTML = 'Spinning...';
         document.getElementById('resultCard').style.display = 'none';
         document.getElementById('resultCard').classList.remove('jackpot');
-        document.getElementById('resultName').classList.remove('jackpot');
 
-        var reel = document.getElementById('slotReel');
-        reel.classList.add('spinning');
+        // Animasikan semua reel
+        var reels = ['reel1', 'reel2', 'reel3'];
+        var intervals = [];
+        
+        reels.forEach(function(reelId) {
+            var strip = document.getElementById(reelId);
+            strip.classList.add('spinning');
+            
+            var interval = setInterval(function() {
+                var randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+                strip.innerHTML = '<div class="reel-item">' + randomSymbol + '</div>';
+            }, 80);
+            intervals.push(interval);
+        });
 
-        // Simulasi animasi slot (2 detik)
-        var emojis = ['🎮', '📱', '💎', '🎁', '🔥', '⚡', '🌟', '🎯', '💻', '🪙'];
-        var spinInterval = setInterval(function() {
-            reel.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        }, 100);
-
-        // Fetch hasil gacha dari backend
+        // Fetch hasil gacha
         try {
             var qrisData = await generateQRIS(gachaPrice);
             var res = await fetch('/api/gacha', {
@@ -280,53 +372,69 @@
             });
             var data = await res.json();
             
-            // Stop animasi setelah 2 detik
+            // Stop animasi setelah delay random (2-3 detik)
+            var spinDuration = 2000 + Math.random() * 1000;
+            
             setTimeout(function() {
-                clearInterval(spinInterval);
-                reel.classList.remove('spinning');
-                
+                intervals.forEach(function(interval, i) {
+                    clearInterval(interval);
+                    var strip = document.getElementById(reels[i]);
+                    strip.classList.remove('spinning');
+                    
+                    // Set hasil
+                    if (data.success) {
+                        var resultSymbol = data.isJackpot ? '&#128081;' : symbols[i * 2];
+                        strip.innerHTML = '<div class="reel-item">' + resultSymbol + '</div>';
+                    } else {
+                        strip.innerHTML = '<div class="reel-item" style="color:#ef4444;">&#10060;</div>';
+                    }
+                });
+
                 if (data.success) {
-                    gachaResult = data;
+                    gachaResultData = data;
                     orderCode = data.orderCode;
                     
-                    // Tampilkan hasil
                     var resultCard = document.getElementById('resultCard');
                     var resultName = document.getElementById('resultName');
                     resultCard.style.display = 'block';
-                    resultName.textContent = '🎉 ' + data.gachaResult;
-                    document.getElementById('resultPrice').textContent = 'Rp ' + (data.originalPrice || 0).toLocaleString();
                     
                     if (data.isJackpot) {
                         resultCard.classList.add('jackpot');
                         resultName.classList.add('jackpot');
-                        resultName.textContent = '🔥 JACKPOT! 🔥 ' + data.gachaResult;
-                        reel.textContent = '💎';
+                        resultName.innerHTML = '&#128293; JACKPOT! &#128293;<br>' + escapeHtml(data.gachaResult);
+                        launchConfetti();
                     } else {
-                        reel.textContent = '🎁';
+                        resultName.innerHTML = '&#127873; ' + escapeHtml(data.gachaResult);
                     }
                     
-                    document.getElementById('spinStatus').textContent = 'Hasil: ' + data.gachaResult;
+                    document.getElementById('resultPrice').textContent = 'Harga asli: Rp ' + (data.originalPrice || 0).toLocaleString();
+                    document.getElementById('spinStatus').innerHTML = '<span style="color:#10b981;">&#10004; Siap klaim!</span>';
                     document.getElementById('btnSpin').innerHTML = '<i class="fas fa-redo"></i> SPIN LAGI';
+                    document.getElementById('btnSpin').style.background = 'linear-gradient(135deg, #f59e0b, #dc2626)';
                 } else {
-                    reel.textContent = '❌';
-                    document.getElementById('spinStatus').textContent = 'Gagal';
+                    document.getElementById('spinStatus').innerHTML = '<span style="color:#ef4444;">Gagal</span>';
                     toast(data.error || 'Gagal spin', true);
                     document.getElementById('btnSpin').innerHTML = '<i class="fas fa-dice"></i> SPIN SEKARANG!';
+                    document.getElementById('btnSpin').style.background = 'linear-gradient(135deg, #f59e0b, #dc2626)';
                 }
                 
                 isSpinning = false;
                 document.getElementById('btnSpin').disabled = false;
-            }, 2000);
+            }, spinDuration);
 
         } catch(e) {
-            clearInterval(spinInterval);
-            reel.classList.remove('spinning');
-            reel.textContent = '❌';
-            document.getElementById('spinStatus').textContent = 'Error';
+            intervals.forEach(function(interval) { clearInterval(interval); });
+            reels.forEach(function(reelId) {
+                var strip = document.getElementById(reelId);
+                strip.classList.remove('spinning');
+                strip.innerHTML = '<div class="reel-item" style="color:#ef4444;">&#10060;</div>';
+            });
+            document.getElementById('spinStatus').innerHTML = '<span style="color:#ef4444;">Error</span>';
             toast('Gagal terhubung', true);
             isSpinning = false;
             document.getElementById('btnSpin').disabled = false;
             document.getElementById('btnSpin').innerHTML = '<i class="fas fa-dice"></i> SPIN SEKARANG!';
+            document.getElementById('btnSpin').style.background = 'linear-gradient(135deg, #f59e0b, #dc2626)';
         }
     }
 
