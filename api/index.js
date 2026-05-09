@@ -337,32 +337,36 @@ app.get('/api/sync-all-referral-balances', async function(req, res) {
     var db = await getDB();
     var updated = 0;
     
-    // Loop semua user
     (db.users || []).forEach(function(user) {
-        var count = 0;
+        var orderCount = 0;
         
-        // Hitung order PAID dengan referralCode user ini
+        // Hitung order PAID
         (db.orders || []).forEach(function(order) {
             if (order.status === 'paid' && order.referralCode === user.referralCode) {
-                count++;
+                orderCount++;
             }
         });
         
-        // Update referralCount dan discountBalance
-        if (user.referralCount !== count || user.discountBalance !== count * 500) {
-            user.referralCount = count;
-            user.discountBalance = count * 500;
+        // Hitung total WD (semua status: pending + success)
+        var totalWD = 0;
+        (db.withdrawals || []).forEach(function(wd) {
+            if (wd.userId === user.id) {
+                totalWD += wd.amount || 0;
+            }
+        });
+        
+        var correctBalance = (orderCount * 500) - totalWD;
+        if (correctBalance < 0) correctBalance = 0;
+        
+        if (user.discountBalance !== correctBalance || user.referralCount !== orderCount) {
+            user.referralCount = orderCount;
+            user.discountBalance = correctBalance;
             updated++;
         }
     });
     
     if (updated > 0) await setDB(null, db.orders, db.sha);
-    res.json({ 
-        success: true, 
-        updatedCount: updated,
-        totalUsers: (db.users || []).length,
-        message: updated + ' user berhasil di-sync saldonya'
-    });
+    res.json({ success: true, updatedCount: updated });
 });
 
 // ========== PING: TRIGGER REFERRAL MANUAL ==========
