@@ -359,6 +359,26 @@ app.get('/api/user/orders', async (req, res) => {
     res.json({ success: true, orders: orders.slice(0, 50).map(o => ({ id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt, isGacha: o.isGacha || false, gachaResult: o.gachaResult || '' })) });
 });
 
+// ========== CHANGE PASSWORD ==========
+app.post('/api/user/change-password', async (req, res) => {
+    const cookies = parseCookies(req.headers.cookie);
+    const token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' });
+    if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' });
+    
+    const db = await getDB();
+    const user = (db.users || []).find(u => u.token === token);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' });
+    
+    user.password = hashPassword(newPassword);
+    await setDB(db.products, db.orders, db.sha);
+    res.json({ success: true, message: 'Password berhasil diganti!' });
+});
+
 // ========== WITHDRAW ==========
 app.post('/api/user/withdraw', async (req, res) => {
     const cookies = parseCookies(req.headers.cookie);
