@@ -82,13 +82,24 @@ async function setDB(products, orders, oldSha, retryCount) {
     return d.content.sha;
 }
 
-async function processReferralReward(db, cookieHeader) {
-    const refCode = parseCookies(cookieHeader)['yanto_ref'];
+// ✅ FUNGSI REWARD REFERRAL (DIPANGGIL PAS PAID)
+async function processReferralReward(db, order) {
+    if (!order || order.referralRewarded) return;
+    
+    let refCode = null;
+    const orderUser = (db.users || []).find(u => u.name.toLowerCase() === (order.customerName || '').toLowerCase());
+    if (orderUser && orderUser.referredBy) {
+        refCode = orderUser.referredBy;
+    }
+    
     if (!refCode) return;
+    
     const referrer = (db.users || []).find(u => u.referralCode === refCode);
     if (referrer) {
         referrer.referralCount = (referrer.referralCount || 0) + 1;
         referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+        order.referralRewarded = true;
+        console.log(`WEBHOOK REFERRAL: ${referrer.name} dapat +Rp 500 dari order ${order.orderCode}`);
     }
 }
 
@@ -146,8 +157,8 @@ module.exports = async (req, res) => {
             order.status = 'paid';
             order.paidAt = data.paid_at || new Date().toISOString();
 
-            // ✅ KOMISI REFERRAL DI WEBHOOK
-            await processReferralReward(db, req.headers.cookie);
+            // ✅ KOMISI REFERRAL DI WEBHOOK (DARI DATABASE)
+            await processReferralReward(db, order);
 
             let bonusContent = '';
             const product = (db.products || []).find(p => p.id == order.productId);
