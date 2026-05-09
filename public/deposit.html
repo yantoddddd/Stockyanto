@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Yanto Store | Deposit Saldo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes urgentPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 32px; max-width: 500px; width: 100%; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 25px 45px rgba(0,0,0,0.3); }
+        .logo { text-align: center; margin-bottom: 4px; }
+        .logo h2 { font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .logo .sub { font-size: 0.65rem; color: #64748b; margin-bottom: 16px; }
+
+        .countdown-wrap { text-align: center; margin-bottom: 8px; }
+        .countdown-label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .countdown-timer { font-size: 2rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .countdown-timer.urgent { color: #ef4444; animation: urgentPulse 1s infinite; }
+        .countdown-timer .cd-unit { background: rgba(59,130,246,0.1); padding: 8px 12px; border-radius: 12px; min-width: 50px; text-align: center; }
+        .countdown-timer.urgent .cd-unit { background: rgba(239,68,68,0.1); }
+        .countdown-timer .cd-sep { font-size: 1.5rem; color: #475569; }
+        .countdown-timer .cd-label { font-size: 0.55rem; color: #64748b; display: block; margin-top: 2px; }
+
+        .progress-wrap { margin-bottom: 20px; }
+        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3b82f6; transition: width 1s linear; border-radius: 4px; }
+        .progress-fill.urgent { background: #ef4444; }
+
+        .expiry-text { text-align: center; color: #64748b; font-size: 0.7rem; margin-bottom: 16px; }
+
+        .qr-container { text-align: center; }
+        .qr-container .qr-icon { font-size: 2.2rem; color: #60a5fa; margin-bottom: 4px; }
+        .qr-container h3 { color: white; font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+        .qris-img { width: 100%; max-width: 220px; margin: 16px auto; display: block; background: white; padding: 14px; border-radius: 20px; }
+        .total-amount { font-size: 1.8rem; font-weight: 700; color: #60a5fa; text-align: center; margin: 12px 0; }
+        .status-text { text-align: center; color: #94a3b8; margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; }
+        .btn-back { background: #334155; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none; margin-top: 10px; }
+        .btn-back:hover { background: #475569; transform: translateY(-2px); }
+        h1 { text-align: center; color: #10b981; font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+<div id="pendingContent">
+    <div class="card">
+        <div class="logo">
+            <h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2>
+            <div class="sub">Isi Saldo via QRIS</div>
+        </div>
+
+        <div class="countdown-wrap">
+            <div class="countdown-label">Sisa Waktu Pembayaran</div>
+            <div class="countdown-timer" id="countdownTimer">
+                <span class="cd-unit"><span id="cdMin">--</span><span class="cd-label">menit</span></span>
+                <span class="cd-sep">:</span>
+                <span class="cd-unit"><span id="cdSec">--</span><span class="cd-label">detik</span></span>
+            </div>
+        </div>
+        <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%;"></div></div>
+        </div>
+        <div class="expiry-text"><i class="far fa-clock"></i> Kadaluarsa: <span id="expiryTime">--</span></div>
+
+        <div class="qr-container">
+            <div class="qr-icon"><i class="fas fa-qrcode"></i></div>
+            <h3>Scan QRIS untuk Deposit</h3>
+            <img id="qrisImage" class="qris-img" alt="QRIS">
+            <div class="total-amount">Rp <span id="totalAmount">0</span></div>
+            <div class="status-text" id="statusText"><i class="fas fa-hourglass-half fa-spin"></i> Menunggu pembayaran...</div>
+        </div>
+    </div>
+</div>
+
+<div id="successContent" style="display:none;">
+    <div class="card">
+        <div class="logo"><h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2></div>
+        <h1>Deposit Berhasil!</h1>
+        <p style="text-align:center;color:#94a3b8;">Saldo kamu udah nambah. Cek di Profile ya!</p>
+        <div style="text-align:center;margin-top:16px;">
+            <a href="/profile" class="btn-back"><i class="fas fa-user"></i> Buka Profile</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var params = new URLSearchParams(window.location.search);
+    var depId = params.get('id');
+    var countdownInterval = null;
+    var pollingInterval = null;
+    var expiredAt = null;
+
+    function toast(msg) { var t = document.createElement('div'); t.textContent = msg; t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:8px 16px;border-radius:40px;font-size:0.8rem;z-index:2000;color:white;'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2000); }
+
+    function showExpired() {
+        clearInterval(countdownInterval);
+        clearInterval(pollingInterval);
+        document.getElementById('pendingContent').innerHTML = '<div class="card"><div class="logo"><h2><i class="fas fa-money-bill-wave"></i> Deposit Kadaluarsa</h2></div><p style="text-align:center;color:#94a3b8;">Waktu pembayaran udah habis. Silakan buat deposit baru di Profile.</p><div style="text-align:center;margin-top:16px;"><a href="/profile" class="btn-back"><i class="fas fa-redo"></i> Kembali ke Profile</a></div></div>';
+    }
+
+    function startCountdown(expiryStr) {
+        expiredAt = new Date(expiryStr).getTime();
+        function update() {
+            var diff = expiredAt - Date.now();
+            if (diff <= 0) { clearInterval(countdownInterval); document.getElementById('cdMin').textContent = '00'; document.getElementById('cdSec').textContent = '00'; document.getElementById('progressFill').style.width = '0%'; showExpired(); return; }
+            document.getElementById('cdMin').textContent = String(Math.floor(diff / 60000)).padStart(2, '0');
+            document.getElementById('cdSec').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+            document.getElementById('progressFill').style.width = (diff / (15 * 60 * 1000)) * 100 + '%';
+            if (diff < 120000) { document.getElementById('countdownTimer').classList.add('urgent'); document.getElementById('progressFill').classList.add('urgent'); }
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+    }
+
+    function startPolling() {
+        pollingInterval = setInterval(async function() {
+            try {
+                var res = await fetch('/api/user/deposits', { credentials: 'include' });
+                var data = await res.json();
+                if (data.success && data.deposits.length > 0) {
+                    var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
+                    if (dep && dep.status === 'paid') {
+                        clearInterval(pollingInterval);
+                        clearInterval(countdownInterval);
+                        document.getElementById('pendingContent').style.display = 'none';
+                        document.getElementById('successContent').style.display = 'block';
+                    }
+                }
+            } catch(e) {}
+        }, 5000);
+    }
+
+    async function loadDeposit() {
+        try {
+            var res = await fetch('/api/user/deposits', { credentials: 'include' });
+            var data = await res.json();
+            if (data.success && data.deposits.length > 0) {
+                var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
+                if (!dep) { document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Deposit Tidak Ditemukan</h1><a href="/profile" style="color:#60a5fa;">Kembali ke Profile</a></div>'; return; }
+                if (dep.status === 'paid') { document.getElementById('pendingContent').style.display = 'none'; document.getElementById('successContent').style.display = 'block'; return; }
+                document.getElementById('qrisImage').src = dep.qrisImage || '';
+                document.getElementById('totalAmount').textContent = (dep.amount || 0).toLocaleString();
+                document.getElementById('expiryTime').textContent = new Date(dep.expiredAt).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                startCountdown(dep.expiredAt);
+                startPolling();
+            }
+        } catch(e) { document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Gagal Memuat</h1><a href="/profile" style="color:#60a5fa;">Kembali</a></div>'; }
+    }
+
+    loadDeposit();
+</script>
+</body>
+</html>
