@@ -276,6 +276,23 @@ app.get('/api/user/orders', async function(req, res) {
     res.json({ success: true, orders: orders.slice(0, 50).map(function(o) { return { id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt }; }) });
 });
 
+// ========== CHANGE PASSWORD ==========
+app.post('/api/user/change-password', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie);
+    var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword;
+    if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' });
+    if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' });
+    var db = await getDB();
+    var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' });
+    user.password = hashPassword(newPassword);
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true });
+});
+
 // ========== DEPOSIT ==========
 app.post('/api/user/deposit', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie);
@@ -292,9 +309,10 @@ app.post('/api/user/deposit', async function(req, res) {
         var qrisData = await qrisRes.json();
         if (qrisData.status !== 'success') throw new Error(qrisData.message || 'Gagal generate QRIS');
         if (!db.deposits) db.deposits = [];
-        db.deposits.unshift({ id: Date.now(), userId: user.id, userName: user.name, amount: amount, qrisId: qrisData.data.qris_id, qrisImage: qrisData.data.qris_image_url, expiredAt: qrisData.data.expired_at, status: 'pending', createdAt: new Date().toISOString() });
+        var depId = Date.now();
+        db.deposits.unshift({ id: depId, userId: user.id, userName: user.name, amount: amount, qrisId: qrisData.data.qris_id, qrisImage: qrisData.data.qris_image_url, expiredAt: qrisData.data.expired_at, status: 'pending', createdAt: new Date().toISOString() });
         await setDB(null, db.orders, db.sha);
-        res.json({ success: true, qrisImage: qrisData.data.qris_image_url, amount: amount });
+        res.json({ success: true, depId: depId, qrisImage: qrisData.data.qris_image_url, amount: amount, expiredAt: qrisData.data.expired_at });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -307,23 +325,6 @@ app.get('/api/user/deposits', async function(req, res) {
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
     var deps = (db.deposits || []).filter(function(d) { return d.userId === user.id; });
     res.json({ success: true, deposits: deps });
-});
-
-// ========== CHANGE PASSWORD ==========
-app.post('/api/user/change-password', async function(req, res) {
-    var cookies = parseCookies(req.headers.cookie);
-    var token = cookies['yanto_token'];
-    if (!token) return res.status(401).json({ error: 'Login dulu' });
-    var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword;
-    if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' });
-    if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' });
-    var db = await getDB();
-    var user = (db.users || []).find(function(u) { return u.token === token; });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' });
-    user.password = hashPassword(newPassword);
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true });
 });
 
 // ========== WITHDRAW ==========
