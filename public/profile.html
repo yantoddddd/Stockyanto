@@ -41,9 +41,7 @@
         .header a:hover { color:white; }
         .header h1 { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,#fff,#94a3f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-        .tab-nav { 
-            display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:20px;
-        }
+        .tab-nav { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:20px; }
         .tab-nav::-webkit-scrollbar { height:2px; }
         .tab-nav::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:8px; }
         .tab-chip { 
@@ -72,20 +70,11 @@
         .detail-row .dl { color:#64748b; }
         .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; font-weight:500; }
 
-        input { 
-            width:100%; padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm);
-            border:1px solid #334155; background:#1e293b; 
-            color:white; font-size:0.85rem; outline:none; transition:0.3s;
-        }
+        input { width:100%; padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm); border:1px solid #334155; background:#1e293b; color:white; font-size:0.85rem; outline:none; transition:0.3s; }
         input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(59,130,246,0.3); }
         input::placeholder { color:#64748b; }
 
-        button { 
-            background:var(--accent); border:none; padding:12px 20px; border-radius:40px;
-            color:white; font-weight:500; cursor:pointer; width:100%; margin-top:8px;
-            display:flex; align-items:center; justify-content:center; gap:8px; 
-            transition:0.25s; font-size:0.85rem;
-        }
+        button { background:var(--accent); border:none; padding:12px 20px; border-radius:40px; color:white; font-weight:500; cursor:pointer; width:100%; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.25s; font-size:0.85rem; }
         button:active { transform:scale(0.96); }
         button:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
         .btn-warning { background:var(--warning); color:#000; font-weight:600; }
@@ -93,10 +82,7 @@
         .btn-danger { background:var(--danger); }
         .btn-danger:hover { box-shadow:0 6px 20px rgba(239,68,68,0.35); }
 
-        .order-item { 
-            background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; 
-            cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); 
-        }
+        .order-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); }
         .order-item:hover { border-color:var(--accent); background:#1a2332; }
         .oname { font-weight:600; color:white; font-size:0.85rem; }
         .odetail { font-size:0.7rem; color:#94a3b8; margin-top:4px; }
@@ -109,18 +95,13 @@
         .empty-state i { font-size:3rem; margin-bottom:12px; opacity:0.3; }
         .empty-state p { font-size:0.8rem; }
 
-        .badge { 
-            display:inline-block; padding:4px 12px; border-radius:20px; 
-            font-size:0.7rem; font-weight:600; 
-            background:rgba(59,130,246,0.15); color:var(--accent2);
-        }
+        .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:600; background:rgba(59,130,246,0.15); color:var(--accent2); }
 
-        .toast { 
-            position:fixed; bottom:20px; left:50%; transform:translateX(-50%); 
-            background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; 
-            opacity:0; transition:0.3s; color:white; z-index:1000; 
-            display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
-        }
+        /* Chart bar */
+        .chart-bar-wrap { background:rgba(255,255,255,0.08); border-radius:10px; height:24px; overflow:hidden; margin-top:8px; }
+        .chart-bar-fill { background:linear-gradient(90deg, var(--accent), var(--success)); height:100%; width:0%; border-radius:10px; transition:width 0.5s ease; }
+
+        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
 
         @media (max-width:480px) { .card { padding:16px; } .tab-chip { padding:8px 14px; font-size:0.7rem; } }
     </style>
@@ -174,6 +155,17 @@
 
         <!-- TAB: REFERRAL -->
         <div class="tab-panel" id="tab-referral">
+            <!-- GRAFIK -->
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Statistik Referral</h2>
+                <div class="detail-row"><span class="dl">Total Klik Link</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div>
+                <div class="detail-row"><span class="dl">Total Konversi (Order)</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div>
+                <div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div>
+                <div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div>
+                <p style="font-size:0.6rem;color:#64748b;margin-top:6px;text-align:center;">Konversi: Klik → Order Sukses</p>
+            </div>
+
+            <!-- LINK REFERRAL -->
             <div class="card">
                 <h2><i class="fas fa-link"></i> Link Referral</h2>
                 <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:4px;">Bagikan link ini:</p>
@@ -183,6 +175,7 @@
                 <button onclick="copyRef()"><i class="fas fa-copy"></i> Salin Link</button>
             </div>
 
+            <!-- WD -->
             <div class="card">
                 <h2><i class="fas fa-wallet"></i> Tarik Saldo (WD)</h2>
                 <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
@@ -193,11 +186,10 @@
                 <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
             </div>
 
+            <!-- RIWAYAT WD -->
             <div class="card">
                 <h2><i class="fas fa-list"></i> Riwayat Penarikan</h2>
-                <div id="wdHistoryList">
-                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
-                </div>
+                <div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
             </div>
         </div>
 
@@ -205,30 +197,26 @@
         <div class="tab-panel" id="tab-history">
             <div class="card">
                 <h2><i class="fas fa-history"></i> Riwayat Order</h2>
-                <div id="orderHistoryList">
-                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
-                </div>
+                <div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-sign-in-alt"></i> Login</h3>
         <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
         <input type="password" id="loginPw" placeholder="Password..." autocomplete="current-password">
         <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
-            Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a>
-        </p>
+        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p>
         <button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
 
 <!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;display:none;justify-content:center;align-items:center;">
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
         <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;"><i class="fas fa-user-plus"></i> Daftar</h3>
         <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
@@ -237,9 +225,7 @@
         <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Minimal umur 12 tahun!</p>
         <input type="password" id="regPw" placeholder="Password..." autocomplete="new-password">
         <button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">
-            Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a>
-        </p>
+        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p>
         <button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
     </div>
 </div>
@@ -257,22 +243,15 @@
         setTimeout(function(){ t.style.opacity = '0'; }, 3000);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; });
-    }
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
 
     function switchTab(tabName, el) {
         document.querySelectorAll('.tab-chip').forEach(function(c) { c.classList.remove('active'); });
         document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
         if (el) el.classList.add('active');
         document.getElementById('tab-' + tabName).classList.add('active');
-        
         if (tabName === 'history') loadOrders();
-        if (tabName === 'referral') { 
-            document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-            loadWdHistory(); 
-        }
+        if (tabName === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); loadWdHistory(); updateReferralChart(); }
     }
 
     async function checkAuth() {
@@ -285,10 +264,7 @@
                 document.getElementById('loggedInSection').style.display = 'block';
                 loadProfile();
                 loadOrders();
-            } else {
-                document.getElementById('guestSection').style.display = 'block';
-                document.getElementById('loggedInSection').style.display = 'none';
-            }
+            } else { document.getElementById('guestSection').style.display = 'block'; document.getElementById('loggedInSection').style.display = 'none'; }
         } catch(e) {}
     }
 
@@ -300,6 +276,18 @@
         document.getElementById('profRefCount').textContent = currentUser.referralCount || 0;
         document.getElementById('profRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode;
         document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+        updateReferralChart();
+    }
+
+    function updateReferralChart() {
+        if (!currentUser) return;
+        var clicks = currentUser.referralClicks || 0;
+        var conversions = currentUser.referralCount || 0;
+        var rate = clicks > 0 ? Math.round((conversions / clicks) * 100) : 0;
+        document.getElementById('chartClicks').textContent = clicks;
+        document.getElementById('chartConversions').textContent = conversions;
+        document.getElementById('chartRate').textContent = rate + '%';
+        document.getElementById('chartBar').style.width = Math.min(rate, 100) + '%';
     }
 
     async function loadOrders() {
@@ -311,18 +299,10 @@
                 el.innerHTML = data.orders.map(function(o) {
                     var stClass = o.status === 'paid' ? 'paid' : o.status === 'pending' ? 'pending' : 'other';
                     var stText = o.status === 'paid' ? 'Lunas' : o.status === 'pending' ? 'Pending' : o.status;
-                    return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'">' +
-                        '<div class="oname">' + escapeHtml(o.productName) + '</div>' +
-                        '<div class="odetail">Rp ' + (o.totalAmount||0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div>' +
-                        '<span class="ostatus ' + stClass + '">' + stText + '</span>' +
-                    '</div>';
+                    return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'"><div class="oname">' + escapeHtml(o.productName) + '</div><div class="odetail">Rp ' + (o.totalAmount||0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div><span class="ostatus ' + stClass + '">' + stText + '</span></div>';
                 }).join('');
-            } else {
-                el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada order</p></div>';
-            }
-        } catch(e) {
-            document.getElementById('orderHistoryList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>';
-        }
+            } else { el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada order</p></div>'; }
+        } catch(e) { document.getElementById('orderHistoryList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; }
     }
 
     async function loadWdHistory() {
@@ -334,34 +314,17 @@
                 el.innerHTML = data.withdrawals.map(function(w) {
                     var stClass = w.status === 'success' ? 'paid' : w.status === 'pending' ? 'pending' : 'other';
                     var stText = w.status === 'success' ? 'Sukses' : w.status === 'pending' ? 'Pending' : w.status;
-                    return '<div class="order-item">' +
-                        '<div class="oname"><span class="ostatus ' + stClass + '">' + stText + '</span> Rp ' + (w.amount || 0).toLocaleString() + '</div>' +
-                        '<div class="odetail">Ke ' + (w.paymentMethod || '-') + ' (' + (w.paymentNumber || '-') + ')</div>' +
-                        '<div class="odetail" style="font-size:0.6rem;">' + new Date(w.createdAt).toLocaleString() + '</div>' +
-                    '</div>';
+                    return '<div class="order-item"><div class="oname"><span class="ostatus ' + stClass + '">' + stText + '</span> Rp ' + (w.amount || 0).toLocaleString() + '</div><div class="odetail">Ke ' + (w.paymentMethod || '-') + ' (' + (w.paymentNumber || '-') + ')</div><div class="odetail" style="font-size:0.6rem;">' + new Date(w.createdAt).toLocaleString() + '</div></div>';
                 }).join('');
-            } else {
-                el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada penarikan</p></div>';
-            }
-        } catch(e) {
-            document.getElementById('wdHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>';
-        }
+            } else { el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada penarikan</p></div>'; }
+        } catch(e) { document.getElementById('wdHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>'; }
     }
 
     function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
     function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
     function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
     function setMaxDate() { var maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 12); document.getElementById('regBday').max = maxDate.toISOString().split('T')[0]; }
-
-    function checkAge() {
-        var bday = document.getElementById('regBday').value;
-        if (!bday) return;
-        var birth = new Date(bday); var today = new Date();
-        var age = today.getFullYear() - birth.getFullYear();
-        var m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; }
-        document.getElementById('ageErr').style.display = age < 12 ? 'block' : 'none';
-    }
+    function checkAge() { var bday = document.getElementById('regBday').value; if (!bday) return; var birth = new Date(bday); var today = new Date(); var age = today.getFullYear() - birth.getFullYear(); var m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; } document.getElementById('ageErr').style.display = age < 12 ? 'block' : 'none'; }
 
     async function doLogin() {
         var name = document.getElementById('loginNm').value.trim();
@@ -370,12 +333,8 @@
         try {
             var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,password:pw}) });
             var data = await res.json();
-            if (data.success) {
-                currentUser = data.user;
-                document.getElementById('loginMod').style.display = 'none';
-                checkAuth();
-                toast('Selamat datang, ' + data.user.name + '!');
-            } else { toast(data.error, true); }
+            if (data.success) { currentUser = data.user; document.getElementById('loginMod').style.display = 'none'; checkAuth(); toast('Selamat datang, ' + data.user.name + '!'); }
+            else { toast(data.error, true); }
         } catch(e) { toast('Gagal login', true); }
     }
 
@@ -404,10 +363,7 @@
         } catch(e) { toast('Gagal', true); }
     }
 
-    function copyRef() {
-        if (!currentUser) return;
-        navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('Link referral tersalin!'); });
-    }
+    function copyRef() { if (!currentUser) return; navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('Link referral tersalin!'); }); }
 
     async function doWd() {
         if (!currentUser) { toast('Login dulu!', true); return; }
@@ -419,21 +375,12 @@
         try {
             var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) });
             var data = await res.json();
-            if (data.success) {
-                currentUser.discountBalance -= amt;
-                loadProfile();
-                document.getElementById('wdAmt').value = '';
-                document.getElementById('wdNum').value = '';
-                loadWdHistory();
-                toast('WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!');
-            } else { toast(data.error, true); }
+            if (data.success) { currentUser.discountBalance -= amt; loadProfile(); document.getElementById('wdAmt').value=''; document.getElementById('wdNum').value=''; loadWdHistory(); toast('WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!'); }
+            else { toast(data.error, true); }
         } catch(e) { toast('Gagal WD', true); }
     }
 
-    async function doLogout() {
-        await fetch('/api/logout', { method:'POST', credentials:'include' });
-        window.location.href = '/';
-    }
+    async function doLogout() { await fetch('/api/logout', { method:'POST', credentials:'include' }); window.location.href = '/'; }
 
     checkAuth();
 </script>
