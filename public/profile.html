@@ -8,108 +8,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
-            --bg: #06080d;
-            --surface: rgba(255,255,255,0.03);
-            --surface2: rgba(255,255,255,0.06);
-            --border: rgba(255,255,255,0.06);
-            --accent: #3b82f6;
-            --accent2: #60a5fa;
-            --text: #e8eaed;
-            --text2: #8b8fa3;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 24px;
-            --radius-sm: 14px;
-            --bottom-nav-h: 70px;
+            --bg: #06080d; --surface: rgba(255,255,255,0.03); --surface2: rgba(255,255,255,0.06);
+            --border: rgba(255,255,255,0.06); --accent: #3b82f6; --accent2: #60a5fa;
+            --text: #e8eaed; --text2: #8b8fa3; --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+            --radius: 24px; --radius-sm: 14px; --bottom-nav-h: 70px;
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); 
-            font-family:'Inter',sans-serif; min-height:100vh; padding:16px 16px calc(var(--bottom-nav-h) + 24px); 
-            color:var(--text); animation:fadeIn 0.5s ease; 
-        }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
+        body { background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%); font-family:'Inter',sans-serif; min-height:100vh; padding:16px 16px calc(var(--bottom-nav-h) + 24px); color:var(--text); animation:fadeIn 0.5s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
+        @keyframes fadeScale { from{opacity:0;transform:scale(0.92);} to{opacity:1;transform:scale(1);} }
         .container { max-width:600px; margin:0 auto; }
-
-        /* HEADER */
-        .header { 
-            display:flex; align-items:center; gap:16px; margin-bottom:20px;
-            background:rgba(255,255,255,0.06); backdrop-filter:blur(12px);
-            border-radius:60px; padding:12px 20px; border:1px solid rgba(255,255,255,0.08);
-        }
-        .header a { color:var(--accent2); text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:6px; transition:0.2s; }
-        .header a:hover { color:white; }
+        .header { display:flex; align-items:center; gap:16px; margin-bottom:20px; background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:60px; padding:12px 20px; border:1px solid rgba(255,255,255,0.08); }
+        .header a { color:var(--accent2); text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:6px; }
         .header h1 { font-size:1.2rem; font-weight:700; background:linear-gradient(135deg,#fff,#94a3f8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; flex:1; text-align:center; }
-
-        /* PROFILE TOP CARD */
-        .profile-card {
-            background:rgba(255,255,255,0.06); backdrop-filter:blur(12px);
-            border-radius:var(--radius); padding:24px; text-align:center;
-            border:1px solid rgba(255,255,255,0.08); margin-bottom:16px;
-        }
-        .profile-avatar {
-            width:64px; height:64px; border-radius:50%;
-            background:linear-gradient(135deg, var(--accent), #6366f1);
-            display:flex; align-items:center; justify-content:center;
-            font-size:1.8rem; color:white; margin:0 auto 12px;
-        }
+        .profile-card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:var(--radius); padding:24px; text-align:center; border:1px solid rgba(255,255,255,0.08); margin-bottom:16px; }
+        .profile-avatar { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--accent),#6366f1); display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:white; margin:0 auto 12px; }
         .profile-name { font-size:1.2rem; font-weight:700; color:white; }
         .profile-role { font-size:0.7rem; color:var(--text2); margin-top:2px; }
-        .profile-stats {
-            display:flex; justify-content:space-around; margin-top:16px;
-            gap:8px;
-        }
-        .profile-stat {
-            background:rgba(0,0,0,0.3); border-radius:16px; padding:12px;
-            flex:1; text-align:center;
-        }
+        .profile-stats { display:flex; justify-content:space-around; margin-top:16px; gap:8px; }
+        .profile-stat { background:rgba(0,0,0,0.3); border-radius:16px; padding:12px; flex:1; text-align:center; }
         .profile-stat .stat-num { font-size:1.1rem; font-weight:700; color:var(--accent2); }
         .profile-stat .stat-label { font-size:0.6rem; color:var(--text2); margin-top:2px; }
-
-        /* TAB CONTENT */
         .tab-content { animation:fadeScale 0.3s ease; margin-bottom:16px; }
-        .tab-panel { display:none; }
-        .tab-panel.active { display:block; }
-
-        .card { 
-            background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); 
-            border-radius:var(--radius); padding:20px; 
-            border:1px solid rgba(255,255,255,0.08); margin-bottom:14px;
-        }
+        .tab-panel { display:none; } .tab-panel.active { display:block; }
+        .card { background:rgba(255,255,255,0.06); backdrop-filter:blur(12px); border-radius:var(--radius); padding:20px; border:1px solid rgba(255,255,255,0.08); margin-bottom:14px; }
         .card h2 { font-size:0.95rem; font-weight:600; color:var(--accent2); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-        .card h2 i { width:20px; text-align:center; }
-
         .detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
-        .detail-row .dl { color:#64748b; }
-        .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; font-weight:500; }
-
-        input { width:100%; padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm); border:1px solid #334155; background:#1e293b; color:white; font-size:0.85rem; outline:none; transition:0.3s; }
+        .detail-row .dl { color:#64748b; } .detail-row .dv { color:#e2e8f0; text-align:right; word-break:break-all; font-weight:500; }
+        input { width:100%; padding:12px 16px; margin:8px 0; border-radius:var(--radius-sm); border:1px solid #334155; background:#1e293b; color:white; font-size:0.85rem; outline:none; }
         input:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(59,130,246,0.3); }
-        input::placeholder { color:#64748b; }
-
         button { background:var(--accent); border:none; padding:12px 20px; border-radius:40px; color:white; font-weight:500; cursor:pointer; width:100%; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.25s; font-size:0.85rem; }
-        button:active { transform:scale(0.96); }
-        button:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
+        button:active { transform:scale(0.96); } button:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
         .btn-warning { background:var(--warning); color:#000; font-weight:600; }
         .btn-danger { background:var(--danger); }
-
-        /* QRIS ITEMS */
-        .qris-item {
-            background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px;
-            border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:0.2s;
-        }
-        .qris-item:hover { border-color:var(--accent); }
-        .qris-item .qris-code { font-family:monospace; color:var(--accent2); font-size:0.7rem; word-break:break-all; }
-        .qris-item .qris-amount { font-weight:600; color:white; font-size:0.9rem; }
-        .qris-item .qris-date { font-size:0.6rem; color:#64748b; margin-top:4px; }
-        .qris-item .qris-actions { display:flex; gap:6px; margin-top:8px; }
-        .btn-xs { padding:6px 12px; border-radius:20px; font-size:0.65rem; border:none; cursor:pointer; color:white; display:flex; align-items:center; gap:4px; width:auto; margin:0; }
-        .btn-xs.blue { background:var(--accent); }
-        .btn-xs.green { background:var(--success); }
-        .btn-xs.orange { background:var(--warning); color:#000; }
-
+        .deposit-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; border:1px solid rgba(255,255,255,0.04); }
+        .deposit-item .dep-amount { font-weight:600; color:white; font-size:0.9rem; }
+        .deposit-item .dep-date { font-size:0.6rem; color:#64748b; margin-top:4px; }
         .order-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; cursor:pointer; transition:0.2s; border:1px solid rgba(255,255,255,0.04); }
         .order-item:hover { border-color:var(--accent); background:#1a2332; }
         .oname { font-weight:600; color:white; font-size:0.85rem; }
@@ -118,417 +52,95 @@
         .ostatus.paid { background:rgba(16,185,129,0.15); color:var(--success); }
         .ostatus.pending { background:rgba(245,158,11,0.15); color:var(--warning); }
         .ostatus.other { background:rgba(239,68,68,0.15); color:var(--danger); }
-
         .empty-state { text-align:center; padding:40px 20px; color:#64748b; }
-        .empty-state i { font-size:3rem; margin-bottom:12px; opacity:0.3; }
-        .empty-state p { font-size:0.8rem; }
-
         .chart-bar-wrap { background:rgba(255,255,255,0.08); border-radius:10px; height:24px; overflow:hidden; margin-top:8px; }
-        .chart-bar-fill { background:linear-gradient(90deg, var(--accent), var(--success)); height:100%; width:0%; border-radius:10px; transition:width 0.5s ease; }
-
-        /* BOTTOM NAV */
-        .bottom-nav {
-            position:fixed; bottom:0; left:0; right:0; z-index:900;
-            background:rgba(10,12,18,0.97); backdrop-filter:blur(24px);
-            border-top:1px solid var(--border);
-            display:flex; justify-content:space-around; align-items:center;
-            height:var(--bottom-nav-h); padding:0 8px;
-        }
-        .nav-item {
-            display:flex; flex-direction:column; align-items:center; gap:4px;
-            color:var(--text2); cursor:pointer; transition:0.2s;
-            padding:8px 12px; border-radius:16px; font-size:0.65rem;
-            border:none; background:none; width:auto; margin:0;
-        }
-        .nav-item:hover { color:white; }
-        .nav-item.active { color:var(--accent2); background:rgba(59,130,246,0.1); }
+        .chart-bar-fill { background:linear-gradient(90deg,var(--accent),var(--success)); height:100%; width:0%; border-radius:10px; transition:width 0.5s ease; }
+        .bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:900; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; height:var(--bottom-nav-h); padding:0 8px; }
+        .nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--text2); cursor:pointer; transition:0.2s; padding:8px 12px; border-radius:16px; font-size:0.65rem; border:none; background:none; width:auto; margin:0; }
+        .nav-item:hover { color:white; } .nav-item.active { color:var(--accent2); background:rgba(59,130,246,0.1); }
         .nav-item .nav-icon { font-size:1.3rem; }
-
-        .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
-
-        @media (max-width:480px) { .card { padding:14px; } .profile-stats { flex-direction:row; } }
+        .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e293b; padding:10px 20px; border-radius:30px; font-size:0.8rem; opacity:0; transition:0.3s; color:white; z-index:1000; display:flex; align-items:center; gap:8px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <a href="/"><i class="fas fa-arrow-left"></i></a>
-        <h1>Profile</h1>
-        <div style="width:40px;"></div>
-    </div>
-
-    <!-- GUEST -->
-    <div id="guestSection">
-        <div class="card" style="text-align:center;">
-            <i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i>
-            <h2>Login Dulu, Bre</h2>
-            <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:20px;">Login buat akses pengaturan, referral, riwayat order & QRIS generator.</p>
-            <button onclick="openLogin()"><i class="fas fa-sign-in-alt"></i> Login / Daftar</button>
-        </div>
-    </div>
-
-    <!-- LOGGED IN -->
+    <div class="header"><a href="/"><i class="fas fa-arrow-left"></i></a><h1>Profile</h1><div style="width:40px;"></div></div>
+    <div id="guestSection"><div class="card" style="text-align:center;"><i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i><h2>Login Dulu, Bre</h2><p style="color:#94a3b8;font-size:0.8rem;margin-bottom:20px;">Login buat akses pengaturan, referral, riwayat order & deposit.</p><button onclick="openLogin()"><i class="fas fa-sign-in-alt"></i> Login / Daftar</button></div></div>
     <div id="loggedInSection" style="display:none;">
-        
-        <!-- PROFILE TOP CARD -->
         <div class="profile-card">
-            <div class="profile-avatar" id="profileAvatar">&#128100;</div>
+            <div class="profile-avatar">&#128100;</div>
             <div class="profile-name" id="profName">-</div>
             <div class="profile-role" id="profRefCode">-</div>
             <div class="profile-stats">
                 <div class="profile-stat"><div class="stat-num" id="profBalance">Rp 0</div><div class="stat-label">&#128176; Saldo</div></div>
                 <div class="profile-stat"><div class="stat-num" id="profRefCount">0</div><div class="stat-label">&#128101; Referral</div></div>
-                <div class="profile-stat"><div class="stat-num" id="profClicks">0</div><div class="stat-label">&#128248; Klik</div></div>
+                <div class="profile-stat"><div class="stat-num" id="profClicks">0</div><div class="stat-label">&#128070; Klik</div></div>
             </div>
         </div>
-
-        <!-- TAB CONTENT -->
         <div class="tab-content">
-            <!-- TAB: BERANDA -->
             <div class="tab-panel active" id="tab-home">
-                <div class="card">
-                    <h2>&#127968; Beranda</h2>
-                    <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="homeName">-</span></div>
-                    <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="homeRefCode" style="font-family:monospace;">-</span></div>
-                    <div class="detail-row"><span class="dl">Saldo</span><span class="dv" style="color:#f59e0b;font-weight:700;">Rp <span id="homeBalance">0</span></span></div>
-                    <div class="detail-row"><span class="dl">Total Order</span><span class="dv" id="homeTotalOrders">0</span></div>
-                </div>
+                <div class="card"><h2>&#127968; Beranda</h2><div class="detail-row"><span class="dl">Nama</span><span class="dv" id="homeName">-</span></div><div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="homeRefCode" style="font-family:monospace;">-</span></div><div class="detail-row"><span class="dl">Saldo</span><span class="dv" style="color:#f59e0b;font-weight:700;">Rp <span id="homeBalance">0</span></span></div></div>
                 <button class="btn-danger" onclick="doLogout()">&#128682; Logout</button>
             </div>
-
-            <!-- TAB: QRIS -->
-            <div class="tab-panel" id="tab-qris">
-                <div class="card">
-                    <h2>&#128179; Generate QRIS</h2>
-                    <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:12px;">Generate QRIS otomatis atas nama <b id="qrisAutoName">-</b></p>
-                    <input type="number" id="qrisAmount" placeholder="Jumlah (Rp)">
-                    <button onclick="generateMyQRIS()">&#128179; Buat QRIS</button>
-                    <div id="qrisGenerated" style="margin-top:12px;display:none;"></div>
-                </div>
-                <div class="card">
-                    <h2>&#128214; Riwayat QRIS</h2>
-                    <div id="qrisHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
-                </div>
+            <div class="tab-panel" id="tab-deposit">
+                <div class="card"><h2>&#128179; Deposit Saldo</h2><p style="font-size:0.7rem;color:#94a3b8;margin-bottom:12px;">Isi saldo lewat QRIS. Saldo otomatis nambah setelah bayar.</p><input type="number" id="depAmount" placeholder="Jumlah (minimal Rp 1.000)"><button onclick="doDeposit()">&#128179; Buat QRIS Deposit</button><div id="depGenerated" style="margin-top:12px;display:none;"></div></div>
+                <div class="card"><h2>&#128214; Riwayat Deposit</h2><div id="depHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
-
-            <!-- TAB: REFERRAL -->
             <div class="tab-panel" id="tab-referral">
-                <div class="card">
-                    <h2>&#128200; Statistik Referral</h2>
-                    <div class="detail-row"><span class="dl">Total Klik Link</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div>
-                    <div class="detail-row"><span class="dl">Total Konversi</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div>
-                    <div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div>
-                    <div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div>
-                    <p style="font-size:0.6rem;color:#64748b;margin-top:6px;text-align:center;">Konversi: Klik &#8594; Order Sukses</p>
-                </div>
-                <div class="card">
-                    <h2>&#128279; Link Referral</h2>
-                    <div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;">
-                        <span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span>
-                    </div>
-                    <button onclick="copyRef()">&#128203; Salin Link</button>
-                </div>
-                <div class="card">
-                    <h2>&#128184; Tarik Saldo (WD)</h2>
-                    <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
-                    <input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)">
-                    <p style="font-size:0.7rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p>
-                    <input type="text" id="wdNum" placeholder="08123456789" maxlength="13">
-                    <button onclick="doWd()" class="btn-warning">&#128228; Kirim WD ke DANA</button>
-                    <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
-                </div>
-                <div class="card">
-                    <h2>&#128221; Riwayat Penarikan</h2>
-                    <div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
-                </div>
+                <div class="card"><h2>&#128200; Statistik Referral</h2><div class="detail-row"><span class="dl">Total Klik Link</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div><div class="detail-row"><span class="dl">Total Konversi</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div><div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div><div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div></div>
+                <div class="card"><h2>&#128279; Link Referral</h2><div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;"><span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span></div><button onclick="copyRef()">&#128203; Salin Link</button></div>
+                <div class="card"><h2>&#128184; Tarik Saldo (WD)</h2><div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div><input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)"><p style="font-size:0.7rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p><input type="text" id="wdNum" placeholder="08123456789" maxlength="13"><button onclick="doWd()" class="btn-warning">&#128228; Kirim WD ke DANA</button></div>
+                <div class="card"><h2>&#128221; Riwayat Penarikan</h2><div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
-
-            <!-- TAB: RIWAYAT -->
             <div class="tab-panel" id="tab-history">
-                <div class="card">
-                    <h2>&#128338; Riwayat Order</h2>
-                    <div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
-                </div>
+                <div class="card"><h2>&#128338; Riwayat Order</h2><div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
-
-            <!-- TAB: PENGATURAN -->
             <div class="tab-panel" id="tab-settings">
-                <div class="card">
-                    <h2>&#128295; Ganti Password</h2>
-                    <input type="password" id="oldPw" placeholder="Password lama..." autocomplete="current-password">
-                    <input type="password" id="newPw" placeholder="Password baru..." autocomplete="new-password">
-                    <button onclick="changePassword()">&#128273; Ganti Password</button>
-                </div>
-                <div class="card">
-                    <h2>&#128172; Bantuan</h2>
-                    <a href="https://t.me/Yantoidiotbruh" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text2);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);"><i class="fab fa-telegram-plane"></i> Telegram Support</a>
-                    <a href="https://wa.me/6289676041776" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
-                </div>
+                <div class="card"><h2>&#128295; Ganti Password</h2><input type="password" id="oldPw" placeholder="Password lama..."><input type="password" id="newPw" placeholder="Password baru..."><button onclick="changePassword()">&#128273; Ganti Password</button></div>
+                <div class="card"><h2>&#128172; Bantuan</h2><a href="https://t.me/Yantoidiotbruh" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/6289676041776" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-whatsapp"></i> WhatsApp</a></div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav" style="display:none;">
-    <button class="nav-item active" onclick="switchTab('home', this)"><span class="nav-icon">&#127968;</span> Beranda</button>
-    <button class="nav-item" onclick="switchTab('qris', this)"><span class="nav-icon">&#128179;</span> QRIS</button>
-    <button class="nav-item" onclick="switchTab('referral', this)"><span class="nav-icon">&#128279;</span> Referral</button>
-    <button class="nav-item" onclick="switchTab('history', this)"><span class="nav-icon">&#128338;</span> Riwayat</button>
-    <button class="nav-item" onclick="switchTab('settings', this)"><span class="nav-icon">&#128295;</span> Atur</button>
+    <button class="nav-item active" onclick="switchTab('home',this)"><span class="nav-icon">&#127968;</span>Beranda</button>
+    <button class="nav-item" onclick="switchTab('deposit',this)"><span class="nav-icon">&#128179;</span>Deposit</button>
+    <button class="nav-item" onclick="switchTab('referral',this)"><span class="nav-icon">&#128279;</span>Referral</button>
+    <button class="nav-item" onclick="switchTab('history',this)"><span class="nav-icon">&#128338;</span>Riwayat</button>
+    <button class="nav-item" onclick="switchTab('settings',this)"><span class="nav-icon">&#128295;</span>Atur</button>
 </div>
-
-<!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
-        <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;">&#128100; Login</h3>
-        <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
-        <input type="password" id="loginPw" placeholder="Password..." autocomplete="current-password">
-        <button onclick="doLogin()">&#128273; Masuk</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p>
-        <button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;">&#10060; Tutup</button>
-    </div>
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;">&#128100; Login</h3><input type="text" id="loginNm" placeholder="Nama..."><input type="password" id="loginPw" placeholder="Password..."><button onclick="doLogin()">&#128273; Masuk</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p><button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;">&#10060; Tutup</button></div>
 </div>
-
-<!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
-        <h3 style="color:white;margin-bottom:16px;font-size:1.2rem;">&#128195; Daftar</h3>
-        <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
-        <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
-        <input type="date" id="regBday" onchange="checkAge()">
-        <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Minimal umur 12 tahun!</p>
-        <input type="password" id="regPw" placeholder="Password..." autocomplete="new-password">
-        <button onclick="doReg()">&#128195; Daftar</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p>
-        <button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;">&#10060; Tutup</button>
-    </div>
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;">&#128221; Daftar</h3><input type="text" id="regNm" placeholder="Nama..."><label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (min 12 thn)</label><input type="date" id="regBday" onchange="checkAge()"><p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Min 12 tahun!</p><input type="password" id="regPw" placeholder="Password..."><button onclick="doReg()">&#128221; Daftar</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p><button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;">&#10060; Tutup</button></div>
 </div>
-
 <div id="toast" class="toast"></div>
 
 <script>
-    const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-    const QRISPY_API_URL = 'https://api.qrispy.id';
-    let currentUser = null;
-    let myQRISList = [];
-
-    function toast(msg, isError) {
-        var t = document.getElementById('toast');
-        t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
-        t.style.background = isError ? '#b91c1c' : '#1e293b';
-        t.style.opacity = '1';
-        setTimeout(function(){ t.style.opacity = '0'; }, 3000);
-    }
-
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
-
-    function switchTab(tabName, el) {
-        document.querySelectorAll('.nav-item').forEach(function(c) { c.classList.remove('active'); });
-        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-        if (el) el.classList.add('active');
-        document.getElementById('tab-' + tabName).classList.add('active');
-        if (tabName === 'history') loadOrders();
-        if (tabName === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); loadWdHistory(); updateReferralChart(); }
-        if (tabName === 'qris') { document.getElementById('qrisAutoName').textContent = currentUser ? currentUser.name : '-'; loadQrisHistory(); }
-    }
-
-    async function checkAuth() {
-        try {
-            var res = await fetch('/api/user/profile', { credentials: 'include' });
-            var data = await res.json();
-            if (data.success) {
-                currentUser = data.user;
-                document.getElementById('guestSection').style.display = 'none';
-                document.getElementById('loggedInSection').style.display = 'block';
-                document.getElementById('bottomNav').style.display = 'flex';
-                loadProfile();
-                loadOrders();
-            } else {
-                document.getElementById('guestSection').style.display = 'block';
-                document.getElementById('loggedInSection').style.display = 'none';
-                document.getElementById('bottomNav').style.display = 'none';
-            }
-        } catch(e) {}
-    }
-
-    function loadProfile() {
-        if (!currentUser) return;
-        document.getElementById('profName').textContent = currentUser.name;
-        document.getElementById('profRefCode').textContent = currentUser.referralCode;
-        document.getElementById('profBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-        document.getElementById('profRefCount').textContent = currentUser.referralCount || 0;
-        document.getElementById('profClicks').textContent = currentUser.referralClicks || 0;
-        document.getElementById('homeName').textContent = currentUser.name;
-        document.getElementById('homeRefCode').textContent = currentUser.referralCode;
-        document.getElementById('homeBalance').textContent = (currentUser.discountBalance || 0).toLocaleString();
-        document.getElementById('profRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode;
-        document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
-        updateReferralChart();
-    }
-
-    function updateReferralChart() {
-        if (!currentUser) return;
-        var clicks = currentUser.referralClicks || 0;
-        var conversions = currentUser.referralCount || 0;
-        var rate = clicks > 0 ? Math.round((conversions / clicks) * 100) : 0;
-        document.getElementById('chartClicks').textContent = clicks;
-        document.getElementById('chartConversions').textContent = conversions;
-        document.getElementById('chartRate').textContent = rate + '%';
-        document.getElementById('chartBar').style.width = Math.min(rate, 100) + '%';
-    }
-
-    async function loadOrders() {
-        try {
-            var res = await fetch('/api/user/orders', { credentials: 'include' });
-            var data = await res.json();
-            var el = document.getElementById('orderHistoryList');
-            if (data.success && data.orders.length > 0) {
-                el.innerHTML = data.orders.map(function(o) {
-                    var stClass = o.status === 'paid' ? 'paid' : o.status === 'pending' ? 'pending' : 'other';
-                    var stText = o.status === 'paid' ? 'Lunas' : o.status === 'pending' ? 'Pending' : o.status;
-                    return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'"><div class="oname">' + escapeHtml(o.productName) + '</div><div class="odetail">Rp ' + (o.totalAmount||0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div><span class="ostatus ' + stClass + '">' + stText + '</span></div>';
-                }).join('');
-                document.getElementById('homeTotalOrders').textContent = data.orders.length;
-            } else { el.innerHTML = '<div class="empty-state">&#128338;<p>Belum ada order</p></div>'; document.getElementById('homeTotalOrders').textContent = '0'; }
-        } catch(e) { document.getElementById('orderHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>'; }
-    }
-
-    async function loadWdHistory() {
-        try {
-            var res = await fetch('/api/user/withdrawals', { credentials: 'include' });
-            var data = await res.json();
-            var el = document.getElementById('wdHistoryList');
-            if (data.success && data.withdrawals.length > 0) {
-                el.innerHTML = data.withdrawals.map(function(w) {
-                    var stClass = w.status === 'success' ? 'paid' : w.status === 'pending' ? 'pending' : 'other';
-                    var stText = w.status === 'success' ? 'Sukses' : w.status === 'pending' ? 'Pending' : w.status;
-                    return '<div class="order-item"><div class="oname"><span class="ostatus ' + stClass + '">' + stText + '</span> Rp ' + (w.amount || 0).toLocaleString() + '</div><div class="odetail">Ke ' + (w.paymentMethod || '-') + ' (' + (w.paymentNumber || '-') + ')</div><div class="odetail" style="font-size:0.6rem;">' + new Date(w.createdAt).toLocaleString() + '</div></div>';
-                }).join('');
-            } else { el.innerHTML = '<div class="empty-state">&#128221;<p>Belum ada penarikan</p></div>'; }
-        } catch(e) { document.getElementById('wdHistoryList').innerHTML = '<div class="empty-state"><p>Gagal memuat</p></div>'; }
-    }
-
-    // ========== QRIS GENERATOR ==========
-    async function generateMyQRIS() {
-        if (!currentUser) { toast('Login dulu!', true); return; }
-        var amount = parseInt(document.getElementById('qrisAmount').value);
-        if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; }
-        
-        try {
-            var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
-                method: 'POST',
-                headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: amount })
-            });
-            var qrisData = await qrisRes.json();
-            if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; }
-
-            var saveRes = await fetch('/api/admin/save-qris-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminKey: 'nisaimut', qrisId: qrisData.data.qris_id, qrisImage: qrisData.data.qris_image_url, totalAmount: amount, expiredAt: qrisData.data.expired_at, customerName: currentUser.name })
-            });
-            var saveData = await saveRes.json();
-            
-            if (saveData.success) {
-                var orderUrl = window.location.origin + '/order/' + saveData.orderCode;
-                document.getElementById('qrisGenerated').style.display = 'block';
-                document.getElementById('qrisGenerated').innerHTML = '<img src="' + qrisData.data.qris_image_url + '" style="max-width:200px;border-radius:16px;display:block;margin:0 auto 12px;background:white;padding:10px;" alt="QRIS"><p style="color:#10b981;font-size:0.85rem;">&#10004; QRIS Rp ' + amount.toLocaleString() + ' siap!</p><div style="display:flex;gap:6px;"><button class="btn-xs blue" onclick="copyToClipboard(\'' + orderUrl + '\')">&#128203; Salin Tautan</button><button class="btn-xs green" onclick="window.open(\'' + orderUrl + '\', \'_blank\')">&#128279; Buka</button></div>';
-                document.getElementById('qrisAmount').value = '';
-                loadQrisHistory();
-                toast('QRIS berhasil dibuat!');
-            } else { toast('Gagal: ' + (saveData.error || 'Unknown'), true); }
-        } catch(e) { toast('Error: ' + e.message, true); }
-    }
-
-    async function loadQrisHistory() {
-        try {
-            var res = await fetch('/api/admin/orders?adminKey=nisaimut');
-            var data = await res.json();
-            if (data.success) {
-                var myQRIS = (data.orders || []).filter(function(o) {
-                    return o.productId === null && o.customerName === currentUser.name;
-                });
-                var el = document.getElementById('qrisHistoryList');
-                if (myQRIS.length > 0) {
-                    el.innerHTML = myQRIS.map(function(q) {
-                        var orderUrl = window.location.origin + '/order/' + q.orderCode;
-                        var st = q.status === 'paid' ? 'Lunas' : q.status === 'pending' ? 'Pending' : q.status;
-                        return '<div class="qris-item"><div class="qris-amount">Rp ' + (q.totalAmount || 0).toLocaleString() + ' <span class="ostatus ' + (q.status === 'paid' ? 'paid' : 'pending') + '">' + st + '</span></div><div class="qris-date">' + new Date(q.createdAt).toLocaleString() + '</div><div class="qris-code">' + q.orderCode + '</div><div class="qris-actions"><button class="btn-xs blue" onclick="event.stopPropagation();copyToClipboard(\'' + orderUrl + '\')">&#128203; Salin</button><button class="btn-xs green" onclick="event.stopPropagation();window.open(\'' + orderUrl + '\', \'_blank\')">&#128279; Buka</button></div></div>';
-                    }).join('');
-                } else { el.innerHTML = '<div class="empty-state">&#128214;<p>Belum ada QRIS</p></div>'; }
-            }
-        } catch(e) {}
-    }
-
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function(){ toast('&#128203; Tersalin!'); }).catch(function(){ toast('Gagal copy', true); });
-    }
-
-    // ========== AUTH ==========
-    function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
-    function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
-    function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
-    function setMaxDate() { var maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 12); document.getElementById('regBday').max = maxDate.toISOString().split('T')[0]; }
-    function checkAge() { var bday = document.getElementById('regBday').value; if (!bday) return; var birth = new Date(bday); var today = new Date(); var age = today.getFullYear() - birth.getFullYear(); var m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; } document.getElementById('ageErr').style.display = age < 12 ? 'block' : 'none'; }
-
-    async function doLogin() {
-        var name = document.getElementById('loginNm').value.trim();
-        var pw = document.getElementById('loginPw').value;
-        if (!name || !pw) { toast('Isi semua!', true); return; }
-        try {
-            var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,password:pw}) });
-            var data = await res.json();
-            if (data.success) { currentUser = data.user; document.getElementById('loginMod').style.display = 'none'; checkAuth(); toast('Selamat datang, ' + data.user.name + '!'); }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal login', true); }
-    }
-
-    async function doReg() {
-        var name = document.getElementById('regNm').value.trim();
-        var bday = document.getElementById('regBday').value;
-        var pw = document.getElementById('regPw').value;
-        if (!name || !bday || !pw) { toast('Isi semua!', true); return; }
-        try {
-            var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,birthDate:bday,password:pw}) });
-            var data = await res.json();
-            if (data.success) { document.getElementById('regMod').style.display = 'none'; toast('Daftar berhasil! Silakan login.'); }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal daftar', true); }
-    }
-
-    async function changePassword() {
-        var oldPw = document.getElementById('oldPw').value;
-        var newPw = document.getElementById('newPw').value;
-        if (!oldPw || !newPw) { toast('Isi semua!', true); return; }
-        try {
-            var res = await fetch('/api/user/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({oldPassword:oldPw,newPassword:newPw}) });
-            var data = await res.json();
-            if (data.success) { toast('Password diganti!'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal', true); }
-    }
-
-    function copyRef() { if (!currentUser) return; navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('Link referral tersalin!'); }); }
-
-    async function doWd() {
-        if (!currentUser) { toast('Login dulu!', true); return; }
-        var amt = parseInt(document.getElementById('wdAmt').value);
-        var num = document.getElementById('wdNum').value.trim();
-        if (!amt || amt < 2000) { toast('Minimal WD Rp 2.000!', true); return; }
-        if (!num || !num.startsWith('08')) { toast('Nomor DANA harus diawali 08!', true); return; }
-        if (num.length < 10) { toast('Nomor DANA tidak valid!', true); return; }
-        try {
-            var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) });
-            var data = await res.json();
-            if (data.success) { currentUser.discountBalance -= amt; loadProfile(); document.getElementById('wdAmt').value=''; document.getElementById('wdNum').value=''; loadWdHistory(); toast('WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!'); }
-            else { toast(data.error, true); }
-        } catch(e) { toast('Gagal WD', true); }
-    }
-
-    async function doLogout() { await fetch('/api/logout', { method:'POST', credentials:'include' }); window.location.href = '/'; }
-
+    const QRISPY_TOKEN='cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
+    const QRISPY_API_URL='https://api.qrispy.id';
+    let currentUser=null;
+    function toast(msg,isErr){var t=document.getElementById('toast');t.innerHTML='<i class="fas '+(isErr?'fa-exclamation-triangle':'fa-check-circle')+'"></i> '+msg;t.style.background=isErr?'#b91c1c':'#1e293b';t.style.opacity='1';setTimeout(function(){t.style.opacity='0';},3000)}
+    function escapeHtml(s){if(!s)return'';return s.replace(/[&<>]/g,function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'>'})}
+    function switchTab(tab,el){document.querySelectorAll('.nav-item').forEach(function(c){c.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});if(el)el.classList.add('active');document.getElementById('tab-'+tab).classList.add('active');if(tab==='history')loadOrders();if(tab==='referral'){document.getElementById('wdBal').textContent='Rp '+((currentUser.discountBalance||0)).toLocaleString();loadWdHistory();updateReferralChart()}if(tab==='deposit')loadDepHistory()}
+    async function checkAuth(){try{var res=await fetch('/api/user/profile',{credentials:'include'});var data=await res.json();if(data.success){currentUser=data.user;document.getElementById('guestSection').style.display='none';document.getElementById('loggedInSection').style.display='block';document.getElementById('bottomNav').style.display='flex';loadProfile();loadOrders()}else{document.getElementById('guestSection').style.display='block';document.getElementById('loggedInSection').style.display='none';document.getElementById('bottomNav').style.display='none'}}catch(e){}}
+    function loadProfile(){if(!currentUser)return;document.getElementById('profName').textContent=currentUser.name;document.getElementById('profRefCode').textContent=currentUser.referralCode;document.getElementById('profBalance').textContent='Rp '+((currentUser.discountBalance||0)).toLocaleString();document.getElementById('profRefCount').textContent=currentUser.referralCount||0;document.getElementById('profClicks').textContent=currentUser.referralClicks||0;document.getElementById('homeName').textContent=currentUser.name;document.getElementById('homeRefCode').textContent=currentUser.referralCode;document.getElementById('homeBalance').textContent=(currentUser.discountBalance||0).toLocaleString();document.getElementById('profRefLink').textContent=window.location.origin+'/?ref='+currentUser.referralCode;document.getElementById('wdBal').textContent='Rp '+((currentUser.discountBalance||0)).toLocaleString();updateReferralChart()}
+    function updateReferralChart(){if(!currentUser)return;var c=currentUser.referralClicks||0;var v=currentUser.referralCount||0;var r=c>0?Math.round((v/c)*100):0;document.getElementById('chartClicks').textContent=c;document.getElementById('chartConversions').textContent=v;document.getElementById('chartRate').textContent=r+'%';document.getElementById('chartBar').style.width=Math.min(r,100)+'%'}
+    async function loadOrders(){try{var res=await fetch('/api/user/orders',{credentials:'include'});var data=await res.json();var el=document.getElementById('orderHistoryList');if(data.success&&data.orders.length>0){el.innerHTML=data.orders.map(function(o){var sc=o.status==='paid'?'paid':o.status==='pending'?'pending':'other';var st=o.status==='paid'?'Lunas':o.status==='pending'?'Pending':o.status;return'<div class="order-item" onclick="window.location.href=\'/order/'+o.orderCode+'\'"><div class="oname">'+escapeHtml(o.productName)+'</div><div class="odetail">Rp '+(o.totalAmount||0).toLocaleString()+' | '+new Date(o.createdAt).toLocaleString()+'</div><span class="ostatus '+sc+'">'+st+'</span></div>'}).join('')}else el.innerHTML='<div class="empty-state">&#128338;<p>Belum ada order</p></div>'}catch(e){el.innerHTML='<div class="empty-state"><p>Gagal</p></div>'}}
+    async function loadWdHistory(){try{var res=await fetch('/api/user/withdrawals',{credentials:'include'});var data=await res.json();var el=document.getElementById('wdHistoryList');if(data.success&&data.withdrawals.length>0){el.innerHTML=data.withdrawals.map(function(w){var sc=w.status==='success'?'paid':w.status==='pending'?'pending':'other';var st=w.status==='success'?'Sukses':w.status==='pending'?'Pending':w.status;return'<div class="order-item"><div class="oname"><span class="ostatus '+sc+'">'+st+'</span> Rp '+(w.amount||0).toLocaleString()+'</div><div class="odetail">Ke '+(w.paymentMethod||'-')+' ('+(w.paymentNumber||'-')+')</div></div>'}).join('')}else el.innerHTML='<div class="empty-state">&#128221;<p>Belum ada</p></div>'}catch(e){el.innerHTML='<div class="empty-state"><p>Gagal</p></div>'}}
+    async function doDeposit(){if(!currentUser){toast('Login dulu!',true);return}var amt=parseInt(document.getElementById('depAmount').value);if(!amt||amt<1000){toast('Minimal Rp 1.000!',true);return}try{var res=await fetch('/api/user/deposit',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({amount:amt})});var data=await res.json();if(data.success){document.getElementById('depGenerated').style.display='block';document.getElementById('depGenerated').innerHTML='<img src="'+data.qrisImage+'" style="max-width:200px;border-radius:16px;display:block;margin:0 auto 12px;background:white;padding:10px;" alt="QRIS"><p style="color:#10b981;text-align:center;">&#9989; Bayar QRIS di atas. Saldo otomatis nambah setelah pembayaran terverifikasi.</p>';document.getElementById('depAmount').value='';loadDepHistory()}else toast(data.error,true)}catch(e){toast('Gagal',true)}}
+    async function loadDepHistory(){try{var res=await fetch('/api/user/deposits',{credentials:'include'});var data=await res.json();var el=document.getElementById('depHistoryList');if(data.success&&data.deposits.length>0){el.innerHTML=data.deposits.map(function(d){var st=d.status==='paid'?'paid':'pending';var stText=d.status==='paid'?'Lunas':'Pending';return'<div class="deposit-item"><div class="dep-amount">Rp '+d.amount.toLocaleString()+' <span class="ostatus '+st+'">'+stText+'</span></div><div class="dep-date">'+new Date(d.createdAt).toLocaleString()+'</div></div>'}).join('')}else el.innerHTML='<div class="empty-state">&#128214;<p>Belum ada deposit</p></div>'}catch(e){}}
+    function openLogin(){document.getElementById('loginMod').style.display='flex'}
+    function showReg(){document.getElementById('loginMod').style.display='none';document.getElementById('regMod').style.display='flex';var d=new Date();d.setFullYear(d.getFullYear()-12);document.getElementById('regBday').max=d.toISOString().split('T')[0]}
+    function showLoginMod(){document.getElementById('regMod').style.display='none';document.getElementById('loginMod').style.display='flex'}
+    function checkAge(){var b=document.getElementById('regBday').value;if(!b)return;var bd=new Date(b),t=new Date(),a=t.getFullYear()-bd.getFullYear();if(t.getMonth()<bd.getMonth()||(t.getMonth()===bd.getMonth()&&t.getDate()<bd.getDate()))a--;document.getElementById('ageErr').style.display=a<12?'block':'none'}
+    async function doLogin(){var n=document.getElementById('loginNm').value.trim(),p=document.getElementById('loginPw').value;if(!n||!p){toast('Isi semua!',true);return}try{var res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({name:n,password:p})});var data=await res.json();if(data.success){currentUser=data.user;document.getElementById('loginMod').style.display='none';checkAuth()}else toast(data.error,true)}catch(e){toast('Gagal',true)}}
+    async function doReg(){var n=document.getElementById('regNm').value.trim(),b=document.getElementById('regBday').value,p=document.getElementById('regPw').value;if(!n||!b||!p){toast('Isi semua!',true);return}try{var res=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({name:n,birthDate:b,password:p})});var data=await res.json();if(data.success){document.getElementById('regMod').style.display='none';toast('Berhasil! Silakan login.')}else toast(data.error,true)}catch(e){toast('Gagal',true)}}
+    async function changePassword(){var o=document.getElementById('oldPw').value,n=document.getElementById('newPw').value;if(!o||!n){toast('Isi semua!',true);return}try{var res=await fetch('/api/user/change-password',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({oldPassword:o,newPassword:n})});var data=await res.json();if(data.success){toast('Password diganti!');document.getElementById('oldPw').value='';document.getElementById('newPw').value=''}else toast(data.error,true)}catch(e){toast('Gagal',true)}}
+    function copyRef(){if(!currentUser)return;navigator.clipboard.writeText(window.location.origin+'/?ref='+currentUser.referralCode).then(function(){toast('Tersalin!')})}
+    async function doWd(){if(!currentUser){toast('Login dulu!',true);return}var a=parseInt(document.getElementById('wdAmt').value),n=document.getElementById('wdNum').value.trim();if(!a||a<2000){toast('Min Rp 2.000!',true);return}if(!n||!n.startsWith('08')){toast('Nomor DANA harus 08!',true);return}try{var res=await fetch('/api/user/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({amount:a,paymentMethod:'DANA',paymentNumber:n})});var data=await res.json();if(data.success){currentUser.discountBalance-=a;loadProfile();document.getElementById('wdAmt').value='';document.getElementById('wdNum').value='';loadWdHistory();toast('WD Rp '+a.toLocaleString()+' diproses!')}else toast(data.error,true)}catch(e){toast('Gagal',true)}}
+    async function doLogout(){await fetch('/api/logout',{method:'POST',credentials:'include'});window.location.href='/'}
     checkAuth();
 </script>
 </body>
