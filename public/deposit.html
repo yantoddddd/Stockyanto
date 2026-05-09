@@ -121,7 +121,7 @@
             try {
                 var res = await fetch('/api/user/deposits', { credentials: 'include' });
                 var data = await res.json();
-                if (data.success && data.deposits.length > 0) {
+                if (data.success && data.deposits && data.deposits.length > 0) {
                     var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
                     if (dep && dep.status === 'paid') {
                         clearInterval(pollingInterval);
@@ -138,7 +138,7 @@
         try {
             var res = await fetch('/api/user/deposits', { credentials: 'include' });
             var data = await res.json();
-            if (data.success && data.deposits.length > 0) {
+            if (data.success && data.deposits && data.deposits.length > 0) {
                 var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
                 if (!dep) { document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Deposit Tidak Ditemukan</h1><a href="/profile" style="color:#60a5fa;">Kembali ke Profile</a></div>'; return; }
                 if (dep.status === 'paid') { document.getElementById('pendingContent').style.display = 'none'; document.getElementById('successContent').style.display = 'block'; return; }
