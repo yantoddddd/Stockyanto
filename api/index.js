@@ -149,51 +149,46 @@ function getReferralFromDB(db, customerName) {
     return null;
 }
 
-// ✅ AUTO-FIX REFERRAL (dipanggil pas user buka profile)
-async function autoFixReferral(db, userName) {
-    if (!userName) return 0;
-    var fixed = 0;
-    var nameLower = userName.toLowerCase();
-    
-    (db.orders || []).forEach(function(order) {
-        if (order.status === 'paid' && !order.referralRewarded && order.customerName.toLowerCase() === nameLower) {
-            var refCode = getReferralFromDB(db, order.customerName);
-            if (refCode) {
-                var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
-                if (referrer) {
-                    referrer.referralCount = (referrer.referralCount || 0) + 1;
-                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
-                    order.referralRewarded = true;
-                    fixed++;
-                }
-            }
-        }
-    });
-    
-    if (fixed > 0) {
-        await setDB(null, db.orders, db.sha);
-        console.log('AUTO-FIX: ' + fixed + ' referral dibenerin untuk ' + userName);
-    }
-    return fixed;
-}
-
+// ✅ FUNGSI REWARD REFERRAL — BACA DARI ORDER DULU
 async function processReferralReward(db, order, cookieHeader) {
     if (!order || order.referralRewarded) return;
     
     var refCode = null;
     var customerName = (order.customerName || '').toLowerCase();
     
-    if (cookieHeader) refCode = getRefFromCookie(cookieHeader);
-    if (!refCode) refCode = getReferralFromDB(db, order.customerName);
-    if (!refCode) return;
+    // 1. DARI ORDER (disimpen pas checkout — paling akurat)
+    if (order.referralCode) {
+        refCode = order.referralCode;
+        console.log('REFERRAL FROM ORDER: ' + refCode);
+    }
+    
+    // 2. DARI COOKIE (fallback)
+    if (!refCode && cookieHeader) {
+        refCode = getRefFromCookie(cookieHeader);
+        if (refCode) console.log('REFERRAL FROM COOKIE: ' + refCode);
+    }
+    
+    // 3. DARI DATABASE (fallback terakhir)
+    if (!refCode) {
+        refCode = getReferralFromDB(db, order.customerName);
+        if (refCode) console.log('REFERRAL FROM DB: ' + refCode);
+    }
+    
+    if (!refCode) {
+        console.log('REFERRAL NOT FOUND untuk ' + customerName);
+        return;
+    }
     
     var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
-    if (!referrer) return;
+    if (!referrer) {
+        console.log('REFERRER NOT FOUND untuk kode ' + refCode);
+        return;
+    }
     
     referrer.referralCount = (referrer.referralCount || 0) + 1;
     referrer.discountBalance = (referrer.discountBalance || 0) + 500;
     order.referralRewarded = true;
-    console.log('REFERRAL: ' + referrer.name + ' +Rp500 dari ' + customerName);
+    console.log('REFERRAL AWARDED: ' + referrer.name + ' +Rp500 dari ' + customerName);
 }
 
 // Auto keep-alive
@@ -281,21 +276,11 @@ app.post('/api/logout', async function(req, res) {
     res.json({ success: true });
 });
 
-// ✅ PROFILE — AUTO-FIX REFERRAL SETIAP KALI DIBUKA
 app.get('/api/user/profile', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
     var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    
-    // ✅ AUTO-FIX REFERRAL buat user ini
-    await autoFixReferral(db, user.name);
-    
-    // Refresh DB setelah fix
-    db = await getDB();
-    dbCacheTime = 0;
-    user = (db.users || []).find(function(u) { return u.token === token; });
-    
     res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } });
 });
 
@@ -402,7 +387,10 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
             if (order.items) { order.items.forEach(function(item) { var p = (freshDB.products || []).find(function(x) { return x.id == item.productId; }); if (p && p.stock > 0) p.stock -= item.quantity || 1; }); }
             else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
             freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
+            
+            // ✅ KOMISI REFERRAL
             await processReferralReward(freshDB, freshOrder, req.headers.cookie);
+            
             for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
             return res.json({ status: 'paid', productCode: freshOrder.productCode });
         }
@@ -411,8 +399,59 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
 });
 
 app.get('/api/products', async function(req, res) { var db = await getDB(); res.json({ success: true, products: db.products || [] }); });
-app.post('/api/create-order', async function(req, res) { var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId; if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); var db = await getDB(); var p = (db.products || []).find(function(x) { return x.id == productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: qrisId, productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, totalAmount: req.body.totalAmount || p.price, customerName: sanitize(customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true, orderCode: oc }); });
-app.post('/api/create-cart-order', async function(req, res) { var items = req.body.items; if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var cartTotal = 0; var oi = []; for (var i = 0; i < items.length; i++) { var item = items[i]; var p = (db.products || []).find(function(x) { return x.id == item.productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok ' + p.name + ' habis' }); cartTotal += p.price * (item.quantity || 1); oi.push({ productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, quantity: item.quantity || 1 }); } var totalItems = items.reduce(function(s, it) { return s + (it.quantity || 1); }, 0); var discount = calculateCartDiscount(totalItems); var finalAmount = Math.max(0, cartTotal - discount); oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, items: oi, productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '), productCode: oi.map(function(x) { return x.productCode; }).join('\n'), price: cartTotal, totalAmount: finalAmount, discountAmount: discount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
+
+// ✅ CREATE ORDER — SIMPAN REFERRAL DARI COOKIE
+app.post('/api/create-order', async function(req, res) {
+    var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId;
+    if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
+    var db = await getDB(); var p = (db.products || []).find(function(x) { return x.id == productId; });
+    if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' });
+    if (p.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
+    var oc = crypto.randomBytes(16).toString('hex');
+    db.orders.unshift({
+        id: Date.now(), orderCode: oc, qrisId: qrisId,
+        productId: p.id, productName: p.name, productCode: p.itemContent,
+        price: p.price, totalAmount: req.body.totalAmount || p.price,
+        customerName: sanitize(customerName || 'Guest'),
+        referralCode: getRefFromCookie(req.headers.cookie) || null, // ✅ SIMPAN REFERRAL
+        status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt,
+        referralRewarded: false, createdAt: new Date().toISOString()
+    });
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, orderCode: oc });
+});
+
+// ✅ CREATE CART ORDER — SIMPAN REFERRAL DARI COOKIE
+app.post('/api/create-cart-order', async function(req, res) {
+    var items = req.body.items;
+    if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
+    for (var attempt = 1; attempt <= 3; attempt++) {
+        try {
+            var db = await getDB(); var cartTotal = 0; var oi = [];
+            for (var i = 0; i < items.length; i++) { var item = items[i]; var p = (db.products || []).find(function(x) { return x.id == item.productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok ' + p.name + ' habis' }); cartTotal += p.price * (item.quantity || 1); oi.push({ productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, quantity: item.quantity || 1 }); }
+            var totalItems = items.reduce(function(s, it) { return s + (it.quantity || 1); }, 0);
+            var discount = calculateCartDiscount(totalItems);
+            var finalAmount = Math.max(0, cartTotal - discount);
+            oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; });
+            var oc = crypto.randomBytes(16).toString('hex');
+            db.orders.unshift({
+                id: Date.now(), orderCode: oc, qrisId: req.body.qrisId,
+                items: oi,
+                productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '),
+                productCode: oi.map(function(x) { return x.productCode; }).join('\n'),
+                price: cartTotal, totalAmount: finalAmount, discountAmount: discount,
+                customerName: sanitize(req.body.customerName || 'Guest'),
+                referralCode: getRefFromCookie(req.headers.cookie) || null, // ✅ SIMPAN REFERRAL
+                status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt,
+                referralRewarded: false, createdAt: new Date().toISOString()
+            });
+            await setDB(null, db.orders, db.sha);
+            return res.json({ success: true, orderCode: oc });
+        } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); }
+    }
+    res.status(500).json({ error: 'Save failed' });
+});
+
 app.get('/api/gacha/info', async function(req, res) { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0; }); var tv = ap.reduce(function(s, p) { return s + p.price; }, 0); res.json({ success: true, gachaPrice: ap.length > 0 ? Math.floor(tv / ap.length * 0.7) : 0, totalProducts: ap.length, jackpotChance: '20%' }); });
 app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
 app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
