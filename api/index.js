@@ -331,6 +331,40 @@ app.post('/api/user/change-password', async function(req, res) {
     res.json({ success: true });
 });
 
+app.get('/api/sync-all-referral-balances', async function(req, res) {
+    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    
+    var db = await getDB();
+    var updated = 0;
+    
+    // Loop semua user
+    (db.users || []).forEach(function(user) {
+        var count = 0;
+        
+        // Hitung order PAID dengan referralCode user ini
+        (db.orders || []).forEach(function(order) {
+            if (order.status === 'paid' && order.referralCode === user.referralCode) {
+                count++;
+            }
+        });
+        
+        // Update referralCount dan discountBalance
+        if (user.referralCount !== count || user.discountBalance !== count * 500) {
+            user.referralCount = count;
+            user.discountBalance = count * 500;
+            updated++;
+        }
+    });
+    
+    if (updated > 0) await setDB(null, db.orders, db.sha);
+    res.json({ 
+        success: true, 
+        updatedCount: updated,
+        totalUsers: (db.users || []).length,
+        message: updated + ' user berhasil di-sync saldonya'
+    });
+});
+
 // ========== PING: TRIGGER REFERRAL MANUAL ==========
 app.get('/api/ping-referral', async function(req, res) {
     var orderCode = req.query.code;
