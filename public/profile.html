@@ -50,7 +50,8 @@
         .btn-warning { background:var(--warning); color:#000; font-weight:600; }
         .btn-danger { background:var(--danger); }
 
-        .deposit-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; border:1px solid rgba(255,255,255,0.04); }
+        .deposit-item { background:#1e293b; padding:14px; border-radius:14px; margin-bottom:8px; border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:0.2s; }
+        .deposit-item:hover { border-color:var(--accent); }
         .deposit-item .dep-amount { font-weight:600; color:white; font-size:0.9rem; }
         .deposit-item .dep-date { font-size:0.6rem; color:#64748b; margin-top:4px; }
 
@@ -70,7 +71,6 @@
         .chart-bar-wrap { background:rgba(255,255,255,0.08); border-radius:10px; height:24px; overflow:hidden; margin-top:8px; }
         .chart-bar-fill { background:linear-gradient(90deg,var(--accent),var(--success)); height:100%; width:0%; border-radius:10px; transition:width 0.5s ease; }
 
-        /* BOTTOM NAV */
         .bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:900; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; height:var(--bottom-nav-h); padding:0 8px; }
         .nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--text2); cursor:pointer; transition:0.2s; padding:8px 12px; border-radius:16px; font-size:0.65rem; border:none; background:none; width:auto; margin:0; }
         .nav-item:hover { color:white; } .nav-item.active { color:var(--accent2); background:rgba(59,130,246,0.1); }
@@ -87,7 +87,6 @@
         <div style="width:40px;"></div>
     </div>
 
-    <!-- GUEST -->
     <div id="guestSection">
         <div class="card" style="text-align:center;">
             <i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i>
@@ -97,10 +96,8 @@
         </div>
     </div>
 
-    <!-- LOGGED IN -->
     <div id="loggedInSection" style="display:none;">
         
-        <!-- PROFILE CARD -->
         <div class="profile-card">
             <div class="profile-avatar"><i class="fas fa-user"></i></div>
             <div class="profile-name" id="profName">-</div>
@@ -112,27 +109,18 @@
             </div>
         </div>
 
-        <!-- TAB CONTENT -->
         <div class="tab-content">
-            <!-- BERANDA -->
             <div class="tab-panel active" id="tab-home">
-                <div class="card">
-                    <h2><i class="fas fa-home"></i> Beranda</h2>
-                    <div class="detail-row"><span class="dl">Nama</span><span class="dv" id="homeName">-</span></div>
-                    <div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="homeRefCode" style="font-family:monospace;">-</span></div>
-                    <div class="detail-row"><span class="dl">Saldo</span><span class="dv" style="color:#f59e0b;font-weight:700;">Rp <span id="homeBalance">0</span></span></div>
-                </div>
+                <div class="card"><h2><i class="fas fa-home"></i> Beranda</h2><div class="detail-row"><span class="dl">Nama</span><span class="dv" id="homeName">-</span></div><div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="homeRefCode" style="font-family:monospace;">-</span></div><div class="detail-row"><span class="dl">Saldo</span><span class="dv" style="color:#f59e0b;font-weight:700;">Rp <span id="homeBalance">0</span></span></div></div>
                 <button class="btn-danger" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
 
-            <!-- DEPOSIT -->
             <div class="tab-panel" id="tab-deposit">
                 <div class="card">
                     <h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2>
                     <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:12px;">Isi saldo lewat QRIS. Saldo otomatis nambah setelah bayar.</p>
                     <input type="number" id="depAmount" placeholder="Jumlah (minimal Rp 1.000)">
                     <button onclick="doDeposit()"><i class="fas fa-qrcode"></i> Buat QRIS Deposit</button>
-                    <div id="depGenerated" style="margin-top:12px;display:none;"></div>
                 </div>
                 <div class="card">
                     <h2><i class="fas fa-history"></i> Riwayat Deposit</h2>
@@ -140,64 +128,25 @@
                 </div>
             </div>
 
-            <!-- REFERRAL -->
             <div class="tab-panel" id="tab-referral">
-                <div class="card">
-                    <h2><i class="fas fa-chart-bar"></i> Statistik Referral</h2>
-                    <div class="detail-row"><span class="dl">Total Klik Link</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div>
-                    <div class="detail-row"><span class="dl">Total Konversi</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div>
-                    <div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div>
-                    <div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div>
-                </div>
-                <div class="card">
-                    <h2><i class="fas fa-link"></i> Link Referral</h2>
-                    <div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;margin-bottom:12px;">
-                        <span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span>
-                    </div>
-                    <button onclick="copyRef()"><i class="fas fa-copy"></i> Salin Link</button>
-                </div>
-                <div class="card">
-                    <h2><i class="fas fa-wallet"></i> Tarik Saldo (WD)</h2>
-                    <div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div>
-                    <input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)">
-                    <p style="font-size:0.7rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p>
-                    <input type="text" id="wdNum" placeholder="08123456789" maxlength="13">
-                    <button onclick="doWd()" class="btn-warning"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button>
-                    <p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p>
-                </div>
-                <div class="card">
-                    <h2><i class="fas fa-list"></i> Riwayat Penarikan</h2>
-                    <div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
-                </div>
+                <div class="card"><h2><i class="fas fa-chart-bar"></i> Statistik Referral</h2><div class="detail-row"><span class="dl">Total Klik</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div><div class="detail-row"><span class="dl">Total Konversi</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div><div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div><div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div></div>
+                <div class="card"><h2><i class="fas fa-link"></i> Link Referral</h2><div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;"><span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span></div><button onclick="copyRef()"><i class="fas fa-copy"></i> Salin Link</button></div>
+                <div class="card"><h2><i class="fas fa-wallet"></i> Tarik Saldo (WD)</h2><div class="detail-row"><span class="dl">Saldo</span><span class="dv" id="wdBal" style="color:#f59e0b;font-weight:700;">Rp 0</span></div><input type="number" id="wdAmt" placeholder="Jumlah (minimal Rp 2.000)"><p style="font-size:0.7rem;color:#94a3b8;margin:4px 0;">Nomor DANA (08xx):</p><input type="text" id="wdNum" placeholder="08123456789" maxlength="13"><button onclick="doWd()" class="btn-warning"><i class="fas fa-paper-plane"></i> Kirim WD ke DANA</button><p style="font-size:0.6rem;color:#64748b;margin-top:8px;text-align:center;">Minimal WD Rp 2.000 | Hanya DANA</p></div>
+                <div class="card"><h2><i class="fas fa-list"></i> Riwayat Penarikan</h2><div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
 
-            <!-- RIWAYAT ORDER -->
             <div class="tab-panel" id="tab-history">
-                <div class="card">
-                    <h2><i class="fas fa-clock"></i> Riwayat Order</h2>
-                    <div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div>
-                </div>
+                <div class="card"><h2><i class="fas fa-clock"></i> Riwayat Order</h2><div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
 
-            <!-- PENGATURAN -->
             <div class="tab-panel" id="tab-settings">
-                <div class="card">
-                    <h2><i class="fas fa-cog"></i> Ganti Password</h2>
-                    <input type="password" id="oldPw" placeholder="Password lama..." autocomplete="current-password">
-                    <input type="password" id="newPw" placeholder="Password baru..." autocomplete="new-password">
-                    <button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button>
-                </div>
-                <div class="card">
-                    <h2><i class="fas fa-question-circle"></i> Bantuan</h2>
-                    <a href="https://t.me/Yantoidiotbruh" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);"><i class="fab fa-telegram-plane"></i> Telegram Support</a>
-                    <a href="https://wa.me/6289676041776" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-whatsapp"></i> WhatsApp Support</a>
-                </div>
+                <div class="card"><h2><i class="fas fa-cog"></i> Ganti Password</h2><input type="password" id="oldPw" placeholder="Password lama..."><input type="password" id="newPw" placeholder="Password baru..."><button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button></div>
+                <div class="card"><h2><i class="fas fa-question-circle"></i> Bantuan</h2><a href="https://t.me/Yantoidiotbruh" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/6289676041776" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-whatsapp"></i> WhatsApp</a></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav" style="display:none;">
     <button class="nav-item active" onclick="switchTab('home',this)"><i class="fas fa-home nav-icon"></i>Beranda</button>
     <button class="nav-item" onclick="switchTab('deposit',this)"><i class="fas fa-money-bill-wave nav-icon"></i>Deposit</button>
@@ -206,31 +155,12 @@
     <button class="nav-item" onclick="switchTab('settings',this)"><i class="fas fa-cog nav-icon"></i>Atur</button>
 </div>
 
-<!-- LOGIN MODAL -->
-<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
-        <h3 style="color:white;margin-bottom:16px;"><i class="fas fa-sign-in-alt"></i> Login</h3>
-        <input type="text" id="loginNm" placeholder="Nama lengkap..." autocomplete="username">
-        <input type="password" id="loginPw" placeholder="Password..." autocomplete="current-password">
-        <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p>
-        <button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
-    </div>
+<div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;"><i class="fas fa-sign-in-alt"></i> Login</h3><input type="text" id="loginNm" placeholder="Nama..."><input type="password" id="loginPw" placeholder="Password..."><button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p><button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button></div>
 </div>
 
-<!-- REGISTER MODAL -->
-<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;justify-content:center;align-items:center;">
-    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;">
-        <h3 style="color:white;margin-bottom:16px;"><i class="fas fa-user-plus"></i> Daftar</h3>
-        <input type="text" id="regNm" placeholder="Nama lengkap..." autocomplete="name">
-        <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
-        <input type="date" id="regBday" onchange="checkAge()">
-        <p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Minimal umur 12 tahun!</p>
-        <input type="password" id="regPw" placeholder="Password..." autocomplete="new-password">
-        <button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button>
-        <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p>
-        <button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button>
-    </div>
+<div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;"><i class="fas fa-user-plus"></i> Daftar</h3><input type="text" id="regNm" placeholder="Nama..."><label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (min 12 thn)</label><input type="date" id="regBday" onchange="checkAge()"><p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Min 12 tahun!</p><input type="password" id="regPw" placeholder="Password..."><button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p><button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button></div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -335,24 +265,19 @@
         } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; }
     }
 
-    // ========== DEPOSIT ==========
+    // ✅ DEPOSIT — REDIRECT KE /deposit?id=...
     async function doDeposit() {
         if (!currentUser) { toast('Login dulu!', true); return; }
         var amt = parseInt(document.getElementById('depAmount').value);
         if (!amt || amt < 1000) { toast('Minimal Rp 1.000!', true); return; }
         try {
             var res = await fetch('/api/user/deposit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
                 body: JSON.stringify({ amount: amt })
             });
             var data = await res.json();
             if (data.success) {
-                document.getElementById('depGenerated').style.display = 'block';
-                document.getElementById('depGenerated').innerHTML = '<img src="' + data.qrisImage + '" style="max-width:200px;border-radius:16px;display:block;margin:0 auto 12px;background:white;padding:10px;" alt="QRIS"><p style="color:#10b981;text-align:center;font-size:0.85rem;"><i class="fas fa-check-circle"></i> Bayar QRIS di atas. Saldo otomatis nambah setelah pembayaran terverifikasi.</p>';
-                document.getElementById('depAmount').value = '';
-                loadDepHistory();
+                window.location.href = '/deposit?id=' + data.depId;
             } else toast(data.error, true);
         } catch(e) { toast('Gagal deposit', true); }
     }
@@ -366,25 +291,23 @@
                 el.innerHTML = data.deposits.map(function(d) {
                     var st = d.status === 'paid' ? 'paid' : 'pending';
                     var stText = d.status === 'paid' ? 'Lunas' : 'Pending';
-                    return '<div class="deposit-item"><div class="dep-amount">Rp ' + d.amount.toLocaleString() + ' <span class="ostatus ' + st + '">' + stText + '</span></div><div class="dep-date">' + new Date(d.createdAt).toLocaleString() + '</div></div>';
+                    return '<div class="deposit-item" onclick="window.location.href=\'/deposit?id=' + d.id + '\'"><div class="dep-amount">Rp ' + d.amount.toLocaleString() + ' <span class="ostatus ' + st + '">' + stText + '</span></div><div class="dep-date">' + new Date(d.createdAt).toLocaleString() + '</div></div>';
                 }).join('');
             } else el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada deposit</p></div>';
         } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; }
     }
 
-    // ========== AUTH ==========
     function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
     function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
     function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
-    function setMaxDate() { var maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 12); document.getElementById('regBday').max = maxDate.toISOString().split('T')[0]; }
-    function checkAge() { var bday = document.getElementById('regBday').value; if (!bday) return; var birth = new Date(bday); var today = new Date(); var age = today.getFullYear() - birth.getFullYear(); var m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) { age--; } document.getElementById('ageErr').style.display = age < 12 ? 'block' : 'none'; }
+    function setMaxDate() { var d = new Date(); d.setFullYear(d.getFullYear() - 12); document.getElementById('regBday').max = d.toISOString().split('T')[0]; }
+    function checkAge() { var b = document.getElementById('regBday').value; if (!b) return; var bd = new Date(b), t = new Date(), a = t.getFullYear() - bd.getFullYear(); if (t.getMonth() < bd.getMonth() || (t.getMonth() === bd.getMonth() && t.getDate() < bd.getDate())) a--; document.getElementById('ageErr').style.display = a < 12 ? 'block' : 'none'; }
 
     async function doLogin() {
-        var name = document.getElementById('loginNm').value.trim();
-        var pw = document.getElementById('loginPw').value;
-        if (!name || !pw) { toast('Isi semua!', true); return; }
+        var n = document.getElementById('loginNm').value.trim(), p = document.getElementById('loginPw').value;
+        if (!n || !p) { toast('Isi semua!', true); return; }
         try {
-            var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,password:pw}) });
+            var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:n,password:p}) });
             var data = await res.json();
             if (data.success) { currentUser = data.user; document.getElementById('loginMod').style.display = 'none'; checkAuth(); toast('Selamat datang, ' + data.user.name + '!'); }
             else toast(data.error, true);
@@ -392,12 +315,10 @@
     }
 
     async function doReg() {
-        var name = document.getElementById('regNm').value.trim();
-        var bday = document.getElementById('regBday').value;
-        var pw = document.getElementById('regPw').value;
-        if (!name || !bday || !pw) { toast('Isi semua!', true); return; }
+        var n = document.getElementById('regNm').value.trim(), b = document.getElementById('regBday').value, p = document.getElementById('regPw').value;
+        if (!n || !b || !p) { toast('Isi semua!', true); return; }
         try {
-            var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:name,birthDate:bday,password:pw}) });
+            var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:n,birthDate:b,password:p}) });
             var data = await res.json();
             if (data.success) { document.getElementById('regMod').style.display = 'none'; toast('Daftar berhasil! Silakan login.'); }
             else toast(data.error, true);
@@ -405,11 +326,10 @@
     }
 
     async function changePassword() {
-        var oldPw = document.getElementById('oldPw').value;
-        var newPw = document.getElementById('newPw').value;
-        if (!oldPw || !newPw) { toast('Isi semua!', true); return; }
+        var o = document.getElementById('oldPw').value, n = document.getElementById('newPw').value;
+        if (!o || !n) { toast('Isi semua!', true); return; }
         try {
-            var res = await fetch('/api/user/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({oldPassword:oldPw,newPassword:newPw}) });
+            var res = await fetch('/api/user/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({oldPassword:o,newPassword:n}) });
             var data = await res.json();
             if (data.success) { toast('Password diganti!'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; }
             else toast(data.error, true);
@@ -420,15 +340,14 @@
 
     async function doWd() {
         if (!currentUser) { toast('Login dulu!', true); return; }
-        var amt = parseInt(document.getElementById('wdAmt').value);
-        var num = document.getElementById('wdNum').value.trim();
-        if (!amt || amt < 2000) { toast('Minimal WD Rp 2.000!', true); return; }
-        if (!num || !num.startsWith('08')) { toast('Nomor DANA harus diawali 08!', true); return; }
-        if (num.length < 10) { toast('Nomor DANA tidak valid!', true); return; }
+        var a = parseInt(document.getElementById('wdAmt').value), n = document.getElementById('wdNum').value.trim();
+        if (!a || a < 2000) { toast('Min Rp 2.000!', true); return; }
+        if (!n || !n.startsWith('08')) { toast('Nomor DANA harus 08!', true); return; }
+        if (n.length < 10) { toast('Nomor DANA tidak valid!', true); return; }
         try {
-            var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:amt, paymentMethod:'DANA', paymentNumber:num}) });
+            var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:a, paymentMethod:'DANA', paymentNumber:n}) });
             var data = await res.json();
-            if (data.success) { currentUser.discountBalance -= amt; loadProfile(); document.getElementById('wdAmt').value=''; document.getElementById('wdNum').value=''; loadWdHistory(); toast('WD Rp ' + amt.toLocaleString() + ' ke DANA diproses!'); }
+            if (data.success) { currentUser.discountBalance -= a; loadProfile(); document.getElementById('wdAmt').value=''; document.getElementById('wdNum').value=''; loadWdHistory(); toast('WD Rp ' + a.toLocaleString() + ' ke DANA diproses!'); }
             else toast(data.error, true);
         } catch(e) { toast('Gagal WD', true); }
     }
