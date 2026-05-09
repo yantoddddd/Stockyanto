@@ -135,7 +135,6 @@ function calculateCartDiscount(itemCount) { return Math.max(0, (itemCount - 1) *
 function getRefFromCookie(cookieHeader) { var c = parseCookies(cookieHeader); return c['yanto_ref'] || null; }
 async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + qrisId + '/cancel', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
 
-// ✅ DETEKSI REFERRAL DARI DATABASE (BACKUP)
 function getReferralFromDB(db, customerName) {
     if (!customerName) return null;
     var nameLower = customerName.toLowerCase();
@@ -150,19 +149,42 @@ function getReferralFromDB(db, customerName) {
     return null;
 }
 
-// ✅ FUNGSI REWARD REFERRAL (COOKIE + DB)
+// ✅ AUTO-FIX REFERRAL (dipanggil pas user buka profile)
+async function autoFixReferral(db, userName) {
+    if (!userName) return 0;
+    var fixed = 0;
+    var nameLower = userName.toLowerCase();
+    
+    (db.orders || []).forEach(function(order) {
+        if (order.status === 'paid' && !order.referralRewarded && order.customerName.toLowerCase() === nameLower) {
+            var refCode = getReferralFromDB(db, order.customerName);
+            if (refCode) {
+                var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
+                if (referrer) {
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+                    order.referralRewarded = true;
+                    fixed++;
+                }
+            }
+        }
+    });
+    
+    if (fixed > 0) {
+        await setDB(null, db.orders, db.sha);
+        console.log('AUTO-FIX: ' + fixed + ' referral dibenerin untuk ' + userName);
+    }
+    return fixed;
+}
+
 async function processReferralReward(db, order, cookieHeader) {
     if (!order || order.referralRewarded) return;
     
     var refCode = null;
     var customerName = (order.customerName || '').toLowerCase();
     
-    // 1. Cek dari cookie
     if (cookieHeader) refCode = getRefFromCookie(cookieHeader);
-    
-    // 2. Cek dari database (visitor / user.referredBy)
     if (!refCode) refCode = getReferralFromDB(db, order.customerName);
-    
     if (!refCode) return;
     
     var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
@@ -195,7 +217,7 @@ setInterval(async function() {
 app.get('/api/health', function(req, res) { res.json({ status: 'ok', time: new Date().toISOString() }); });
 app.get('/api/public-stats', async function(req, res) { try { var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var today = new Date().toISOString().split('T')[0]; var soldMap = {}; paid.forEach(function(o) { soldMap[o.productId] = (soldMap[o.productId] || 0) + 1; }); res.json({ success: true, totalProducts: (db.products || []).filter(function(p) { return p.stock > 0; }).length, todayOrders: paid.filter(function(o) { return (o.paidAt || o.createdAt).startsWith(today); }).length, soldMap: soldMap, maintenance: db.maintenance || false }); } catch(e) { res.status(500).json({ success: false }); } });
 
-// ========== REFERRAL APPLY (COOKIE + DB) ==========
+// ========== REFERRAL APPLY ==========
 app.get('/api/referral/apply', async function(req, res) {
     var ref = req.query.ref;
     if (!ref) return res.json({ success: false });
@@ -203,7 +225,6 @@ app.get('/api/referral/apply', async function(req, res) {
         var db = await getDB();
         var referrer = (db.users || []).find(function(u) { return u.referralCode === ref; });
         if (!referrer) return res.json({ success: false });
-        
         referrer.referralClicks = (referrer.referralClicks || 0) + 1;
         
         var cookies = parseCookies(req.headers.cookie);
@@ -260,11 +281,21 @@ app.post('/api/logout', async function(req, res) {
     res.json({ success: true });
 });
 
+// ✅ PROFILE — AUTO-FIX REFERRAL SETIAP KALI DIBUKA
 app.get('/api/user/profile', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
     var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    // ✅ AUTO-FIX REFERRAL buat user ini
+    await autoFixReferral(db, user.name);
+    
+    // Refresh DB setelah fix
+    db = await getDB();
+    dbCacheTime = 0;
+    user = (db.users || []).find(function(u) { return u.token === token; });
+    
     res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } });
 });
 
@@ -277,7 +308,7 @@ app.get('/api/user/orders', async function(req, res) {
     res.json({ success: true, orders: orders.slice(0, 50).map(function(o) { return { id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt }; }) });
 });
 
-// ========== DEPOSIT SAVE ==========
+// ========== DEPOSIT ==========
 app.post('/api/user/deposit-save', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Login dulu' });
@@ -371,7 +402,6 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
             if (order.items) { order.items.forEach(function(item) { var p = (freshDB.products || []).find(function(x) { return x.id == item.productId; }); if (p && p.stock > 0) p.stock -= item.quantity || 1; }); }
             else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
             freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
-            // ✅ KOMISI REFERRAL
             await processReferralReward(freshDB, freshOrder, req.headers.cookie);
             for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
             return res.json({ status: 'paid', productCode: freshOrder.productCode });
