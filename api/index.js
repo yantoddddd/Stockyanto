@@ -331,6 +331,38 @@ app.post('/api/user/change-password', async function(req, res) {
     res.json({ success: true });
 });
 
+// ========== PING: TRIGGER REFERRAL MANUAL ==========
+app.get('/api/ping-referral', async function(req, res) {
+    var orderCode = req.query.code;
+    if (!orderCode) return res.json({ error: 'Masukkan kode order: ?code=xxx' });
+    
+    var db = await getDB();
+    dbCacheTime = 0; // bypass cache
+    
+    var order = (db.orders || []).find(function(o) { return o.orderCode === orderCode; });
+    if (!order) return res.json({ error: 'Order tidak ditemukan' });
+    
+    console.log('=== PING REFERRAL ===');
+    console.log('Order:', order.orderCode);
+    console.log('Status:', order.status);
+    console.log('ReferralCode:', order.referralCode);
+    console.log('ReferralRewarded:', order.referralRewarded);
+    
+    if (order.status !== 'paid') return res.json({ error: 'Order belum PAID. Status: ' + order.status });
+    if (order.referralRewarded) return res.json({ message: 'Order udah di-reward sebelumnya' });
+    
+    // ✅ PROSES REFERRAL
+    await processReferralReward(db, order, null);
+    
+    // ✅ SIMPAN
+    if (order.referralRewarded) {
+        await setDB(null, db.orders, db.sha);
+        res.json({ success: true, message: 'Referral berhasil diproses!', orderCode: orderCode });
+    } else {
+        res.json({ error: 'Gagal proses referral. Cek log Vercel.' });
+    }
+});
+
 // ========== WITHDRAW ==========
 app.post('/api/user/withdraw', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
