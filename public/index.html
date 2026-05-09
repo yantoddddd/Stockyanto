@@ -1,571 +1,430 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Yanto Store | Beli Digital</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --bg: #06080d;
-            --surface: rgba(255,255,255,0.03);
-            --surface2: rgba(255,255,255,0.06);
-            --border: rgba(255,255,255,0.06);
-            --accent: #3b82f6;
-            --accent2: #60a5fa;
-            --text: #e8eaed;
-            --text2: #8b8fa3;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 20px;
-            --radius-sm: 12px;
-        }
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const path = require('path');
 
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
-        body { 
-            background: var(--bg);
-            font-family: 'Inter', sans-serif; 
-            min-height: 100vh; 
-            padding:0 16px 40px; 
-            color: var(--text);
-            background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(96,165,250,0.05) 0%, transparent 50%);
-        }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeScale { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
-        @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideRight { from { transform:translateX(100%); } to { transform:translateX(0); } }
-        @keyframes bounceIn { 0% { transform:scale(0.3); opacity:0; } 50% { transform:scale(1.05); } 70% { transform:scale(0.9); } 100% { transform:scale(1); opacity:1; } }
-        .container { max-width:1100px; margin:0 auto; padding-top:100px; }
+const app = express();
+app.use(cors({ credentials: true, origin: true }));
+app.use(express.json());
+app.use(express.static('public'));
 
-        #splashScreen {
-            position:fixed; top:0; left:0; width:100%; height:100%;
-            background: var(--bg); z-index:9999;
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-            background-image: radial-gradient(ellipse at center, rgba(59,130,246,0.1) 0%, transparent 70%);
-        }
-        #splashScreen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-        .splash-icon { font-size:3.5rem; margin-bottom:20px; }
-        .splash-icon i { background:linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .splash-title { font-size:1.6rem; font-weight:800; letter-spacing:-0.5px; color:white; margin-bottom:4px; }
-        .splash-sub { font-size:0.8rem; color:var(--text2); letter-spacing:1px; margin-bottom:28px; }
-        .splash-loader { width:40px; height:40px; border:3px solid rgba(96,165,250,0.2); border-top-color:#60a5fa; border-radius:50%; animation:spin 0.8s linear infinite; }
+const ADMIN_KEY = process.env.ADMIN_KEY;
+const QRISPY_TOKEN = process.env.QRISPY_TOKEN;
+const QRISPY_API_URL = 'https://api.qrispy.id';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
+const GITHUB_PATH = 'database.json';
+const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
 
-        /* HEADER STICKY */
-        .header-wrap {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-            background: rgba(6,8,13,0.85); backdrop-filter: blur(20px);
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .header { 
-            display:flex; justify-content:space-between; align-items:center; 
-            max-width:1100px; margin:0 auto;
-            padding:10px 22px;
-            background:var(--surface2); backdrop-filter:blur(20px);
-            border-radius:60px; border:1px solid var(--border);
-        }
-        .logo-wrap { 
-            display:flex; align-items:center; gap:10px; cursor:pointer; 
-            background:linear-gradient(135deg, rgba(59,130,246,0.2), rgba(96,165,250,0.1));
-            border-radius:40px; padding:8px 18px; border:1px solid rgba(59,130,246,0.3);
-            transition:0.3s;
-        }
-        .logo-wrap:hover { border-color:var(--accent); background:rgba(59,130,246,0.3); }
-        .profile-avatar { 
-            width:34px; height:34px; border-radius:50%; 
-            background:linear-gradient(135deg, var(--accent), #6366f1); 
-            display:flex; align-items:center; justify-content:center; 
-            font-size:0.9rem; color:white;
-        }
-        .profile-text h1 { font-size:0.9rem; font-weight:700; color:white; letter-spacing:-0.3px; }
-        .profile-text span { font-size:0.6rem; color:var(--accent2); letter-spacing:0.5px; }
-        .menu-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+function encrypt(text) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
 
-        .search-filter-wrap { margin-bottom:22px; display:none; }
-        .search-row { display:flex; gap:10px; margin-bottom:14px; }
-        .search-input { 
-            flex:1; padding:14px 20px; border-radius:var(--radius-sm); 
-            border:1px solid var(--border); background:var(--surface2); 
-            color:white; font-size:0.85rem; outline:none; transition:0.3s; 
-        }
-        .search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
-        .search-input::placeholder { color:var(--text2); }
-        .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
-        .filter-scroll::-webkit-scrollbar { height:2px; }
-        .filter-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-        .filter-chip { 
-            padding:8px 16px; border-radius:24px; border:1px solid var(--border);
-            background:var(--surface); color:var(--text2); font-size:0.78rem;
-            cursor:pointer; white-space:nowrap; transition:0.25s; font-weight:500;
-        }
-        .filter-chip:hover { border-color:var(--accent2); color:white; }
-        .filter-chip.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
-        .results-info { font-size:0.7rem; color:var(--text2); margin-top:10px; }
+function decrypt(encryptedText) {
+    if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset');
+    const parts = encryptedText.split(':');
+    const iv = Buffer.from(parts[0], 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv);
+    let decrypted = decipher.update(parts[1], 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
 
-        .sidebar { position:fixed; top:0; right:-310px; width:290px; height:100%; background:rgba(10,12,18,0.97); backdrop-filter:blur(24px); z-index:1000; transition:0.35s cubic-bezier(0.4,0,0.2,1); padding:70px 22px 22px; border-left:1px solid var(--border); overflow-y:auto; }
-        .sidebar.open { right:0; animation:slideRight 0.3s ease; }
-        .sidebar .close-btn { position:absolute; top:20px; right:18px; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; }
-        .sidebar-title { color:var(--text2); font-size:0.65rem; text-transform:uppercase; letter-spacing:2px; margin:22px 0 10px; font-weight:700; }
-        .sidebar .menu-item { display:flex; align-items:center; gap:12px; padding:12px 0; color:var(--text2); text-decoration:none; font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s; cursor:pointer; background:none; width:100%; text-align:left; border-left:none; border-right:none; border-top:none; }
-        .sidebar .menu-item:hover { color:white; padding-left:6px; }
-        .sidebar .menu-item i { width:22px; text-align:center; }
-        
-        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; display:none; }
-        .overlay.show { display:block; }
-
-        /* FLOATING BUTTONS */
-        .float-buttons {
-            position: fixed; bottom: 24px; right: 24px;
-            display: flex; flex-direction: column; gap: 12px; z-index: 500;
-        }
-        .cart-float, .gacha-float {
-            width: 56px; height: 56px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.5rem; cursor: pointer;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            transition: 0.3s; border: none; position: relative;
-        }
-        .cart-float { background: #3b82f6; box-shadow: 0 8px 24px rgba(59,130,246,0.4); }
-        .gacha-float { background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 8px 24px rgba(245,158,11,0.4); animation: pulse 2s infinite; }
-        .cart-float:active, .gacha-float:active { transform: scale(0.9); }
-        .cart-count, .gacha-label {
-            position: absolute; top: -4px; right: -4px;
-            background: #ef4444; color: white; border-radius: 50%;
-            width: 22px; height: 22px; font-size: 0.7rem;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-        }
-        .gacha-label { width: auto; padding: 2px 8px; border-radius: 10px; font-size: 0.55rem; right: -8px; background: #f59e0b; color: #000; }
-
-        .products-grid { 
-            display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); 
-            gap:18px; margin-bottom:24px; 
-        }
-        .product-card { 
-            background:var(--surface2); border:1px solid var(--border);
-            border-radius:var(--radius); padding:22px; 
-            transition:0.3s; cursor:pointer; position:relative;
-            animation:fadeScale 0.4s ease; animation-fill-mode:both;
-            backdrop-filter:blur(10px); overflow:hidden;
-        }
-        .product-card::before {
-            content:''; position:absolute; top:0; left:0; width:100%; height:3px;
-            background:linear-gradient(90deg, var(--accent), #6366f1);
-            opacity:0; transition:0.3s;
-        }
-        .product-card:hover::before { opacity:1; }
-        .product-card:hover { transform:translateY(-4px); border-color:rgba(59,130,246,0.3); box-shadow:0 12px 30px rgba(0,0,0,0.3); }
-        .product-card:active { transform:scale(0.98); }
-        .product-badge { 
-            position:absolute; top:16px; right:16px;
-            padding:5px 10px; border-radius:20px; font-size:0.65rem; font-weight:600;
-            background:rgba(59,130,246,0.15); color:var(--accent2);
-            letter-spacing:0.3px;
-        }
-        .product-badge.hot { background:rgba(239,68,68,0.15); color:#fca5a5; }
-        .product-badge.new { background:rgba(16,185,129,0.15); color:#6ee7b7; }
-        .product-icon { font-size:2rem; margin-bottom:14px; opacity:0.8; }
-        .product-name { font-size:1.1rem; font-weight:700; color:white; margin-bottom:6px; }
-        .product-desc { font-size:0.75rem; color:var(--text2); margin-bottom:14px; line-height:1.5; }
-        .product-price-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-        .product-price { font-size:1.5rem; font-weight:800; color:var(--accent2); }
-        .product-stock { font-size:0.68rem; color:var(--text2); display:flex; align-items:center; gap:4px; }
-        .product-actions { display:flex; gap:8px; }
-        .btn-buy { 
-            background:linear-gradient(135deg, var(--accent), #2563eb); 
-            border:none; flex:1; padding:13px; border-radius:14px; 
-            font-weight:600; color:white; cursor:pointer; 
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            transition:0.25s; font-size:0.85rem; letter-spacing:-0.2px;
-        }
-        .btn-buy:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); transform:translateY(-1px); }
-        .btn-buy:active { transform:scale(0.97); }
-        .btn-buy:disabled { background:#334155; cursor:not-allowed; opacity:0.5; transform:none; box-shadow:none; }
-        .btn-cart {
-            background:var(--surface); border:1px solid var(--border);
-            border-radius:14px; padding:13px 16px; color:var(--text2);
-            cursor:pointer; transition:0.25s; font-size:0.85rem;
-            display:flex; align-items:center; justify-content:center;
-        }
-        .btn-cart:hover { background:var(--surface2); border-color:var(--accent); color:white; }
-        .btn-cart:active { transform:scale(0.97); }
-
-        .load-more-wrap { text-align:center; margin-bottom:30px; display:none; }
-        .btn-load-more { 
-            background:var(--surface); border:1px solid var(--border);
-            padding:12px 32px; border-radius:30px; color:var(--text2);
-            cursor:pointer; font-size:0.8rem; transition:0.25s; font-weight:500;
-        }
-        .btn-load-more:hover { background:var(--surface2); border-color:var(--accent); color:white; }
-
-        .empty-state { text-align:center; padding:80px 20px; color:var(--text2); animation:fadeScale 0.5s ease; }
-        .empty-state i { font-size:4rem; margin-bottom:16px; opacity:0.3; }
-        .empty-state p { font-size:0.9rem; }
-
-        #maintenanceScreen { display: none; text-align: center; padding: 120px 20px; animation: fadeScale 0.5s ease; }
-        #maintenanceScreen .maint-icon { font-size: 4rem; margin-bottom: 16px; }
-        #maintenanceScreen h2 { color: var(--warning); font-size: 1.5rem; margin-bottom: 8px; }
-        #maintenanceScreen p { color: var(--text2); font-size: 0.9rem; }
-
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); justify-content:center; align-items:center; z-index:1100; }
-        .modal-content { 
-            background:linear-gradient(160deg, #111827, #0f172a); border-radius:28px; padding:32px; 
-            max-width:420px; width:90%; border:1px solid var(--border);
-            animation:fadeScale 0.3s ease; max-height:85vh; overflow-y:auto;
-        }
-        .modal-content h3 { font-size:1.3rem; font-weight:700; color:white; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
-        input { 
-            width:100%; padding:14px 18px; margin:8px 0; border-radius:14px;
-            border:1px solid var(--border); background:var(--surface); 
-            color:white; font-size:0.9rem; outline:none; transition:0.3s;
-        }
-        input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
-        .btn-primary { 
-            background:linear-gradient(135deg, var(--accent), #2563eb); 
-            width:100%; padding:15px; border:none; border-radius:14px;
-            font-weight:600; color:white; cursor:pointer; margin-top:14px;
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            transition:0.25s; font-size:0.9rem;
-        }
-        .btn-primary:hover { box-shadow:0 6px 20px rgba(37,99,235,0.35); }
-        .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
-        .btn-secondary { 
-            background:var(--surface2); width:100%; padding:13px; border:none; border-radius:14px;
-            font-weight:500; color:var(--text2); cursor:pointer; margin-top:8px;
-            display:flex; align-items:center; justify-content:center; gap:8px; transition:0.2s;
-            border:1px solid var(--border);
-        }
-        .btn-secondary:hover { background:var(--border); color:white; }
-        .toast { 
-            position:fixed; bottom:30px; left:50%; transform:translateX(-50%); 
-            background:#1e293b; padding:12px 24px; border-radius:30px; font-size:0.8rem;
-            opacity:0; transition:0.3s; z-index:1200; color:white; 
-            display:flex; align-items:center; gap:8px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
-        }
-        .loading-spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
-        .site-footer { text-align:center; padding:20px; color:var(--text2); font-size:0.65rem; border-top:1px solid var(--border); margin-top:20px; }
-        .site-footer a { color:var(--text2); text-decoration:none; margin:0 8px; transition:0.2s; }
-        .site-footer a:hover { color:var(--accent2); }
-
-        #loadingOverlay {
-            display:none; position:fixed; top:0;left:0;width:100%;height:100%;
-            background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
-            z-index:1300; justify-content:center; align-items:center; flex-direction:column; gap:16px;
-        }
-        #loadingOverlay .loading-text { color:white; font-size:0.9rem; }
-
-        @media (max-width:640px) { .products-grid { grid-template-columns:1fr; } .header { padding:12px 16px; } .product-actions { flex-direction:column; } .btn-cart { width:100%; } }
-    </style>
-</head>
-<body>
-
-<div id="splashScreen">
-    <div class="splash-icon"><i class="fas fa-store-alt"></i></div>
-    <div class="splash-title">Yanto Store</div>
-    <div class="splash-sub">AutoOrder Digital</div>
-    <div class="splash-loader"></div>
-</div>
-
-<!-- HEADER STICKY -->
-<div class="header-wrap">
-    <div class="header">
-        <div class="logo-wrap" onclick="window.location.href='/profile'">
-            <div class="profile-avatar"><i class="fas fa-user"></i></div>
-            <div class="profile-text">
-                <h1 id="headerProfileName">Profile</h1>
-                <span id="headerProfileSub">Login / Daftar</span>
-            </div>
-        </div>
-        <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-    </div>
-</div>
-
-<div class="container" id="mainContainer" style="display:none;">
-
-    <div id="maintenanceScreen">
-        <div class="maint-icon">🔧</div>
-        <h2>Toko Sedang Maintenance</h2>
-        <p>Maaf ya Bre, lagi ada perbaikan. Balik lagi nanti!</p>
-        <p style="margin-top:16px;font-size:0.7rem;">Kontak: <a href="https://t.me/Yantoidiotbruh" style="color:#60a5fa;">@Yantoidiotbruh</a></p>
-    </div>
-
-    <div id="mainShopContent">
-        <div class="search-filter-wrap" id="searchFilterWrap">
-            <div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="Cari produk..." oninput="renderProducts()"></div>
-            <div class="filter-scroll" id="filterScroll"></div>
-            <div class="results-info" id="resultsInfo"></div>
-        </div>
-
-        <div class="products-grid" id="productsGrid"></div>
-        <div class="load-more-wrap" id="loadMoreWrap">
-            <button class="btn-load-more" onclick="loadMore()"><i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak</button>
-        </div>
-
-        <div class="site-footer">
-            <span>&copy; 2026 Yanto Store</span>
-            <a href="/ketentuan">Ketentuan</a>
-        </div>
-    </div>
-</div>
-
-<!-- FLOATING BUTTONS -->
-<div class="float-buttons">
-    <button class="gacha-float" onclick="window.location.href='/gacha'" title="Gacha!">
-        🎰
-        <span class="gacha-label" id="gachaFloatPrice">-</span>
-    </button>
-    <button class="cart-float" onclick="openCart()" aria-label="Keranjang belanja">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="cart-count" id="cartCount" style="display:none;">0</span>
-    </button>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-<div class="sidebar" id="sidebar">
-    <button class="close-btn" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
-    <div class="sidebar-title">Menu</div>
-    <button class="menu-item" onclick="lacakOrder()"><i class="fas fa-search"></i> Lacak Pesanan</button>
-    <a href="/" class="menu-item"><i class="fas fa-home"></i> Beranda</a>
-    <a href="/ketentuan" class="menu-item"><i class="fas fa-file-contract"></i> Ketentuan</a>
-    <div class="sidebar-title">Bantuan</div>
-    <a href="https://t.me/Yantoidiotbruh" target="_blank" class="menu-item"><i class="fab fa-telegram-plane"></i> Telegram</a>
-    <a href="https://wa.me/6289676041776" target="_blank" class="menu-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-</div>
-
-<!-- LOGIN MODAL -->
-<div id="loginModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-content">
-        <h3 id="loginModalTitle"><i class="fas fa-sign-in-alt"></i> Login / Daftar</h3>
-        <div id="loginForm">
-            <input type="text" id="loginName" placeholder="Nama lengkap..." autocomplete="username">
-            <input type="password" id="loginPassword" placeholder="Password..." autocomplete="current-password">
-            <button class="btn-primary" onclick="doLoginUser()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-            <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showRegisterForm();" style="color:#60a5fa;">Daftar</a></p>
-        </div>
-        <div id="registerForm" style="display:none;">
-            <input type="text" id="regName" placeholder="Nama lengkap..." autocomplete="name">
-            <label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (minimal umur 12 tahun)</label>
-            <input type="date" id="regBirthDate" onchange="checkAge()">
-            <p id="ageError" style="color:#ef4444;font-size:0.7rem;display:none;">❌ Minimal umur 12 tahun!</p>
-            <input type="password" id="regPassword" placeholder="Password..." autocomplete="new-password">
-            <button class="btn-primary" onclick="doRegister()"><i class="fas fa-user-plus"></i> Daftar</button>
-            <p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginForm();" style="color:#60a5fa;">Masuk</a></p>
-        </div>
-        <button class="btn-secondary" onclick="document.getElementById('loginModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
-    </div>
-</div>
-
-<!-- CART MODAL -->
-<div id="cartModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-height:80vh;overflow-y:auto;max-width:500px;">
-        <h3><i class="fas fa-shopping-cart"></i> Keranjang Belanja</h3>
-        <div id="cartItems"></div>
-        <div id="cartEmpty" style="text-align:center;color:#94a3b8;padding:20px;">
-            <i class="fas fa-shopping-cart" style="font-size:3rem;opacity:0.3;"></i>
-            <p>Keranjang kosong</p>
-        </div>
-        <div id="cartSummary" style="display:none;">
-            <div class="detail-row"><span class="dl">Total Item</span><span class="dv" id="cartTotalItems">0</span></div>
-            <div class="detail-row"><span class="dl">Subtotal</span><span class="dv" id="cartSubtotal">Rp 0</span></div>
-            <div class="detail-row" id="cartDiscountRow" style="display:none;"><span class="dl">Diskon</span><span class="dv" style="color:#10b981;" id="cartDiscount">-Rp 0</span></div>
-            <div class="detail-row" style="font-weight:700;margin-top:8px;"><span class="dl">Total</span><span class="dv" style="color:#60a5fa;font-size:1.2rem;" id="cartTotal">Rp 0</span></div>
-            <button class="btn-primary" onclick="checkoutCart()"><i class="fas fa-qrcode"></i> Checkout QRIS</button>
-        </div>
-        <button class="btn-secondary" onclick="document.getElementById('cartModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button>
-    </div>
-</div>
-
-<!-- LOADING OVERLAY -->
-<div id="loadingOverlay">
-    <span class="loading-spinner" style="width:40px;height:40px;border-width:3px;"></span>
-    <span class="loading-text">Membuat pesanan...</span>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<script>
-    const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
-    const QRISPY_API_URL = 'https://api.qrispy.id';
-    let currentProduct = null;
-    let allProducts = [];
-    let soldMap = {};
-    let currentFilter = 'all';
-    let displayCount = 6;
-    let categories = [];
-    let maintenanceMode = false;
-
-    window.addEventListener('load', function() {
-        checkMaintenance();
-        loadProducts();
-        loadGachaInfo();
-        checkAutoLogin();
-        checkReferralFromUrl();
-        setTimeout(function() {
-            document.getElementById('splashScreen').classList.add('hidden');
-            document.getElementById('mainContainer').style.display = 'block';
-        }, 1500);
+function parseCookies(cookieHeader) {
+    const cookies = {};
+    if (!cookieHeader) return cookies;
+    cookieHeader.split(';').forEach(function(cookie) {
+        var parts = cookie.trim().split('=');
+        var name = parts[0];
+        var value = parts.slice(1).join('=');
+        if (name) cookies[name] = value;
     });
+    return cookies;
+}
 
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-    function toast(msg, isError) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isError ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
-    function lacakOrder() { var code = prompt('Masukkan kode order kamu:'); if (code && code.trim()) { window.location.href = '/order/' + code.trim(); } toggleMenu(); }
+let dbCache = null;
+let dbCacheTime = 0;
+const CACHE_TTL = 5000;
 
-    function showLoading(msg) { document.getElementById('loadingOverlay').style.display = 'flex'; document.getElementById('loadingOverlay').querySelector('.loading-text').textContent = msg || 'Memproses...'; }
-    function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+const rateLimitMap = new Map();
+app.use(function(req, res, next) {
+    var ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown').split(',')[0].trim();
+    if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) return next();
+    var now = Date.now();
+    if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
+    var requests = rateLimitMap.get(ip).filter(function(t) { return now - t < 60000; });
+    if (requests.length >= 60) return res.status(429).json({ error: 'Rate limit' });
+    requests.push(now);
+    rateLimitMap.set(ip, requests);
+    next();
+});
 
-    async function checkMaintenance() {
-        try {
-            var res = await fetch('/api/public-stats');
-            var data = await res.json();
-            if (data.success && data.maintenance) {
-                maintenanceMode = true;
-                document.getElementById('mainShopContent').style.display = 'none';
-                document.getElementById('maintenanceScreen').style.display = 'block';
-            } else {
-                maintenanceMode = false;
-                document.getElementById('mainShopContent').style.display = 'block';
-                document.getElementById('maintenanceScreen').style.display = 'none';
+function getClientIP(req) { return (req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown').split(',')[0].trim(); }
+function isAdmin(req, adminKey) { if (adminKey === ADMIN_KEY) return true; var ip = getClientIP(req); if (dbCache && dbCache.adminIP === ip) return true; if (dbCache && dbCache.adminIPs && dbCache.adminIPs.includes(ip)) return true; return false; }
+
+async function getDB() {
+    var now = Date.now();
+    if (dbCache && (now - dbCacheTime) < CACHE_TTL) return { ...dbCache, sha: dbCache.sha };
+    try {
+        var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, {
+            headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null, adminIP: null, adminIPs: [], maintenance: false };
+        var data = await res.json();
+        var content = Buffer.from(data.content, 'base64').toString('utf8');
+        var parsed;
+        try { parsed = JSON.parse(content); } catch(e) { parsed = JSON.parse(decrypt(content)); }
+        dbCache = { ...parsed, sha: data.sha };
+        dbCacheTime = now;
+        return { ...dbCache, sha: data.sha };
+    } catch (err) { return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; }
+}
+
+async function setDB(products, orders, oldSha, retryCount) {
+    if (!retryCount) retryCount = 0;
+    if (retryCount > 5) throw new Error('Save failed after 5 retries');
+    var db = await getDB();
+    var content = {
+        products: products || db.products || [],
+        orders: orders || db.orders || [],
+        users: db.users || [],
+        withdrawals: db.withdrawals || [],
+        deposits: db.deposits || [],
+        referralVisitors: db.referralVisitors || [],
+        adminIP: db.adminIP || null,
+        adminIPs: db.adminIPs || [],
+        maintenance: db.maintenance || false,
+        encrypted: true,
+        updatedAt: new Date().toISOString()
+    };
+    var encryptedContent = encrypt(JSON.stringify(content));
+    var updatedContent = Buffer.from(encryptedContent).toString('base64');
+    var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Update', content: updatedContent, sha: oldSha })
+    });
+    if (!res.ok) {
+        var e = await res.json().catch(function() { return {}; });
+        if (e.message && e.message.includes('SHA')) { await new Promise(function(r) { setTimeout(r, 800); }); var f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); }
+        throw new Error('Save failed: ' + (e.message || res.status));
+    }
+    var d = await res.json();
+    dbCache = { ...content, sha: d.content.sha };
+    dbCacheTime = Date.now();
+    return d.content.sha;
+}
+
+async function sendTelegramMessage(text) {
+    try { if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) }); } catch (e) {}
+}
+
+function sanitize(str) { if (!str) return ''; return String(str).replace(/[<>"'&]/g, function(m) { return ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' })[m]; }); }
+function generateReferralCode(name) { return name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + crypto.randomBytes(3).toString('hex').toUpperCase(); }
+function validateAge(birthDate) { var today = new Date(); var birth = new Date(birthDate); var age = today.getFullYear() - birth.getFullYear(); var m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--; return age >= 12; }
+function hashPassword(password) { return crypto.createHash('sha256').update(password + 'YANTO_SALT').digest('hex'); }
+function verifyPassword(password, hash) { return hashPassword(password) === hash; }
+function calculateCartDiscount(itemCount) { return Math.max(0, (itemCount - 1) * 500); }
+function getRefFromCookie(cookieHeader) { var c = parseCookies(cookieHeader); return c['yanto_ref'] || null; }
+async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + qrisId + '/cancel', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
+
+function getReferralFromDB(db, customerName) {
+    if (!customerName) return null;
+    var nameLower = customerName.toLowerCase();
+    var visitors = db.referralVisitors || [];
+    for (var i = 0; i < visitors.length; i++) {
+        if (visitors[i].visitorName.toLowerCase() === nameLower) return visitors[i].referralCode;
+    }
+    var users = db.users || [];
+    for (var j = 0; j < users.length; j++) {
+        if (users[j].name.toLowerCase() === nameLower && users[j].referredBy) return users[j].referredBy;
+    }
+    return null;
+}
+
+// ✅ AUTO-FIX REFERRAL (dipanggil pas user buka profile)
+async function autoFixReferral(db, userName) {
+    if (!userName) return 0;
+    var fixed = 0;
+    var nameLower = userName.toLowerCase();
+    
+    (db.orders || []).forEach(function(order) {
+        if (order.status === 'paid' && !order.referralRewarded && order.customerName.toLowerCase() === nameLower) {
+            var refCode = getReferralFromDB(db, order.customerName);
+            if (refCode) {
+                var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
+                if (referrer) {
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+                    order.referralRewarded = true;
+                    fixed++;
+                }
             }
-        } catch(e) {}
-    }
-
-    // ✅ REFERRAL: kirim ke server, cookie diset oleh server
-    function checkReferralFromUrl() {
-        var params = new URLSearchParams(window.location.search);
-        var ref = params.get('ref');
-        if (ref) {
-            fetch('/api/referral/apply?ref=' + ref, { credentials: 'include' });
-            window.history.replaceState({}, document.title, window.location.pathname);
         }
+    });
+    
+    if (fixed > 0) {
+        await setDB(null, db.orders, db.sha);
+        console.log('AUTO-FIX: ' + fixed + ' referral dibenerin untuk ' + userName);
     }
+    return fixed;
+}
 
-    // ========== CART ==========
-    let cart = [];
+async function processReferralReward(db, order, cookieHeader) {
+    if (!order || order.referralRewarded) return;
+    
+    var refCode = null;
+    var customerName = (order.customerName || '').toLowerCase();
+    
+    if (cookieHeader) refCode = getRefFromCookie(cookieHeader);
+    if (!refCode) refCode = getReferralFromDB(db, order.customerName);
+    if (!refCode) return;
+    
+    var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
+    if (!referrer) return;
+    
+    referrer.referralCount = (referrer.referralCount || 0) + 1;
+    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+    order.referralRewarded = true;
+    console.log('REFERRAL: ' + referrer.name + ' +Rp500 dari ' + customerName);
+}
 
-    function addToCart(productId) {
-        if (maintenanceMode) { toast('Toko lagi maintenance!', true); return; }
-        var product = allProducts.find(function(p) { return p.id == productId; });
-        if (!product || product.stock <= 0) { toast('Stok habis!', true); return; }
-        var existing = cart.find(function(item) { return item.productId == productId; });
-        if (existing) { existing.quantity++; }
-        else { cart.push({ productId: productId, name: product.name, price: product.price, quantity: 1 }); }
-        updateCartUI();
-        toast('✅ Ditambahkan ke keranjang');
+// Auto keep-alive
+setInterval(function() { fetch('https://stockyanto.vercel.app/api/health').catch(function() {}); }, 20000);
+
+// Auto expire orders
+setInterval(async function() {
+    try { var db = await getDB(); var n = new Date(); var changed = false; (db.orders || []).forEach(function(o) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; changed = true; } }); if (changed) await setDB(null, db.orders, db.sha); } catch(e) {}
+}, 30000);
+
+// Auto check deposit
+setInterval(async function() {
+    try {
+        var db = await getDB(); if (!db.deposits) db.deposits = []; var changed = false;
+        for (var i = 0; i < db.deposits.length; i++) { var dep = db.deposits[i]; if (dep.status === 'pending' && dep.qrisId && QRISPY_TOKEN) { try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + dep.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } }); var d = await r.json(); if (d.status === 'success' && d.data && d.data.status === 'paid') { dep.status = 'paid'; dep.paidAt = new Date().toISOString(); var user = (db.users || []).find(function(u) { return u.id === dep.userId; }); if (user) user.discountBalance = (user.discountBalance || 0) + dep.amount; changed = true; } } catch(e) {} } }
+        if (changed) await setDB(null, db.orders, db.sha);
+    } catch(e) {}
+}, 10000);
+
+// ========== PUBLIC ==========
+app.get('/api/health', function(req, res) { res.json({ status: 'ok', time: new Date().toISOString() }); });
+app.get('/api/public-stats', async function(req, res) { try { var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var today = new Date().toISOString().split('T')[0]; var soldMap = {}; paid.forEach(function(o) { soldMap[o.productId] = (soldMap[o.productId] || 0) + 1; }); res.json({ success: true, totalProducts: (db.products || []).filter(function(p) { return p.stock > 0; }).length, todayOrders: paid.filter(function(o) { return (o.paidAt || o.createdAt).startsWith(today); }).length, soldMap: soldMap, maintenance: db.maintenance || false }); } catch(e) { res.status(500).json({ success: false }); } });
+
+// ========== REFERRAL APPLY ==========
+app.get('/api/referral/apply', async function(req, res) {
+    var ref = req.query.ref;
+    if (!ref) return res.json({ success: false });
+    try {
+        var db = await getDB();
+        var referrer = (db.users || []).find(function(u) { return u.referralCode === ref; });
+        if (!referrer) return res.json({ success: false });
+        referrer.referralClicks = (referrer.referralClicks || 0) + 1;
+        
+        var cookies = parseCookies(req.headers.cookie);
+        var token = cookies['yanto_token'];
+        var visitorName = 'Guest';
+        var visitorId = null;
+        if (token) { var v = (db.users || []).find(function(u) { return u.token === token; }); if (v) { visitorName = v.name; visitorId = v.id; } }
+        
+        if (!db.referralVisitors) db.referralVisitors = [];
+        db.referralVisitors.unshift({ id: Date.now(), referralCode: ref, visitorName: visitorName, visitorId: visitorId, ip: getClientIP(req), createdAt: new Date().toISOString() });
+        
+        res.setHeader('Set-Cookie', 'yanto_ref=' + ref + '; Path=/; SameSite=Lax; Max-Age=' + (7 * 24 * 60 * 60));
+        await setDB(null, db.orders, db.sha);
+        res.json({ success: true });
+    } catch(e) { res.json({ success: false }); }
+});
+
+// ========== AUTH ==========
+app.post('/api/register', async function(req, res) {
+    var name = req.body.name, birthDate = req.body.birthDate, password = req.body.password;
+    if (!name || !birthDate || !password) return res.status(400).json({ error: 'Data tidak lengkap' });
+    if (!validateAge(birthDate)) return res.status(400).json({ error: 'Minimal umur 12 tahun' });
+    for (var attempt = 1; attempt <= 3; attempt++) {
+        try {
+            var db = await getDB(); if (!db.users) db.users = [];
+            if (db.users.find(function(u) { return u.name.toLowerCase() === name.toLowerCase(); })) return res.status(400).json({ error: 'Nama sudah terdaftar' });
+            var refCode = getRefFromCookie(req.headers.cookie);
+            var user = { id: Date.now(), name: sanitize(name), birthDate: birthDate, password: hashPassword(password), referralCode: generateReferralCode(name), referredBy: refCode || null, referralCount: 0, referralClicks: 0, discountBalance: 0, createdAt: new Date().toISOString() };
+            db.users.push(user);
+            await setDB(null, db.orders, db.sha);
+            return res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: 0, referralClicks: 0, discountBalance: 0 } });
+        } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); }
     }
+    res.status(500).json({ error: 'Save failed' });
+});
 
-    function removeFromCart(productId) { cart = cart.filter(function(item) { return item.productId != productId; }); updateCartUI(); updateCartModal(); }
-    function updateCartUI() { var count = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0); var countEl = document.getElementById('cartCount'); if (count > 0) { countEl.style.display = 'flex'; countEl.textContent = count; } else { countEl.style.display = 'none'; } }
-    function getCartDiscount() { var totalItems = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0); return Math.max(0, (totalItems - 1) * 500); }
-    function openCart() { updateCartModal(); document.getElementById('cartModal').style.display = 'flex'; }
+app.post('/api/login', async function(req, res) {
+    var name = req.body.name, password = req.body.password;
+    var db = await getDB();
+    var user = (db.users || []).find(function(u) { return u.name.toLowerCase() === name.toLowerCase(); });
+    if (!user || !verifyPassword(password, user.password)) return res.status(401).json({ error: 'Nama atau password salah' });
+    var token = crypto.randomBytes(32).toString('hex');
+    user.token = token;
+    if (!user.referredBy) { var refCode = getRefFromCookie(req.headers.cookie); if (refCode) user.referredBy = refCode; }
+    await setDB(null, db.orders, db.sha);
+    res.setHeader('Set-Cookie', 'yanto_token=' + token + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (7 * 24 * 60 * 60));
+    res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } });
+});
 
-    function updateCartModal() {
-        var cartItemsEl = document.getElementById('cartItems');
-        var cartEmptyEl = document.getElementById('cartEmpty');
-        var cartSummaryEl = document.getElementById('cartSummary');
-        if (cart.length === 0) { cartItemsEl.innerHTML = ''; cartEmptyEl.style.display = 'block'; cartSummaryEl.style.display = 'none'; }
-        else {
-            cartEmptyEl.style.display = 'none'; cartSummaryEl.style.display = 'block'; var subtotal = 0;
-            cartItemsEl.innerHTML = cart.map(function(item) { var itemTotal = item.price * item.quantity; subtotal += itemTotal; return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><div><div style="color:white;font-weight:600;">' + escapeHtml(item.name) + '</div><div style="color:#94a3b8;font-size:0.7rem;">Rp ' + item.price.toLocaleString() + ' x ' + item.quantity + '</div></div><button onclick="event.stopPropagation();removeFromCart(' + item.productId + ')" style="background:#b91c1c;border:none;color:white;padding:6px 10px;border-radius:8px;cursor:pointer;"><i class="fas fa-trash"></i></button></div>'; }).join('');
-            var discount = getCartDiscount(); var total = Math.max(0, subtotal - discount);
-            document.getElementById('cartTotalItems').textContent = cart.reduce(function(s, i) { return s + i.quantity; }, 0);
-            document.getElementById('cartSubtotal').textContent = 'Rp ' + subtotal.toLocaleString();
-            if (discount > 0) { document.getElementById('cartDiscountRow').style.display = 'flex'; document.getElementById('cartDiscount').textContent = '-Rp ' + discount.toLocaleString(); }
-            else { document.getElementById('cartDiscountRow').style.display = 'none'; }
-            document.getElementById('cartTotal').textContent = 'Rp ' + total.toLocaleString();
+app.post('/api/logout', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (token) { var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (user) { user.token = null; await setDB(null, db.orders, db.sha); } }
+    res.setHeader('Set-Cookie', 'yanto_token=; Path=/; Max-Age=0');
+    res.json({ success: true });
+});
+
+// ✅ PROFILE — AUTO-FIX REFERRAL SETIAP KALI DIBUKA
+app.get('/api/user/profile', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    // ✅ AUTO-FIX REFERRAL buat user ini
+    await autoFixReferral(db, user.name);
+    
+    // Refresh DB setelah fix
+    db = await getDB();
+    dbCacheTime = 0;
+    user = (db.users || []).find(function(u) { return u.token === token; });
+    
+    res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } });
+});
+
+app.get('/api/user/orders', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    var orders = (db.orders || []).filter(function(o) { return o.customerName.toLowerCase() === user.name.toLowerCase(); });
+    res.json({ success: true, orders: orders.slice(0, 50).map(function(o) { return { id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt }; }) });
+});
+
+// ========== DEPOSIT ==========
+app.post('/api/user/deposit-save', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var amount = parseInt(req.body.amount), qrisId = req.body.qrisId, qrisImage = req.body.qrisImage, expiredAt = req.body.expiredAt;
+    if (!amount || !qrisId || !qrisImage || !expiredAt) return res.status(400).json({ error: 'Data tidak lengkap' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!db.deposits) db.deposits = [];
+    var depId = Date.now();
+    db.deposits.unshift({ id: depId, userId: user.id, userName: user.name, amount: amount, qrisId: qrisId, qrisImage: qrisImage, expiredAt: expiredAt, status: 'pending', createdAt: new Date().toISOString() });
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, depId: depId });
+});
+
+app.get('/api/user/deposits', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    res.json({ success: true, deposits: (db.deposits || []).filter(function(d) { return d.userId === user.id; }) });
+});
+
+// ========== CHANGE PASSWORD ==========
+app.post('/api/user/change-password', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword;
+    if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' });
+    if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' });
+    user.password = hashPassword(newPassword);
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true });
+});
+
+// ========== WITHDRAW ==========
+app.post('/api/user/withdraw', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var amount = parseInt(req.body.amount), paymentMethod = req.body.paymentMethod, paymentNumber = req.body.paymentNumber;
+    if (!amount || amount < 2000) return res.status(400).json({ error: 'Minimal WD Rp 2.000' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if ((user.discountBalance || 0) < amount) return res.status(400).json({ error: 'Saldo gak cukup' });
+    if (!db.withdrawals) db.withdrawals = [];
+    db.withdrawals.unshift({ id: Date.now(), userId: user.id, userName: user.name, amount: amount, paymentMethod: paymentMethod || 'DANA', paymentNumber: paymentNumber || '-', status: 'pending', createdAt: new Date().toISOString() });
+    user.discountBalance -= amount;
+    await setDB(null, db.orders, db.sha);
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) sendTelegramMessage('💰 WITHDRAW\n\n👤 ' + user.name + '\n💵 Rp ' + amount.toLocaleString() + '\n🏦 ' + (paymentMethod || 'DANA') + '\n📱 ' + (paymentNumber || '-'));
+    res.json({ success: true });
+});
+
+app.get('/api/user/withdrawals', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    res.json({ success: true, withdrawals: (db.withdrawals || []).filter(function(w) { return w.userId === user.id; }) });
+});
+
+// ========== ADMIN ==========
+app.get('/api/admin/check-ip', async function(req, res) { try { var db = await getDB(); var ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/set-ip', async function(req, res) { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var ip = getClientIP(req); var ips = db.adminIPs || []; if (db.adminIP && !ips.includes(db.adminIP)) ips.push(db.adminIP); if (!ips.includes(ip)) ips.push(ip); var c = { products: db.products || [], orders: db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: ip, adminIPs: ips, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); var r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Set IP', content: b, sha: db.sha }) }); if (r.ok) { var d = await r.json(); dbCache = { ...c, sha: d.content.sha }; dbCacheTime = Date.now(); } res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/reset-ip', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var c = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/toggle-maintenance', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); db.maintenance = req.body.maintenance === true; var c = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
+app.post('/api/admin/save-qris-order', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var qrisId = req.body.qrisId, totalAmount = req.body.totalAmount; if (!qrisId || !totalAmount) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now() + attempt, orderCode: oc, qrisId: qrisId, productId: null, productName: 'QRIS Manual', productCode: 'QRIS Manual', price: totalAmount, totalAmount: totalAmount, customerName: sanitize(req.body.customerName || 'Customer'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
+app.delete('/api/admin/order/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var idx = (db.orders || []).findIndex(function(o) { return o.id == req.params.id; }); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.orders.splice(idx, 1); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.get('/api/admin/withdrawals', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, withdrawals: (await getDB()).withdrawals || [] }); });
+app.put('/api/admin/withdrawal/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var status = req.body.status; if (!status || ['pending','success','failed'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' }); var db = await getDB(); var wd = (db.withdrawals || []).find(function(w) { return w.id == req.params.id; }); if (!wd) return res.status(404).json({ error: 'Not found' }); wd.status = status; wd.processedAt = new Date().toISOString(); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+
+// ========== ORDER & PRODUCT ==========
+app.post('/api/cancel-order/:orderId', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.id == req.params.orderId || o.orderCode == req.params.orderId; }); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.get('/api/get-order/:orderCode', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; }); if (!order) return res.json({ success: false }); var product = (db.products || []).find(function(p) { return p.id == order.productId; }); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product ? product.itemType : 'text', createdAt: order.createdAt, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '' }); });
+
+app.get('/api/check-payment/:orderCode', async function(req, res) {
+    var db = await getDB();
+    var order = (db.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; });
+    if (!order) return res.json({ status: 'not_found' });
+    if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode });
+    if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(null, db.orders, db.sha); return res.json({ status: 'expired' }); }
+    if (!QRISPY_TOKEN) return res.json({ status: 'pending' });
+    try {
+        var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + order.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } });
+        var d = await r.json();
+        if (d.status === 'success' && d.data && d.data.status === 'paid') {
+            dbCacheTime = 0; var freshDB = await getDB();
+            var freshOrder = (freshDB.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; });
+            if (freshOrder && freshOrder.status === 'paid') return res.json({ status: 'paid', productCode: freshOrder.productCode });
+            if (order.items) { order.items.forEach(function(item) { var p = (freshDB.products || []).find(function(x) { return x.id == item.productId; }); if (p && p.stock > 0) p.stock -= item.quantity || 1; }); }
+            else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
+            freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
+            await processReferralReward(freshDB, freshOrder, req.headers.cookie);
+            for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
+            return res.json({ status: 'paid', productCode: freshOrder.productCode });
         }
-    }
+        res.json({ status: 'pending' });
+    } catch(e) { res.json({ status: 'pending' }); }
+});
 
-    async function checkoutCart() {
-        if (maintenanceMode) { toast('Toko lagi maintenance!', true); return; }
-        if (cart.length === 0) { toast('Keranjang kosong!', true); return; }
-        showLoading('Membuat QRIS...');
-        var customerName = currentUser ? currentUser.name : 'Guest';
-        var subtotal = cart.reduce(function(sum, item) { return sum + item.price * item.quantity; }, 0);
-        var discount = getCartDiscount(); var total = Math.max(0, subtotal - discount);
-        try {
-            var qrisData = await generateQRIS(total);
-            var res = await fetch('/api/create-cart-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ items: cart.map(function(item) { return { productId: item.productId, quantity: item.quantity }; }), customerName: customerName, qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: total, expiredAt: qrisData.expired_at }) });
-            var data = await res.json();
-            if (data.success) { cart = []; updateCartUI(); document.getElementById('cartModal').style.display = 'none'; hideLoading(); window.location.href = '/order/' + data.orderCode; }
-            else { hideLoading(); toast(data.error || 'Gagal checkout', true); }
-        } catch(e) { hideLoading(); toast('Gagal checkout', true); }
-    }
+app.get('/api/products', async function(req, res) { var db = await getDB(); res.json({ success: true, products: db.products || [] }); });
+app.post('/api/create-order', async function(req, res) { var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId; if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); var db = await getDB(); var p = (db.products || []).find(function(x) { return x.id == productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: qrisId, productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, totalAmount: req.body.totalAmount || p.price, customerName: sanitize(customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true, orderCode: oc }); });
+app.post('/api/create-cart-order', async function(req, res) { var items = req.body.items; if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var cartTotal = 0; var oi = []; for (var i = 0; i < items.length; i++) { var item = items[i]; var p = (db.products || []).find(function(x) { return x.id == item.productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok ' + p.name + ' habis' }); cartTotal += p.price * (item.quantity || 1); oi.push({ productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, quantity: item.quantity || 1 }); } var totalItems = items.reduce(function(s, it) { return s + (it.quantity || 1); }, 0); var discount = calculateCartDiscount(totalItems); var finalAmount = Math.max(0, cartTotal - discount); oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, items: oi, productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '), productCode: oi.map(function(x) { return x.productCode; }).join('\n'), price: cartTotal, totalAmount: finalAmount, discountAmount: discount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
+app.get('/api/gacha/info', async function(req, res) { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0; }); var tv = ap.reduce(function(s, p) { return s + p.price; }, 0); res.json({ success: true, gachaPrice: ap.length > 0 ? Math.floor(tv / ap.length * 0.7) : 0, totalProducts: ap.length, jackpotChance: '20%' }); });
+app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
+app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
+app.get('/api/admin/products', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, products: (await getDB()).products || [] }); });
+app.get('/api/admin/orders', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, orders: (await getDB()).orders || [] }); });
+app.post('/api/admin/product', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, itemContent = req.body.itemContent, price = parseInt(req.body.price); if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); db.products.push({ id: Date.now(), name: name, description: req.body.description || '', price: price, stock: parseInt(req.body.stock) || 1, itemType: req.body.itemType || 'text', itemContent: itemContent, bonusType: req.body.bonusType || 'none', bonusContent: req.body.bonusContent || '', createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.put('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var idx = (db.products || []).findIndex(function(p) { return p.id == req.params.id; }); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.products[idx] = { ...db.products[idx], name: req.body.name, description: req.body.description || '', price: parseInt(req.body.price), stock: parseInt(req.body.stock) || 1, itemType: req.body.itemType || 'text', itemContent: req.body.itemContent, bonusType: req.body.bonusType || 'none', bonusContent: req.body.bonusContent || '' }; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.delete('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); db.products = (db.products || []).filter(function(p) { return p.id != req.params.id; }); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.post('/api/admin/reset-orders', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); db.orders = paid; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.post('/api/admin/backup', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify(db)], { type: 'application/json' }), 'backup.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
+app.post('/api/admin/broadcast', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.message) return res.status(400).json({ error: 'Pesan wajib diisi' }); await sendTelegramMessage('📢 BROADCAST\n\n' + req.body.message); res.json({ success: true }); });
 
-    // ========== AUTH ==========
-    let currentUser = null;
-    function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; showLoginForm(); }
-    function showLoginForm() { document.getElementById('loginForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-sign-in-alt"></i> Login / Daftar'; }
-    function showRegisterForm() { document.getElementById('loginForm').style.display = 'none'; document.getElementById('registerForm').style.display = 'block'; document.getElementById('loginModalTitle').innerHTML = '<i class="fas fa-user-plus"></i> Daftar Akun'; var maxDate = new Date(); maxDate.setFullYear(maxDate.getFullYear() - 12); document.getElementById('regBirthDate').max = maxDate.toISOString().split('T')[0]; }
-    function checkAge() { var birthDate = document.getElementById('regBirthDate').value; if (!birthDate) return; var birth = new Date(birthDate); var today = new Date(); var age = today.getFullYear() - birth.getFullYear(); var monthDiff = today.getMonth() - birth.getMonth(); if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) { age--; } document.getElementById('ageError').style.display = age < 12 ? 'block' : 'none'; }
+app.get('/order/:code', function(req, res) { res.sendFile(path.join(__dirname, '../public/order.html')); });
 
-    async function doRegister() {
-        var name = document.getElementById('regName').value.trim(); var birthDate = document.getElementById('regBirthDate').value; var password = document.getElementById('regPassword').value;
-        if (!name || !birthDate || !password) { toast('Semua field wajib diisi!', true); return; }
-        try { var res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ name: name, birthDate: birthDate, password: password }) }); var data = await res.json(); if (data.success) { toast('✅ Daftar berhasil! Silakan login.'); showLoginForm(); } else { toast(data.error, true); } } catch(e) { toast('Gagal daftar', true); }
-    }
-
-    async function doLoginUser() {
-        var name = document.getElementById('loginName').value.trim(); var password = document.getElementById('loginPassword').value;
-        if (!name || !password) { toast('Isi nama dan password!', true); return; }
-        try { var res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ name: name, password: password }) }); var data = await res.json(); if (data.success) { currentUser = data.user; updateHeaderUI(); document.getElementById('loginModal').style.display = 'none'; toast('✅ Selamat datang, ' + data.user.name + '!'); } else { toast(data.error, true); } } catch(e) { toast('Gagal login', true); }
-    }
-
-    function updateHeaderUI() { var nameEl = document.getElementById('headerProfileName'); var subEl = document.getElementById('headerProfileSub'); if (currentUser) { nameEl.textContent = currentUser.name; subEl.textContent = 'Lihat Profile ▸'; } else { nameEl.textContent = 'Profile'; subEl.textContent = 'Login / Daftar'; } }
-
-    async function checkAutoLogin() { try { var res = await fetch('/api/user/profile', { credentials: 'include' }); var data = await res.json(); if (data.success) { currentUser = data.user; updateHeaderUI(); } } catch(e) {} }
-
-    // ========== GACHA ==========
-    async function loadGachaInfo() { try { var res = await fetch('/api/gacha/info'); var data = await res.json(); if (data.success && data.gachaPrice > 0) { document.getElementById('gachaFloatPrice').textContent = 'Rp ' + data.gachaPrice.toLocaleString(); } } catch(e) {} }
-
-    // ========== PRODUCTS ==========
-    async function loadProducts() {
-        try {
-            var res = await fetch('/api/products'); var data = await res.json();
-            if (!data.products || data.products.length === 0) { document.getElementById('productsGrid').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada produk nih</p></div>'; return; }
-            allProducts = data.products;
-            try { var orderRes = await fetch('/api/public-stats'); var orderData = await orderRes.json(); if (orderData.success) { if (orderData.soldMap) { soldMap = orderData.soldMap; } maintenanceMode = orderData.maintenance || false; if (maintenanceMode) { document.getElementById('mainShopContent').style.display = 'none'; document.getElementById('maintenanceScreen').style.display = 'block'; } } } catch(e) {}
-            var catSet = new Set(); allProducts.forEach(function(p) { var name = p.name.toLowerCase(); if (name.includes('qris')) catSet.add('QRIS'); else if (name.includes('web') || name.includes('suntik')) catSet.add('Web Tools'); else if (name.includes('apk')) catSet.add('APK'); else if (name.includes('script') || name.includes('jpm')) catSet.add('Script'); else if (name.includes('nokos')) catSet.add('Nokos'); else catSet.add('Lainnya'); });
-            categories = ['all'].concat(Array.from(catSet));
-            document.getElementById('filterScroll').innerHTML = categories.map(function(cat) { return '<span class="filter-chip' + (cat === 'all' ? ' active' : '') + '" onclick="setFilter(\'' + cat + '\')">' + (cat === 'all' ? 'Semua' : cat) + '</span>'; }).join('');
-            document.getElementById('searchFilterWrap').style.display = 'block';
-            displayCount = 6; currentFilter = 'all';
-            if (!maintenanceMode) renderProducts();
-        } catch(e) { toast('Gagal load produk', true); }
-    }
-
-    function setFilter(cat) { currentFilter = cat; displayCount = 6; document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); }); if (event && event.target) event.target.classList.add('active'); renderProducts(); }
-    function getFilteredProducts() { var query = (document.getElementById('searchInput').value || '').toLowerCase(); var filtered = allProducts.filter(function(p) { var matchSearch = !query || p.name.toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query); var matchFilter = currentFilter === 'all' || (function() { var name = p.name.toLowerCase(); if (currentFilter === 'QRIS') return name.includes('qris'); if (currentFilter === 'Web Tools') return name.includes('web') || name.includes('suntik'); if (currentFilter === 'APK') return name.includes('apk'); if (currentFilter === 'Script') return name.includes('script') || name.includes('jpm'); if (currentFilter === 'Nokos') return name.includes('nokos'); if (currentFilter === 'Lainnya') return !name.includes('qris') && !name.includes('web') && !name.includes('suntik') && !name.includes('apk') && !name.includes('script') && !name.includes('jpm') && !name.includes('nokos'); return true; })(); return matchSearch && matchFilter; }); filtered.sort(function(a, b) { return (soldMap[b.id] || 0) - (soldMap[a.id] || 0); }); return filtered; }
-    function renderProducts() { var filtered = getFilteredProducts(); var toShow = filtered.slice(0, displayCount); var grid = document.getElementById('productsGrid'); if (toShow.length === 0) { grid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>Produk tidak ditemukan</p></div>'; } else { grid.innerHTML = toShow.map(function(p, i) { var sold = soldMap[p.id] || 0; var badgeHtml = ''; if (sold >= 20) badgeHtml = '<span class="product-badge hot"><i class="fas fa-fire"></i> Best Seller</span>'; else if (sold >= 10) badgeHtml = '<span class="product-badge hot">Laris (' + sold + 'x)</span>'; else if (sold >= 3) badgeHtml = '<span class="product-badge">Terjual ' + sold + 'x</span>'; else if (Date.now() - new Date(p.createdAt).getTime() < 7*24*3600*1000) badgeHtml = '<span class="product-badge new">Baru</span>'; var desc = p.description || ''; if (desc.length > 60) desc = desc.substring(0, 60) + '...'; return '<div class="product-card" style="animation-delay:' + (i * 0.04) + 's">' + badgeHtml + '<div class="product-icon"><i class="fas ' + (p.itemType==='link'?'fa-link':p.itemType==='html'?'fa-code':'fa-file-alt') + '"></i></div>' + '<div class="product-name">' + escapeHtml(p.name) + '</div>' + '<div class="product-desc">' + escapeHtml(desc) + '</div>' + '<div class="product-price-row"><span class="product-price">Rp ' + (p.price || 0).toLocaleString() + '</span><span class="product-stock"><i class="fas fa-database"></i> ' + p.stock + '</span></div>' + '<div class="product-actions">' + '<button class="btn-buy" onclick="event.stopPropagation();buyNow(' + p.id + ')">' + (p.stock > 0 ? '<i class="fas fa-shopping-cart"></i> Beli' : '<i class="fas fa-ban"></i> Habis') + '</button>' + (p.stock > 0 ? '<button class="btn-cart" onclick="event.stopPropagation();addToCart(' + p.id + ')" title="Tambah ke keranjang"><i class="fas fa-cart-plus"></i></button>' : '') + '</div></div>'; }).join(''); } document.getElementById('resultsInfo').textContent = 'Menampilkan ' + toShow.length + ' dari ' + filtered.length + ' produk'; if (displayCount < filtered.length) { document.getElementById('loadMoreWrap').style.display = 'block'; } else { document.getElementById('loadMoreWrap').style.display = 'none'; } }
-    function loadMore() { displayCount += 6; renderProducts(); }
-    function buyNow(productId) { if (maintenanceMode) { toast('Toko lagi maintenance!', true); return; } var product = allProducts.find(function(p) { return p.id == productId; }); if (!product || product.stock <= 0) { toast('Stok habis!', true); return; } directBuy(product); }
-
-    async function directBuy(product) {
-        var customerName = currentUser ? currentUser.name : 'Guest';
-        showLoading('Membuat QRIS...');
-        try {
-            var totalAmount = product.price;
-            var qrisData = await generateQRIS(totalAmount);
-            var orderRes = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ productId: product.id, customerName: customerName, qrisId: qrisData.qris_id, qrisImage: qrisData.qris_image_url, totalAmount: totalAmount, expiredAt: qrisData.expired_at }) });
-            var orderData = await orderRes.json();
-            if (!orderData.success) throw new Error(orderData.error);
-            hideLoading();
-            window.location.href = '/order/' + orderData.orderCode;
-        } catch (err) { hideLoading(); toast(err.message || 'Gagal membuat pesanan', true); }
-    }
-
-    async function generateQRIS(amount) {
-        var response = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount }) });
-        var data = await response.json();
-        if (data.status !== 'success') throw new Error(data.message || 'Gagal generate QRIS');
-        return data.data;
-    }
-</script>
-</body>
-</html>
+module.exports = app;
