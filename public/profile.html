@@ -265,21 +265,39 @@
         } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; }
     }
 
-    // ✅ DEPOSIT — REDIRECT KE /deposit?id=...
+    // ✅ DEPOSIT — QRIS dari frontend, backend cuma simpan
     async function doDeposit() {
         if (!currentUser) { toast('Login dulu!', true); return; }
         var amt = parseInt(document.getElementById('depAmount').value);
         if (!amt || amt < 1000) { toast('Minimal Rp 1.000!', true); return; }
+
         try {
-            var res = await fetch('/api/user/deposit', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            // 1. Generate QRIS langsung dari frontend
+            var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', {
+                method: 'POST',
+                headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: amt })
             });
-            var data = await res.json();
-            if (data.success) {
-                window.location.href = '/deposit?id=' + data.depId;
-            } else toast(data.error, true);
-        } catch(e) { toast('Gagal deposit', true); }
+            var qrisData = await qrisRes.json();
+            if (qrisData.status !== 'success') throw new Error(qrisData.message || 'Gagal generate QRIS');
+
+            // 2. Simpan deposit ke backend
+            var saveRes = await fetch('/api/user/deposit-save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    amount: amt,
+                    qrisId: qrisData.data.qris_id,
+                    qrisImage: qrisData.data.qris_image_url,
+                    expiredAt: qrisData.data.expired_at
+                })
+            });
+            var saveData = await saveRes.json();
+            if (saveData.success) {
+                window.location.href = '/deposit?id=' + saveData.depId;
+            } else toast(saveData.error, true);
+        } catch(e) { toast('Gagal: ' + e.message, true); }
     }
 
     async function loadDepHistory() {
