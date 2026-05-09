@@ -327,6 +327,49 @@ app.get('/api/user/deposits', async function(req, res) {
     res.json({ success: true, deposits: deps });
 });
 
+// ========== DEPOSIT SAVE (simpan aja, QRIS dari frontend) ==========
+app.post('/api/user/deposit-save', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie);
+    var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    
+    var amount = parseInt(req.body.amount);
+    var qrisId = req.body.qrisId;
+    var qrisImage = req.body.qrisImage;
+    var expiredAt = req.body.expiredAt;
+    
+    if (!amount || !qrisId || !qrisImage || !expiredAt) {
+        return res.status(400).json({ error: 'Data tidak lengkap' });
+    }
+    
+    var db = await getDB();
+    var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    if (!db.deposits) db.deposits = [];
+    var depId = Date.now();
+    db.deposits.unshift({
+        id: depId, userId: user.id, userName: user.name,
+        amount: amount, qrisId: qrisId, qrisImage: qrisImage,
+        expiredAt: expiredAt, status: 'pending',
+        createdAt: new Date().toISOString()
+    });
+    
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, depId: depId });
+});
+
+app.get('/api/user/deposits', async function(req, res) {
+    var cookies = parseCookies(req.headers.cookie);
+    var token = cookies['yanto_token'];
+    if (!token) return res.status(401).json({ error: 'Login dulu' });
+    var db = await getDB();
+    var user = (db.users || []).find(function(u) { return u.token === token; });
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    var deps = (db.deposits || []).filter(function(d) { return d.userId === user.id; });
+    res.json({ success: true, deposits: deps });
+});
+
 // ========== WITHDRAW ==========
 app.post('/api/user/withdraw', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie);
