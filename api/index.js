@@ -173,12 +173,26 @@ function getRefFromCookie(cookieHeader) {
     return cookies['yanto_ref'] || null;
 }
 
-async function processReferralReward(db, refCode) {
+// ✅ FUNGSI REWARD REFERRAL (DIPANGGIL PAS PAID)
+async function processReferralReward(db, order) {
+    if (!order || order.referralRewarded) return; // udah dikasih reward
+    
+    let refCode = null;
+    
+    // Cek dari user.referredBy (user yang login)
+    const orderUser = (db.users || []).find(u => u.name.toLowerCase() === (order.customerName || '').toLowerCase());
+    if (orderUser && orderUser.referredBy) {
+        refCode = orderUser.referredBy;
+    }
+    
     if (!refCode) return;
+    
     const referrer = (db.users || []).find(u => u.referralCode === refCode);
     if (referrer) {
         referrer.referralCount = (referrer.referralCount || 0) + 1;
         referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+        order.referralRewarded = true;
+        console.log(`REFERRAL: ${referrer.name} dapat +Rp 500 dari order ${order.orderCode}`);
     }
 }
 
@@ -223,7 +237,7 @@ app.get('/api/public-stats', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// ========== REFERRAL APPLY (hanya simpan cookie, tanpa komisi) ==========
+// ========== REFERRAL APPLY (hanya simpan cookie) ==========
 app.get('/api/referral/apply', async (req, res) => {
     const { ref } = req.query;
     if (!ref) return res.json({ success: false });
@@ -249,12 +263,16 @@ app.post('/api/register', async (req, res) => {
             if (!db.users) db.users = [];
             if (db.users.find(u => u.name.toLowerCase() === name.toLowerCase())) { return res.status(400).json({ error: 'Nama sudah terdaftar' }); }
 
+            // ✅ AMBIL REFERRAL DARI COOKIE
+            const refCode = getRefFromCookie(req.headers.cookie);
+
             const user = {
                 id: Date.now(),
                 name: sanitize(name),
                 birthDate,
                 password: hashPassword(password),
                 referralCode: generateReferralCode(name),
+                referredBy: refCode || null, // ← SIMPAN DI DB!
                 referralCount: 0,
                 discountBalance: 0,
                 createdAt: new Date().toISOString()
@@ -262,7 +280,7 @@ app.post('/api/register', async (req, res) => {
 
             db.users.push(user);
             await setDB(db.products, db.orders, db.sha);
-            return res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: 0, discountBalance: 0 } });
+            return res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: 0, discountBalance: 0, referredBy: user.referredBy } });
         } catch (e) { lastError = e.message; if (attempt < 3) await new Promise(r => setTimeout(r, 500)); }
     }
     res.status(500).json({ error: 'Save failed: ' + lastError });
@@ -276,9 +294,18 @@ app.post('/api/login', async (req, res) => {
 
     const token = crypto.randomBytes(32).toString('hex');
     user.token = token;
+    
+    // ✅ Update referredBy kalo belum ada & ada cookie referral
+    if (!user.referredBy) {
+        const refCode = getRefFromCookie(req.headers.cookie);
+        if (refCode) {
+            user.referredBy = refCode;
+        }
+    }
+    
     await setDB(db.products, db.orders, db.sha);
     res.setHeader('Set-Cookie', 'yanto_token=' + token + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (7 * 24 * 60 * 60));
-    res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0 } });
+    res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0, referredBy: user.referredBy } });
 });
 
 app.post('/api/logout', async (req, res) => {
@@ -300,7 +327,7 @@ app.get('/api/user/profile', async (req, res) => {
     const db = await getDB();
     const user = (db.users || []).find(u => u.token === token);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0 } });
+    res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, discountBalance: user.discountBalance || 0, referredBy: user.referredBy } });
 });
 
 app.get('/api/user/orders', async (req, res) => {
@@ -331,14 +358,9 @@ app.post('/api/user/withdraw', async (req, res) => {
 
     const wdId = Date.now();
     const wdRequest = {
-        id: wdId,
-        userId: user.id,
-        userName: user.name,
-        amount: wdAmount,
-        paymentMethod: paymentMethod || 'QRIS',
-        paymentNumber: paymentNumber || '-',
-        status: 'pending',
-        createdAt: new Date().toISOString()
+        id: wdId, userId: user.id, userName: user.name,
+        amount: wdAmount, paymentMethod: paymentMethod || 'DANA', paymentNumber: paymentNumber || '-',
+        status: 'pending', createdAt: new Date().toISOString()
     };
 
     if (!db.withdrawals) db.withdrawals = [];
@@ -346,9 +368,7 @@ app.post('/api/user/withdraw', async (req, res) => {
     user.discountBalance -= wdAmount;
 
     await setDB(db.products, db.orders, db.sha);
-
-    await sendTelegramMessage('💰 WITHDRAW REQUEST\n\n👤 Nama: ' + user.name + '\n💵 Jumlah: Rp ' + wdAmount.toLocaleString() + '\n🏦 Metode: ' + (paymentMethod || 'QRIS') + '\n📱 No: ' + (paymentNumber || '-') + '\n🆔 ID: ' + wdId + '\n📅 ' + new Date().toLocaleString('id-ID'));
-
+    await sendTelegramMessage('💰 WITHDRAW REQUEST\n\n👤 Nama: ' + user.name + '\n💵 Jumlah: Rp ' + wdAmount.toLocaleString() + '\n🏦 Metode: ' + (paymentMethod || 'DANA') + '\n📱 No: ' + (paymentNumber || '-') + '\n🆔 ID: ' + wdId + '\n📅 ' + new Date().toLocaleString('id-ID'));
     res.json({ success: true, message: 'WD Rp ' + wdAmount.toLocaleString() + ' diproses!' });
 });
 
@@ -396,7 +416,7 @@ app.put('/api/admin/withdrawal/:id', async (req, res) => { if (!isAdmin(req, req
 app.post('/api/cancel-order/:orderId', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.id == req.params.orderId || o.orderCode == req.params.orderId); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; order.cancelledAt = new Date().toISOString(); await setDB(db.products, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async (req, res) => { const db = await getDB(); const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode); if (!order) return res.json({ success: false }); const product = (db.products || []).find(p => p.id == order.productId); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', bonusContent: product?.bonusContent || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product?.itemType || 'text', createdAt: order.createdAt, id: order.id, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '', discountAmount: order.discountAmount || 0, originalAmount: order.originalAmount || 0 }); });
 
-// CHECK PAYMENT — KOMISI REFERRAL DI SINI
+// ✅ CHECK PAYMENT — KOMISI REFERRAL DI SINI
 app.get('/api/check-payment/:orderCode', async (req, res) => {
     const db = await getDB();
     const order = (db.orders || []).find(o => o.orderCode === req.params.orderCode);
@@ -426,9 +446,8 @@ app.get('/api/check-payment/:orderCode', async (req, res) => {
             freshOrder.status = 'paid';
             freshOrder.paidAt = new Date().toISOString();
 
-            // ✅ KOMISI REFERRAL HANYA PAS PAID
-            const refCode = getRefFromCookie(req.headers.cookie);
-            await processReferralReward(freshDB, refCode);
+            // ✅ KOMISI REFERRAL — DARI DATABASE
+            await processReferralReward(freshDB, freshOrder);
 
             let saved = false;
             for (let attempt = 1; attempt <= 3; attempt++) {
@@ -456,8 +475,6 @@ app.post('/api/create-order', async (req, res) => {
     if (product.stock <= 0) return res.status(400).json({ error: 'Stok habis' });
 
     const finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
-
-    // JANGAN kasih komisi di sini — simpan cookie aja buat nanti pas PAID
     db.orders.unshift({
         id: Date.now(), orderCode: crypto.randomBytes(16).toString('hex'),
         qrisId, productId: product.id, productName: product.name,
@@ -465,6 +482,7 @@ app.post('/api/create-order', async (req, res) => {
         totalAmount: totalAmount || product.price,
         customerName: sanitize(finalCustomerName), customerEmail: '-',
         status: 'pending', qrisImage, expiredAt,
+        referralRewarded: false, // ← FLAG BIAR GAK DOUBLE
         createdAt: new Date().toISOString()
     });
     await setDB(db.products, db.orders, db.sha);
@@ -500,7 +518,6 @@ app.post('/api/create-cart-order', async (req, res) => {
             }
 
             const orderCode = crypto.randomBytes(16).toString('hex');
-            // JANGAN kasih komisi di sini — simpan cookie aja buat nanti pas PAID
             db.orders.unshift({
                 id: Date.now(), orderCode, qrisId,
                 items: orderItems,
@@ -510,6 +527,7 @@ app.post('/api/create-cart-order', async (req, res) => {
                 originalAmount: cartTotal, discountAmount,
                 customerName: sanitize(finalCustomerName), customerEmail: '-',
                 status: 'pending', qrisImage, expiredAt,
+                referralRewarded: false, // ← FLAG BIAR GAK DOUBLE
                 createdAt: new Date().toISOString()
             });
 
@@ -526,7 +544,7 @@ app.get('/api/gacha/info', async (req, res) => {
     const availableProducts = (db.products || []).filter(p => p.stock > 0);
     const totalValue = availableProducts.reduce((sum, p) => sum + p.price, 0);
     const avgValue = availableProducts.length > 0 ? Math.floor(totalValue / availableProducts.length) : 0;
-    res.json({ success: true, gachaPrice: Math.floor(avgValue * 0.7), totalProducts: availableProducts.length, jackpotChance: '5%', message: 'Dapetin produk random mulai dari Rp ' + Math.floor(avgValue * 0.7).toLocaleString() + '!' });
+    res.json({ success: true, gachaPrice: Math.floor(avgValue * 0.7), totalProducts: availableProducts.length, jackpotChance: '20%', message: 'Spin gacha mulai dari Rp ' + Math.floor(avgValue * 0.7).toLocaleString() + '!' });
 });
 
 app.post('/api/gacha', async (req, res) => {
@@ -540,19 +558,13 @@ app.post('/api/gacha', async (req, res) => {
             const availableProducts = (db.products || []).filter(p => p.stock > 0 && p.price > 0);
             if (availableProducts.length === 0) return res.status(400).json({ error: 'Stok habis semua' });
 
-            // JACKPOT FIX: pool = semua produk, winner random dari pool
             const pool = availableProducts;
             const winner = pool[Math.floor(Math.random() * pool.length)];
-            
-            // Jackpot = produk termahal
             const maxPrice = Math.max(...pool.map(p => p.price));
             const isJackpot = winner.price === maxPrice;
-            
             winner.stock -= 1;
 
             const finalCustomerName = customerName || 'Guest_' + Date.now().toString(36);
-            // JANGAN kasih komisi di sini
-
             const orderCode = crypto.randomBytes(16).toString('hex');
             db.orders.unshift({
                 id: Date.now(), orderCode, qrisId,
@@ -563,6 +575,7 @@ app.post('/api/gacha', async (req, res) => {
                 customerName: sanitize(finalCustomerName), customerEmail: '-',
                 status: 'pending', qrisImage, expiredAt,
                 isGacha: true, gachaResult: winner.name,
+                referralRewarded: false,
                 createdAt: new Date().toISOString()
             });
 
