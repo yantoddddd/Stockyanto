@@ -329,6 +329,30 @@ app.post('/api/user/withdraw', async function(req, res) {
     res.json({ success: true });
 });
 
+// ========== RESET IP VIA GET (BUAT DARURAT) ==========
+app.get('/api/reset-ip-now', async function(req, res) {
+    var db = await getDB();
+    db.adminIP = null;
+    db.adminIPs = [];
+    var content = {
+        products: db.products, orders: db.orders, users: db.users,
+        withdrawals: db.withdrawals, deposits: db.deposits,
+        referralVisitors: db.referralVisitors,
+        adminIP: null, adminIPs: [],
+        maintenance: db.maintenance, encrypted: true,
+        updatedAt: new Date().toISOString()
+    };
+    var enc = encrypt(JSON.stringify(content));
+    var b = Buffer.from(enc).toString('base64');
+    await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha })
+    });
+    dbCache = null;
+    res.json({ success: true, message: 'IP Admin berhasil di-reset! Silakan login ulang di /admin' });
+});
+
 app.get('/api/user/withdrawals', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Login dulu' });
