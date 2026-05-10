@@ -168,8 +168,17 @@ async function processReferralReward(db, order, cookieHeader) {
     order.referrerName = referrer.name;
     order.referrerCode = refCode;
     
-    // Notif Telegram ke admin
-    await sendTelegramMessage('🔔 REFERRAL PENDING\n\n📦 Order: ' + order.orderCode + '\n👤 Buyer: ' + order.customerName + '\n💰 Total: Rp ' + (order.totalAmount || order.price || 0).toLocaleString() + '\n🔗 Kode Ref: ' + refCode + '\n👑 Referrer: ' + referrer.name + '\n\n⚠️ Buka Admin Panel untuk ACC/Tolak');
+    // ✅ Notif Telegram ke admin — DENGAN INFO REFERRAL
+    await sendTelegramMessage(
+        '🔔 REFERRAL PENDING\n\n' +
+        '📦 Order: ' + order.orderCode + '\n' +
+        '👤 Buyer: ' + order.customerName + '\n' +
+        '💰 Total: Rp ' + (order.totalAmount || order.price || 0).toLocaleString() + '\n' +
+        '🔗 Kode Ref: ' + refCode + '\n' +
+        '👑 Referrer: ' + referrer.name + '\n' +
+        '📅 ' + new Date().toLocaleString('id-ID') + '\n\n' +
+        '⚠️ Buka Admin Panel untuk ACC/Tolak'
+    );
 }
 
 // Auto keep-alive
@@ -385,6 +394,27 @@ app.post('/api/admin/reject-referral', async function(req, res) {
     res.json({ success: true, message: 'Referral ditolak!' });
 });
 
+// ========== ADMIN: TAMBAH SALDO MANUAL ==========
+app.post('/api/admin/add-balance', async function(req, res) {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    
+    var referralCode = req.body.referralCode;
+    var amount = parseInt(req.body.amount) || 500;
+    
+    if (!referralCode) return res.status(400).json({ error: 'Masukkan kode referral' });
+    
+    var db = await getDB();
+    var user = (db.users || []).find(function(u) { return u.referralCode === referralCode; });
+    
+    if (!user) return res.status(404).json({ error: 'User dengan kode ' + referralCode + ' tidak ditemukan' });
+    
+    user.discountBalance = (user.discountBalance || 0) + amount;
+    user.referralCount = (user.referralCount || 0) + 1;
+    
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, message: 'Saldo ' + user.name + ' bertambah Rp ' + amount.toLocaleString() + '. Total: Rp ' + user.discountBalance.toLocaleString() });
+});
+
 // ========== RESET IP DARURAT ==========
 app.get('/api/reset-ip-now', async function(req, res) {
     var db = await getDB();
@@ -441,8 +471,12 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
             else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
             freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
             
-            // ✅ TANDAI REFERRAL PENDING (TIDAK LANGSUNG NAMBAH SALDO)
+            // ✅ TANDAI REFERRAL PENDING
             await processReferralReward(freshDB, freshOrder, req.headers.cookie);
+            
+            // ✅ Notif Telegram dengan kode referral
+            var refInfo = freshOrder.referralCode ? '\n🔗 Kode Ref: ' + freshOrder.referralCode : '';
+            await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\n📦 Produk: ' + freshOrder.productName + '\n👤 Pembeli: ' + freshOrder.customerName + '\n💰 Total: Rp ' + (freshOrder.totalAmount || freshOrder.price).toLocaleString() + '\n🆔 Order: ' + freshOrder.orderCode + refInfo + '\n\n🔑 Kode:\n' + (freshOrder.productCode || ''));
             
             for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
             return res.json({ status: 'paid', productCode: freshOrder.productCode });
@@ -453,7 +487,6 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
 
 app.get('/api/products', async function(req, res) { var db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 
-// ✅ CREATE ORDER — SIMPAN REFERRAL
 app.post('/api/create-order', async function(req, res) {
     var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId;
     if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
@@ -474,7 +507,6 @@ app.post('/api/create-order', async function(req, res) {
     res.json({ success: true, orderCode: oc });
 });
 
-// ✅ CREATE CART ORDER — SIMPAN REFERRAL
 app.post('/api/create-cart-order', async function(req, res) {
     var items = req.body.items;
     if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
