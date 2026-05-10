@@ -105,6 +105,10 @@
         .wd-status.pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
         .wd-status.success { background: rgba(16,185,129,0.2); color: #10b981; }
         .wd-status.failed { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .ref-status { display: inline-flex; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; }
+        .ref-status.pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .ref-status.approved { background: rgba(16,185,129,0.2); color: #10b981; }
+        .ref-status.rejected { background: rgba(239,68,68,0.2); color: #ef4444; }
 
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -124,7 +128,6 @@
 
     <section class="card" id="loginCard" aria-label="Form login admin">
         <h1><i class="fas fa-user-shield" aria-hidden="true"></i> Admin Panel</h1>
-        <label for="adminKeyInput" class="sr-only">Kunci Admin</label>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin" autocomplete="current-password">
         <button type="button" onclick="doLogin()"><i class="fas fa-key" aria-hidden="true"></i> Login</button>
         <div id="loginError" role="alert"></div>
@@ -141,6 +144,7 @@
         <nav class="filter-scroll custom-scrollbar" aria-label="Filter navigasi">
             <span class="filter-chip active" role="button" tabindex="0" onclick="switchFilter('orders', this)" aria-pressed="true"><i class="fas fa-history" aria-hidden="true"></i> Riwayat Order</span>
             <span class="filter-chip" role="button" tabindex="0" onclick="switchFilter('products', this)" aria-pressed="false"><i class="fas fa-boxes" aria-hidden="true"></i> Barang</span>
+            <span class="filter-chip" role="button" tabindex="0" onclick="switchFilter('refapproval', this)" aria-pressed="false"><i class="fas fa-check-circle" aria-hidden="true"></i> Approve Ref</span>
             <span class="filter-chip" role="button" tabindex="0" onclick="switchFilter('qris', this)" aria-pressed="false"><i class="fas fa-qrcode" aria-hidden="true"></i> QRIS</span>
             <span class="filter-chip" role="button" tabindex="0" onclick="switchFilter('withdrawals', this)" aria-pressed="false"><i class="fas fa-wallet" aria-hidden="true"></i> WD</span>
             <span class="filter-chip" role="button" tabindex="0" onclick="switchFilter('menu', this)" aria-pressed="false"><i class="fas fa-cog" aria-hidden="true"></i> Menu</span>
@@ -179,6 +183,13 @@
                 <div class="load-more-wrap" id="productsLoadMore" style="display:none;">
                     <button type="button" class="btn-load-more" onclick="loadMoreProducts()">Tampilkan Lebih Banyak</button>
                 </div>
+            </div>
+        </section>
+
+        <section id="panel-refapproval" class="hidden" aria-label="Panel Approve Referral">
+            <div class="card">
+                <h2><i class="fas fa-check-circle" aria-hidden="true"></i> Pending Referral Approval</h2>
+                <div id="pendingReferralsList" role="list" aria-label="Daftar referral pending"></div>
             </div>
         </section>
 
@@ -296,7 +307,7 @@
     let currentDetailId = null;
     let currentQrisId = null;
     let currentIP = '';
-    let allOrders = [], allProducts = [], allQrisPending = [], allWithdrawals = [];
+    let allOrders = [], allProducts = [], allQrisPending = [], allWithdrawals = [], allPendingReferrals = [];
     let orderDisplay = 10, productDisplay = 10;
     let lastOrderCount = 0;
     let maintenanceMode = false;
@@ -334,9 +345,10 @@
         window.location.hash = filter;
         document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); c.setAttribute('aria-pressed','false'); });
         if (el) { el.classList.add('active'); el.setAttribute('aria-pressed','true'); }
-        var panels = ['orders','products','qris','withdrawals','menu'];
+        var panels = ['orders','products','refapproval','qris','withdrawals','menu'];
         panels.forEach(function(p) { document.getElementById('panel-'+p).classList.add('hidden'); });
         document.getElementById('panel-'+filter).classList.remove('hidden');
+        if (filter === 'refapproval') { loadPendingReferrals(); }
         updateResultsInfo();
     }
 
@@ -352,6 +364,7 @@
         else if (!document.getElementById('panel-products').classList.contains('hidden')) { total=allProducts.length; showing=Math.min(productDisplay,total); }
         else if (!document.getElementById('panel-qris').classList.contains('hidden')) { total=allQrisPending.length; showing=total; }
         else if (!document.getElementById('panel-withdrawals').classList.contains('hidden')) { total=allWithdrawals.length; showing=total; }
+        else if (!document.getElementById('panel-refapproval').classList.contains('hidden')) { total=allPendingReferrals.length; showing=total; }
         else { document.getElementById('resultsInfo').textContent=''; return; }
         document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total;
     }
@@ -395,9 +408,9 @@
     async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
 
     let autoInterval = null;
-    function startAutoRefresh() { stopAutoRefresh(); autoInterval = setInterval(function() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); loadWithdrawals(); autoPingAll(); }, 5000); }
+    function startAutoRefresh() { stopAutoRefresh(); autoInterval = setInterval(function() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); loadWithdrawals(); loadPendingReferrals(); autoPingAll(); }, 5000); }
     function stopAutoRefresh() { if (autoInterval) { clearInterval(autoInterval); autoInterval = null; } }
-    function loadAll() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); loadWithdrawals(); autoPingAll(); }
+    function loadAll() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); loadWithdrawals(); loadPendingReferrals(); autoPingAll(); }
 
     async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
     function renderOrders() {
@@ -406,7 +419,8 @@
         if (toShow.length) {
             c.innerHTML = toShow.map(function(o) {
                 var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
-                return '<div class="item" role="button" tabindex="0" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
+                var refInfo = o.referrerCode ? ' | Ref: '+o.referrerCode+' ('+(o.referralStatus||'none')+')' : '';
+                return '<div class="item" role="button" tabindex="0" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+refInfo+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
             }).join('');
         } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
         document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
@@ -425,6 +439,7 @@
             '<div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div>'+
             '<div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div>'+
             '<div class="detail-row"><span class="dl">Kode Order</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div>'+
+            (order.referrerCode ? '<div class="detail-row"><span class="dl">Referral</span><span class="dv">'+order.referrerCode+' ('+(order.referralStatus||'none')+')</span></div>' : '')+
             '<div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>';
         document.getElementById('detailModal').style.display = 'flex';
     }
@@ -441,7 +456,41 @@
     function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button type="button" class="btn-sm green" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button type="button" class="btn-sm orange" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button type="button" class="btn-sm red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
 
-    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.totalUsers+'</div><div class="stat-label">User</div></div><div class="stat-card"><div class="stat-number">'+s.totalWithdrawals+'</div><div class="stat-label">WD</div></div><div class="stat-card"><div class="stat-number">'+s.pendingCount+'</div><div class="stat-label">Pending</div></div>'; } } catch(e) {} }
+    async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.totalUsers+'</div><div class="stat-label">User</div></div><div class="stat-card"><div class="stat-number">'+s.totalWithdrawals+'</div><div class="stat-label">WD</div></div><div class="stat-card"><div class="stat-number">'+s.totalDeposits+'</div><div class="stat-label">Deposit</div></div><div class="stat-card"><div class="stat-number">'+(s.pendingReferrals||0)+'</div><div class="stat-label">Ref Pending</div></div>'; } } catch(e) {} }
+
+    async function loadPendingReferrals() {
+        try {
+            var res = await fetch('/api/admin/pending-referrals?adminKey='+adminPassword);
+            var data = await res.json();
+            if (data.success) { allPendingReferrals = data.pending||[]; renderPendingReferrals(); }
+        } catch(e) {}
+    }
+
+    function renderPendingReferrals() {
+        var c = document.getElementById('pendingReferralsList');
+        if (allPendingReferrals.length) {
+            c.innerHTML = allPendingReferrals.map(function(o) {
+                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">Buyer: '+escapeHtml(o.customerName)+'</div><div class="item-detail">Referrer: '+escapeHtml(o.referrerName||'-')+' ('+escapeHtml(o.referrerCode||'-')+')</div><div class="item-detail">Total: Rp '+(o.totalAmount||o.price||0).toLocaleString()+' | '+new Date(o.createdAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="approveReferral(\''+o.orderCode+'\')"><i class="fas fa-check"></i> ACC</button><button class="btn-sm red" onclick="rejectReferral(\''+o.orderCode+'\')"><i class="fas fa-times"></i> Tolak</button></div></div>';
+            }).join('');
+        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Tidak ada referral pending</div>'; }
+        updateResultsInfo();
+    }
+
+    async function approveReferral(orderCode) {
+        if (!confirm('ACC referral ini?')) return;
+        var res = await fetch('/api/admin/approve-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) });
+        var data = await res.json();
+        if (data.success) { toast('✅ '+data.message); loadPendingReferrals(); loadStats(); }
+        else toast(data.error, true);
+    }
+
+    async function rejectReferral(orderCode) {
+        if (!confirm('Tolak referral ini?')) return;
+        var res = await fetch('/api/admin/reject-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) });
+        var data = await res.json();
+        if (data.success) { toast('❌ '+data.message); loadPendingReferrals(); loadStats(); }
+        else toast(data.error, true);
+    }
 
     async function loadWithdrawals() { try { var res = await fetch('/api/admin/withdrawals?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allWithdrawals = data.withdrawals||[]; renderWithdrawals(); } } catch(e) {} }
     function renderWithdrawals() {
