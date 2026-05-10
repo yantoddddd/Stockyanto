@@ -149,46 +149,27 @@ function getReferralFromDB(db, customerName) {
     return null;
 }
 
-// ✅ FUNGSI REWARD REFERRAL — BACA DARI ORDER DULU
+// ✅ FUNGSI REWARD REFERRAL — UBAH JADI PENDING APPROVAL
 async function processReferralReward(db, order, cookieHeader) {
-    if (!order || order.referralRewarded) return;
+    if (!order || order.referralRewarded || order.referralStatus) return;
     
     var refCode = null;
-    var customerName = (order.customerName || '').toLowerCase();
-    
-    // 1. DARI ORDER (disimpen pas checkout — paling akurat)
-    if (order.referralCode) {
-        refCode = order.referralCode;
-        console.log('REFERRAL FROM ORDER: ' + refCode);
-    }
-    
-    // 2. DARI COOKIE (fallback)
-    if (!refCode && cookieHeader) {
-        refCode = getRefFromCookie(cookieHeader);
-        if (refCode) console.log('REFERRAL FROM COOKIE: ' + refCode);
-    }
-    
-    // 3. DARI DATABASE (fallback terakhir)
-    if (!refCode) {
-        refCode = getReferralFromDB(db, order.customerName);
-        if (refCode) console.log('REFERRAL FROM DB: ' + refCode);
-    }
-    
-    if (!refCode) {
-        console.log('REFERRAL NOT FOUND untuk ' + customerName);
-        return;
-    }
+    if (order.referralCode) refCode = order.referralCode;
+    if (!refCode && cookieHeader) refCode = getRefFromCookie(cookieHeader);
+    if (!refCode) refCode = getReferralFromDB(db, order.customerName);
+    if (!refCode) return;
     
     var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
-    if (!referrer) {
-        console.log('REFERRER NOT FOUND untuk kode ' + refCode);
-        return;
-    }
+    if (!referrer) return;
     
-    referrer.referralCount = (referrer.referralCount || 0) + 1;
-    referrer.discountBalance = (referrer.discountBalance || 0) + 500;
-    order.referralRewarded = true;
-    console.log('REFERRAL AWARDED: ' + referrer.name + ' +Rp500 dari ' + customerName);
+    // ✅ Tandai sebagai PENDING APPROVAL
+    order.referralStatus = 'pending';
+    order.referralRewarded = false;
+    order.referrerName = referrer.name;
+    order.referrerCode = refCode;
+    
+    // Notif Telegram ke admin
+    await sendTelegramMessage('🔔 REFERRAL PENDING\n\n📦 Order: ' + order.orderCode + '\n👤 Buyer: ' + order.customerName + '\n💰 Total: Rp ' + (order.totalAmount || order.price || 0).toLocaleString() + '\n🔗 Kode Ref: ' + refCode + '\n👑 Referrer: ' + referrer.name + '\n\n⚠️ Buka Admin Panel untuk ACC/Tolak');
 }
 
 // Auto keep-alive
@@ -331,85 +312,6 @@ app.post('/api/user/change-password', async function(req, res) {
     res.json({ success: true });
 });
 
-// ========== SYNC ALL REFERRAL BALANCES ==========
-app.get('/api/sync-all-referral-balances', async function(req, res) {
-    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    
-    var db = await getDB();
-    var updated = 0;
-    
-    (db.users || []).forEach(function(user) {
-        var orderCount = 0;
-        
-        // Hitung order PAID dengan referralCode user ini
-        (db.orders || []).forEach(function(order) {
-            if (order.status === 'paid' && order.referralCode === user.referralCode) {
-                orderCount++;
-            }
-        });
-        
-        // Hitung total WD SUCCESS
-        var totalWD = 0;
-        (db.withdrawals || []).forEach(function(wd) {
-            if (wd.userId === user.id && wd.status === 'success') {
-                totalWD += wd.amount || 0;
-            }
-        });
-        
-        var correctBalance = (orderCount * 500) - totalWD;
-        if (correctBalance < 0) correctBalance = 0;
-        
-        user.referralCount = orderCount;
-        user.discountBalance = correctBalance;
-        updated++;
-    });
-    
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true, updatedCount: updated });
-});
-
-// ========== HAPUS SEMUA WD ==========
-app.get('/api/delete-all-withdrawals', async function(req, res) {
-    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    var db = await getDB();
-    var count = (db.withdrawals || []).length;
-    db.withdrawals = [];
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true, deletedCount: count, message: count + ' WD berhasil dihapus' });
-});
-
-// ========== PING: TRIGGER REFERRAL MANUAL ==========
-app.get('/api/ping-referral', async function(req, res) {
-    var orderCode = req.query.code;
-    if (!orderCode) return res.json({ error: 'Masukkan kode order: ?code=xxx' });
-    
-    var db = await getDB();
-    dbCacheTime = 0; // bypass cache
-    
-    var order = (db.orders || []).find(function(o) { return o.orderCode === orderCode; });
-    if (!order) return res.json({ error: 'Order tidak ditemukan' });
-    
-    console.log('=== PING REFERRAL ===');
-    console.log('Order:', order.orderCode);
-    console.log('Status:', order.status);
-    console.log('ReferralCode:', order.referralCode);
-    console.log('ReferralRewarded:', order.referralRewarded);
-    
-    if (order.status !== 'paid') return res.json({ error: 'Order belum PAID. Status: ' + order.status });
-    if (order.referralRewarded) return res.json({ message: 'Order udah di-reward sebelumnya' });
-    
-    // ✅ PROSES REFERRAL
-    await processReferralReward(db, order, null);
-    
-    // ✅ SIMPAN
-    if (order.referralRewarded) {
-        await setDB(null, db.orders, db.sha);
-        res.json({ success: true, message: 'Referral berhasil diproses!', orderCode: orderCode });
-    } else {
-        res.json({ error: 'Gagal proses referral. Cek log Vercel.' });
-    }
-});
-
 // ========== WITHDRAW ==========
 app.post('/api/user/withdraw', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
@@ -435,7 +337,55 @@ app.get('/api/user/withdrawals', async function(req, res) {
     res.json({ success: true, withdrawals: (db.withdrawals || []).filter(function(w) { return w.userId === user.id; }) });
 });
 
-// ========== ADMIN ==========
+// ========== ADMIN: PENDING REFERRALS ==========
+app.get('/api/admin/pending-referrals', async function(req, res) {
+    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var db = await getDB();
+    var pending = (db.orders || []).filter(function(order) {
+        return order.status === 'paid' && order.referralStatus === 'pending';
+    });
+    res.json({ success: true, pending: pending });
+});
+
+// ========== ADMIN: APPROVE REFERRAL ==========
+app.post('/api/admin/approve-referral', async function(req, res) {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var orderCode = req.body.orderCode;
+    var db = await getDB();
+    var order = (db.orders || []).find(function(o) { return o.orderCode === orderCode; });
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    if (order.referralStatus !== 'pending') return res.status(400).json({ error: 'Referral sudah diproses' });
+    
+    var referrer = (db.users || []).find(function(u) { return u.referralCode === order.referrerCode; });
+    if (referrer) {
+        referrer.referralCount = (referrer.referralCount || 0) + 1;
+        referrer.discountBalance = (referrer.discountBalance || 0) + 500;
+    }
+    
+    order.referralStatus = 'approved';
+    order.referralRewarded = true;
+    
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, message: 'Referral approved! ' + (referrer ? referrer.name : '') + ' +Rp500' });
+});
+
+// ========== ADMIN: REJECT REFERRAL ==========
+app.post('/api/admin/reject-referral', async function(req, res) {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var orderCode = req.body.orderCode;
+    var db = await getDB();
+    var order = (db.orders || []).find(function(o) { return o.orderCode === orderCode; });
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    if (order.referralStatus !== 'pending') return res.status(400).json({ error: 'Referral sudah diproses' });
+    
+    order.referralStatus = 'rejected';
+    order.referralRewarded = false;
+    
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, message: 'Referral ditolak!' });
+});
+
+// ========== ADMIN AUTH ==========
 app.get('/api/admin/check-ip', async function(req, res) { try { var db = await getDB(); var ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/set-ip', async function(req, res) { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var ip = getClientIP(req); var ips = db.adminIPs || []; if (db.adminIP && !ips.includes(db.adminIP)) ips.push(db.adminIP); if (!ips.includes(ip)) ips.push(ip); var c = { products: db.products || [], orders: db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: ip, adminIPs: ips, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); var r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Set IP', content: b, sha: db.sha }) }); if (r.ok) { var d = await r.json(); dbCache = { ...c, sha: d.content.sha }; dbCacheTime = Date.now(); } res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/reset-ip', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var c = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
@@ -467,7 +417,7 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
             else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
             freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
             
-            // ✅ KOMISI REFERRAL
+            // ✅ PROSES REFERRAL → JADI PENDING APPROVAL
             await processReferralReward(freshDB, freshOrder, req.headers.cookie);
             
             for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
@@ -479,7 +429,7 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
 
 app.get('/api/products', async function(req, res) { var db = await getDB(); res.json({ success: true, products: db.products || [] }); });
 
-// ✅ CREATE ORDER — SIMPAN REFERRAL DARI COOKIE
+// ✅ CREATE ORDER — SIMPAN REFERRAL
 app.post('/api/create-order', async function(req, res) {
     var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId;
     if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
@@ -492,7 +442,7 @@ app.post('/api/create-order', async function(req, res) {
         productId: p.id, productName: p.name, productCode: p.itemContent,
         price: p.price, totalAmount: req.body.totalAmount || p.price,
         customerName: sanitize(customerName || 'Guest'),
-        referralCode: getRefFromCookie(req.headers.cookie) || null, // ✅ SIMPAN REFERRAL
+        referralCode: getRefFromCookie(req.headers.cookie) || null,
         status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt,
         referralRewarded: false, createdAt: new Date().toISOString()
     });
@@ -500,7 +450,7 @@ app.post('/api/create-order', async function(req, res) {
     res.json({ success: true, orderCode: oc });
 });
 
-// ✅ CREATE CART ORDER — SIMPAN REFERRAL DARI COOKIE
+// ✅ CREATE CART ORDER — SIMPAN REFERRAL
 app.post('/api/create-cart-order', async function(req, res) {
     var items = req.body.items;
     if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' });
@@ -514,13 +464,12 @@ app.post('/api/create-cart-order', async function(req, res) {
             oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; });
             var oc = crypto.randomBytes(16).toString('hex');
             db.orders.unshift({
-                id: Date.now(), orderCode: oc, qrisId: req.body.qrisId,
-                items: oi,
+                id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, items: oi,
                 productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '),
                 productCode: oi.map(function(x) { return x.productCode; }).join('\n'),
                 price: cartTotal, totalAmount: finalAmount, discountAmount: discount,
                 customerName: sanitize(req.body.customerName || 'Guest'),
-                referralCode: getRefFromCookie(req.headers.cookie) || null, // ✅ SIMPAN REFERRAL
+                referralCode: getRefFromCookie(req.headers.cookie) || null,
                 status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt,
                 referralRewarded: false, createdAt: new Date().toISOString()
             });
@@ -533,7 +482,7 @@ app.post('/api/create-cart-order', async function(req, res) {
 
 app.get('/api/gacha/info', async function(req, res) { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0; }); var tv = ap.reduce(function(s, p) { return s + p.price; }, 0); res.json({ success: true, gachaPrice: ap.length > 0 ? Math.floor(tv / ap.length * 0.7) : 0, totalProducts: ap.length, jackpotChance: '20%' }); });
 app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
-app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
+app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var pendingRef = (db.orders || []).filter(function(o) { return o.referralStatus === 'pending'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, pendingReferrals: pendingRef.length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
 app.get('/api/admin/products', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, products: (await getDB()).products || [] }); });
 app.get('/api/admin/orders', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, orders: (await getDB()).orders || [] }); });
 app.post('/api/admin/product', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, itemContent = req.body.itemContent, price = parseInt(req.body.price); if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); db.products.push({ id: Date.now(), name: name, description: req.body.description || '', price: price, stock: parseInt(req.body.stock) || 1, itemType: req.body.itemType || 'text', itemContent: itemContent, bonusType: req.body.bonusType || 'none', bonusContent: req.body.bonusContent || '', createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
