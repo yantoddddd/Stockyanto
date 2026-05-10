@@ -331,6 +331,7 @@ app.post('/api/user/change-password', async function(req, res) {
     res.json({ success: true });
 });
 
+// ========== SYNC ALL REFERRAL BALANCES ==========
 app.get('/api/sync-all-referral-balances', async function(req, res) {
     if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
     
@@ -338,67 +339,43 @@ app.get('/api/sync-all-referral-balances', async function(req, res) {
     var updated = 0;
     
     (db.users || []).forEach(function(user) {
-        var referralCode = user.referralCode;
-        var currentBalance = user.discountBalance || 0;
+        var orderCount = 0;
         
-        // Ambil semua order PAID dengan referralCode user ini, urutkan by waktu
-        var userOrders = (db.orders || []).filter(function(order) {
-            return order.status === 'paid' && order.referralCode === referralCode;
-        }).sort(function(a, b) {
-            return new Date(a.paidAt || a.createdAt) - new Date(b.paidAt || b.createdAt);
-        });
-        
-        // Ambil semua WD sukses user ini, urutkan by waktu
-        var userWDs = (db.withdrawals || []).filter(function(wd) {
-            return wd.userId === user.id && wd.status === 'success';
-        }).sort(function(a, b) {
-            return new Date(a.processedAt || a.createdAt) - new Date(b.processedAt || b.createdAt);
-        });
-        
-        var orderCount = userOrders.length;
-        var totalEarned = orderCount * 500;
-        
-        // Hitung saldo berdasarkan kronologi: 
-        // Setiap kali WD, kurangi dari saldo yang tersedia saat itu
-        var simulatedBalance = 0;
-        var wdIndex = 0;
-        
-        for (var i = 0; i < userOrders.length; i++) {
-            simulatedBalance += 500; // Tambah Rp 500 dari order ini
-            
-            // Proses semua WD yang terjadi SEBELUM order berikutnya
-            var nextOrderTime = i + 1 < userOrders.length 
-                ? new Date(userOrders[i + 1].paidAt || userOrders[i + 1].createdAt).getTime() 
-                : Infinity;
-            
-            while (wdIndex < userWDs.length) {
-                var wdTime = new Date(userWDs[wdIndex].processedAt || userWDs[wdIndex].createdAt).getTime();
-                if (wdTime <= nextOrderTime) {
-                    simulatedBalance -= userWDs[wdIndex].amount || 0;
-                    wdIndex++;
-                } else {
-                    break;
-                }
+        // Hitung order PAID dengan referralCode user ini
+        (db.orders || []).forEach(function(order) {
+            if (order.status === 'paid' && order.referralCode === user.referralCode) {
+                orderCount++;
             }
-        }
+        });
         
-        // Sisa WD yang terjadi setelah order terakhir
-        while (wdIndex < userWDs.length) {
-            simulatedBalance -= userWDs[wdIndex].amount || 0;
-            wdIndex++;
-        }
+        // Hitung total WD SUCCESS
+        var totalWD = 0;
+        (db.withdrawals || []).forEach(function(wd) {
+            if (wd.userId === user.id && wd.status === 'success') {
+                totalWD += wd.amount || 0;
+            }
+        });
         
-        if (simulatedBalance < 0) simulatedBalance = 0;
+        var correctBalance = (orderCount * 500) - totalWD;
+        if (correctBalance < 0) correctBalance = 0;
         
-        if (user.discountBalance !== simulatedBalance || user.referralCount !== orderCount) {
-            user.referralCount = orderCount;
-            user.discountBalance = simulatedBalance;
-            updated++;
-        }
+        user.referralCount = orderCount;
+        user.discountBalance = correctBalance;
+        updated++;
     });
     
-    if (updated > 0) await setDB(null, db.orders, db.sha);
+    await setDB(null, db.orders, db.sha);
     res.json({ success: true, updatedCount: updated });
+});
+
+// ========== HAPUS SEMUA WD ==========
+app.get('/api/delete-all-withdrawals', async function(req, res) {
+    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var db = await getDB();
+    var count = (db.withdrawals || []).length;
+    db.withdrawals = [];
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, deletedCount: count, message: count + ' WD berhasil dihapus' });
 });
 
 // ========== PING: TRIGGER REFERRAL MANUAL ==========
