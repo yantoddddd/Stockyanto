@@ -149,7 +149,7 @@ function getReferralFromDB(db, customerName) {
     return null;
 }
 
-// ✅ FUNGSI REWARD REFERRAL — UBAH JADI PENDING APPROVAL
+// ✅ FUNGSI REFERRAL — HANYA TANDAI PENDING, TIDAK NAMBAH SALDO
 async function processReferralReward(db, order, cookieHeader) {
     if (!order || order.referralRewarded || order.referralStatus) return;
     
@@ -162,7 +162,7 @@ async function processReferralReward(db, order, cookieHeader) {
     var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
     if (!referrer) return;
     
-    // ✅ Tandai sebagai PENDING APPROVAL
+    // ✅ HANYA TANDAI PENDING, JANGAN NAMBAH SALDO
     order.referralStatus = 'pending';
     order.referralRewarded = false;
     order.referrerName = referrer.name;
@@ -329,30 +329,6 @@ app.post('/api/user/withdraw', async function(req, res) {
     res.json({ success: true });
 });
 
-// ========== RESET IP VIA GET (BUAT DARURAT) ==========
-app.get('/api/reset-ip-now', async function(req, res) {
-    var db = await getDB();
-    db.adminIP = null;
-    db.adminIPs = [];
-    var content = {
-        products: db.products, orders: db.orders, users: db.users,
-        withdrawals: db.withdrawals, deposits: db.deposits,
-        referralVisitors: db.referralVisitors,
-        adminIP: null, adminIPs: [],
-        maintenance: db.maintenance, encrypted: true,
-        updatedAt: new Date().toISOString()
-    };
-    var enc = encrypt(JSON.stringify(content));
-    var b = Buffer.from(enc).toString('base64');
-    await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, {
-        method: 'PUT',
-        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha })
-    });
-    dbCache = null;
-    res.json({ success: true, message: 'IP Admin berhasil di-reset! Silakan login ulang di /admin' });
-});
-
 app.get('/api/user/withdrawals', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Login dulu' });
@@ -371,7 +347,7 @@ app.get('/api/admin/pending-referrals', async function(req, res) {
     res.json({ success: true, pending: pending });
 });
 
-// ========== ADMIN: APPROVE REFERRAL ==========
+// ========== ADMIN: APPROVE REFERRAL (TAMBAH SALDO) ==========
 app.post('/api/admin/approve-referral', async function(req, res) {
     if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
     var orderCode = req.body.orderCode;
@@ -409,6 +385,30 @@ app.post('/api/admin/reject-referral', async function(req, res) {
     res.json({ success: true, message: 'Referral ditolak!' });
 });
 
+// ========== RESET IP DARURAT ==========
+app.get('/api/reset-ip-now', async function(req, res) {
+    var db = await getDB();
+    db.adminIP = null;
+    db.adminIPs = [];
+    var content = {
+        products: db.products, orders: db.orders, users: db.users,
+        withdrawals: db.withdrawals, deposits: db.deposits,
+        referralVisitors: db.referralVisitors,
+        adminIP: null, adminIPs: [],
+        maintenance: db.maintenance, encrypted: true,
+        updatedAt: new Date().toISOString()
+    };
+    var enc = encrypt(JSON.stringify(content));
+    var b = Buffer.from(enc).toString('base64');
+    await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha })
+    });
+    dbCache = null;
+    res.json({ success: true, message: 'IP Admin berhasil di-reset! Silakan login ulang di /admin' });
+});
+
 // ========== ADMIN AUTH ==========
 app.get('/api/admin/check-ip', async function(req, res) { try { var db = await getDB(); var ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch(e) { res.status(500).json({ error: e.message }); } });
 app.post('/api/admin/set-ip', async function(req, res) { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var ip = getClientIP(req); var ips = db.adminIPs || []; if (db.adminIP && !ips.includes(db.adminIP)) ips.push(db.adminIP); if (!ips.includes(ip)) ips.push(ip); var c = { products: db.products || [], orders: db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: ip, adminIPs: ips, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); var r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Set IP', content: b, sha: db.sha }) }); if (r.ok) { var d = await r.json(); dbCache = { ...c, sha: d.content.sha }; dbCacheTime = Date.now(); } res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
@@ -441,7 +441,7 @@ app.get('/api/check-payment/:orderCode', async function(req, res) {
             else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; }
             freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString();
             
-            // ✅ PROSES REFERRAL → JADI PENDING APPROVAL
+            // ✅ TANDAI REFERRAL PENDING (TIDAK LANGSUNG NAMBAH SALDO)
             await processReferralReward(freshDB, freshOrder, req.headers.cookie);
             
             for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } }
