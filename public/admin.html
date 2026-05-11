@@ -96,7 +96,6 @@
         .wd-status.pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
         .wd-status.success { background: rgba(16,185,129,0.2); color: #10b981; }
         .wd-status.failed { background: rgba(239,68,68,0.2); color: #ef4444; }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
         @media (max-width: 640px) { .item { flex-direction: column; align-items: flex-start; } .item-info { width: 100%; } .item-actions { width: 100%; justify-content: flex-end; } .qris-generator-wrap { flex-direction: column; } }
     </style>
 </head>
@@ -113,7 +112,6 @@
 
     <section class="card" id="loginCard" aria-label="Form login admin">
         <h1><i class="fas fa-user-shield" aria-hidden="true"></i> Admin Panel</h1>
-        <label for="adminKeyInput" class="sr-only">Kunci Admin</label>
         <input type="password" id="adminKeyInput" placeholder="Kunci Admin" autocomplete="current-password">
         <button type="button" onclick="doLogin()"><i class="fas fa-key" aria-hidden="true"></i> Login</button>
         <div id="loginError" role="alert"></div>
@@ -137,192 +135,50 @@
         </nav>
         <div class="results-info" id="resultsInfo" aria-live="polite"></div>
 
-        <!-- PANEL: ORDERS -->
-        <section id="panel-orders" aria-label="Panel riwayat order">
-            <div class="card">
-                <h2><i class="fas fa-history" aria-hidden="true"></i> Riwayat Order</h2>
-                <div id="ordersList" role="list" aria-label="Daftar order"></div>
-                <div class="load-more-wrap" id="ordersLoadMore" style="display:none;">
-                    <button type="button" class="btn-load-more" onclick="loadMoreOrders()">Tampilkan Lebih Banyak</button>
-                </div>
-            </div>
-        </section>
+        <!-- PANEL ORDERS -->
+        <section id="panel-orders" aria-label="Panel riwayat order"><div class="card"><h2><i class="fas fa-history"></i> Riwayat Order</h2><div id="ordersList"></div><div class="load-more-wrap" id="ordersLoadMore" style="display:none;"><button class="btn-load-more" onclick="loadMoreOrders()">Tampilkan Lebih Banyak</button></div></div></section>
 
-        <!-- PANEL: PRODUCTS -->
+        <!-- PANEL PRODUCTS -->
         <section id="panel-products" class="hidden" aria-label="Panel manajemen produk">
-            <div class="card">
-                <h2><i class="fas fa-plus-circle" aria-hidden="true"></i> Tambah Produk</h2>
-                <label for="productName" class="sr-only">Nama Produk</label>
-                <input type="text" id="productName" placeholder="Nama Produk">
-                <label for="productDesc" class="sr-only">Deskripsi Produk</label>
-                <textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea>
-                <label for="productPrice" class="sr-only">Harga</label>
-                <input type="number" id="productPrice" placeholder="Harga">
-                <label for="productStock" class="sr-only">Stok</label>
-                <input type="number" id="productStock" placeholder="Stok">
-                <label for="itemType" class="sr-only">Tipe Item</label>
-                <select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-                <div id="itemTextField"><label for="itemText" class="sr-only">Konten Teks</label><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div>
-                <div id="itemLinkField" class="hidden"><label for="itemLink" class="sr-only">Link</label><input type="url" id="itemLink" placeholder="https://..."></div>
-                <div id="itemHtmlField" class="hidden"><label for="itemHtml" class="sr-only">HTML</label><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
-                <label for="bonusType" class="sr-only">Tipe Bonus</label>
-                <select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-                <div id="bonusTextField" class="hidden"><label for="bonusText" class="sr-only">Bonus Teks</label><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-                <div id="bonusLinkField" class="hidden"><label for="bonusLink" class="sr-only">Bonus Link</label><input type="url" id="bonusLink" placeholder="https://..."></div>
-                <button type="button" onclick="addProduct()"><i class="fas fa-save" aria-hidden="true"></i> Simpan Produk</button>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-boxes" aria-hidden="true"></i> Daftar Produk</h2>
-                <div id="productsList" role="list" aria-label="Daftar produk"></div>
-                <div class="load-more-wrap" id="productsLoadMore" style="display:none;">
-                    <button type="button" class="btn-load-more" onclick="loadMoreProducts()">Tampilkan Lebih Banyak</button>
-                </div>
-            </div>
+            <div class="card"><h2><i class="fas fa-plus-circle"></i> Tambah Produk</h2><input type="text" id="productName" placeholder="Nama Produk"><textarea id="productDesc" rows="2" placeholder="Deskripsi Produk (opsional)"></textarea><input type="number" id="productPrice" placeholder="Harga"><input type="number" id="productStock" placeholder="Stok"><select id="itemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select><div id="itemTextField"><textarea id="itemText" rows="5" placeholder="Konten teks"></textarea></div><div id="itemLinkField" class="hidden"><input type="url" id="itemLink" placeholder="https://..."></div><div id="itemHtmlField" class="hidden"><textarea id="itemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div><select id="bonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select><div id="bonusTextField" class="hidden"><textarea id="bonusText" rows="2" placeholder="Teks bonus"></textarea></div><div id="bonusLinkField" class="hidden"><input type="url" id="bonusLink" placeholder="https://..."></div><button onclick="addProduct()"><i class="fas fa-save"></i> Simpan Produk</button></div>
+            <div class="card"><h2><i class="fas fa-boxes"></i> Daftar Produk</h2><div id="productsList"></div><div class="load-more-wrap" id="productsLoadMore" style="display:none;"><button class="btn-load-more" onclick="loadMoreProducts()">Tampilkan Lebih Banyak</button></div></div>
         </section>
 
-        <!-- PANEL: REF APPROVAL -->
-        <section id="panel-refapproval" class="hidden" aria-label="Panel Approve Referral">
-            <div class="card">
-                <h2><i class="fas fa-check-circle" aria-hidden="true"></i> Pending Referral Approval</h2>
-                <div id="pendingReferralsList" role="list" aria-label="Daftar referral pending"></div>
-            </div>
-        </section>
+        <!-- PANEL REF APPROVAL -->
+        <section id="panel-refapproval" class="hidden" aria-label="Panel Approve Referral"><div class="card"><h2><i class="fas fa-check-circle"></i> Pending Referral Approval</h2><div id="pendingReferralsList"></div></div></section>
 
-        <!-- PANEL: QRIS -->
+        <!-- PANEL QRIS -->
         <section id="panel-qris" class="hidden" aria-label="Panel QRIS">
-            <div class="card">
-                <h2><i class="fas fa-qrcode" aria-hidden="true"></i> Generate QRIS</h2>
-                <div class="qris-generator-wrap">
-                    <label for="qrisAmount" class="sr-only">Jumlah QRIS</label>
-                    <input type="number" id="qrisAmount" placeholder="Jumlah (Rp)">
-                    <button type="button" class="btn-success" onclick="generateQRIS()"><i class="fas fa-qrcode" aria-hidden="true"></i> Generate</button>
-                </div>
-                <div id="qrisResult" style="margin-top:12px;text-align:center;" aria-live="polite"></div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-list" aria-hidden="true"></i> QRIS Aktif (Pending)</h2>
-                <div class="qris-active-list custom-scrollbar" id="qrisActiveList" aria-label="Daftar QRIS pending"><div style="text-align:center;color:#64748b;">Memuat...</div></div>
-            </div>
+            <div class="card"><h2><i class="fas fa-qrcode"></i> Generate QRIS</h2><div class="qris-generator-wrap"><input type="number" id="qrisAmount" placeholder="Jumlah (Rp)"><button class="btn-success" onclick="generateQRIS()"><i class="fas fa-qrcode"></i> Generate</button></div><div id="qrisResult" style="margin-top:12px;text-align:center;"></div></div>
+            <div class="card"><h2><i class="fas fa-list"></i> QRIS Aktif (Pending)</h2><div class="qris-active-list custom-scrollbar" id="qrisActiveList"><div style="text-align:center;color:#64748b;">Memuat...</div></div></div>
         </section>
 
-        <!-- PANEL: WITHDRAWALS -->
-        <section id="panel-withdrawals" class="hidden" aria-label="Panel Withdrawals">
-            <div class="card">
-                <h2><i class="fas fa-wallet" aria-hidden="true"></i> Daftar Withdraw (WD)</h2>
-                <div id="withdrawalsList" role="list" aria-label="Daftar WD"></div>
-            </div>
-        </section>
+        <!-- PANEL WITHDRAWALS -->
+        <section id="panel-withdrawals" class="hidden" aria-label="Panel Withdrawals"><div class="card"><h2><i class="fas fa-wallet"></i> Daftar Withdraw (WD)</h2><div id="withdrawalsList"></div></div></section>
 
-        <!-- PANEL: MENU -->
+        <!-- PANEL MENU -->
         <section id="panel-menu" class="hidden" aria-label="Panel menu admin">
-            <div class="card">
-                <h2><i class="fas fa-chart-line" aria-hidden="true"></i> Statistik</h2>
-                <div class="stats-grid" id="statsGrid" aria-label="Statistik ringkasan"></div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-plug" aria-hidden="true"></i> Ping Test</h2>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button type="button" class="btn-outline" onclick="pingTest('github')" style="flex:1;justify-content:center;"><i class="fab fa-github" aria-hidden="true"></i> GitHub</button>
-                    <button type="button" class="btn-outline" onclick="pingTest('qrispy')" style="flex:1;justify-content:center;"><i class="fas fa-qrcode" aria-hidden="true"></i> Qrispy</button>
-                    <button type="button" class="btn-outline" onclick="pingTest('telegram')" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane" aria-hidden="true"></i> Tele</button>
-                    <button type="button" class="btn-outline" onclick="pingTest('web')" style="flex:1;justify-content:center;"><i class="fas fa-globe" aria-hidden="true"></i> Web</button>
-                </div>
-                <div class="ping-status" id="pingStatus" aria-label="Status ping">
-                    <span>GitHub: <span id="pingGithub">-</span></span>
-                    <span>Qrispy: <span id="pingQrispy">-</span></span>
-                    <span>Telegram: <span id="pingTelegram">-</span></span>
-                    <span>Web: <span id="pingWeb">-</span></span>
-                </div>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-coins"></i> Tambah Saldo Manual</h2>
-                <p style="font-size:0.7rem;color:#94a3b8;margin-bottom:12px;">Tambah saldo ke akun berdasarkan kode referral</p>
-                <input type="text" id="addBalanceCode" placeholder="Kode Referral (contoh: YANT79B854)">
-                <input type="number" id="addBalanceAmount" placeholder="Jumlah (default Rp 500)" value="500">
-                <button onclick="addBalance()"><i class="fas fa-plus-circle"></i> Tambah Saldo</button>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-tools" aria-hidden="true"></i> Maintenance Mode</h2>
-                <button type="button" id="maintToggleBtn" onclick="toggleMaintenance()" class="btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-power-off" aria-hidden="true"></i> Aktifkan Maintenance</button>
-            </div>
-            <div class="card">
-                <h2><i class="fas fa-bullhorn" aria-hidden="true"></i> Broadcast</h2>
-                <textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea>
-                <button type="button" onclick="sendBroadcast()"><i class="fas fa-paper-plane" aria-hidden="true"></i> Kirim Broadcast</button>
-            </div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                <button type="button" class="btn-warning" onclick="resetOrders()" style="flex:1;"><i class="fas fa-trash-alt" aria-hidden="true"></i> Reset Pending</button>
-                <button type="button" class="btn-success" onclick="backupData()" style="flex:1;"><i class="fas fa-database" aria-hidden="true"></i> Backup</button>
-            </div>
+            <div class="card"><h2><i class="fas fa-chart-line"></i> Statistik</h2><div class="stats-grid" id="statsGrid"></div></div>
+            <div class="card"><h2><i class="fas fa-plug"></i> Ping Test</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-outline" onclick="pingTest('github')" style="flex:1;justify-content:center;"><i class="fab fa-github"></i> GitHub</button><button class="btn-outline" onclick="pingTest('qrispy')" style="flex:1;justify-content:center;"><i class="fas fa-qrcode"></i> Qrispy</button><button class="btn-outline" onclick="pingTest('telegram')" style="flex:1;justify-content:center;"><i class="fab fa-telegram-plane"></i> Tele</button><button class="btn-outline" onclick="pingTest('web')" style="flex:1;justify-content:center;"><i class="fas fa-globe"></i> Web</button></div><div class="ping-status" id="pingStatus"><span>GitHub: <span id="pingGithub">-</span></span><span>Qrispy: <span id="pingQrispy">-</span></span><span>Telegram: <span id="pingTelegram">-</span></span><span>Web: <span id="pingWeb">-</span></span></div></div>
+            <div class="card"><h2><i class="fas fa-coins"></i> Tambah Saldo Manual</h2><p style="font-size:0.7rem;color:#94a3b8;margin-bottom:12px;">Tambah saldo ke akun berdasarkan kode referral</p><input type="text" id="addBalanceCode" placeholder="Kode Referral (contoh: YANT79B854)"><input type="number" id="addBalanceAmount" placeholder="Jumlah (default Rp 500)" value="500"><button onclick="addBalance()"><i class="fas fa-plus-circle"></i> Tambah Saldo</button></div>
+            <div class="card"><h2><i class="fas fa-tools"></i> Maintenance Mode</h2><button type="button" id="maintToggleBtn" onclick="toggleMaintenance()" class="btn-warning" style="width:100%;justify-content:center;"><i class="fas fa-power-off"></i> Aktifkan Maintenance</button></div>
+            <div class="card"><h2><i class="fas fa-bullhorn"></i> Broadcast</h2><textarea id="broadcastMessage" rows="3" placeholder="Tulis pesan broadcast..."></textarea><button onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Kirim Broadcast</button></div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;"><button class="btn-warning" onclick="resetOrders()" style="flex:1;"><i class="fas fa-trash-alt"></i> Reset Pending</button><button class="btn-success" onclick="backupData()" style="flex:1;"><i class="fas fa-database"></i> Backup</button></div>
         </section>
     </div>
 </div>
 
 <!-- MODALS -->
-<div id="detailModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target===this) this.style.display='none'">
-    <div class="modal-content">
-        <h3 id="detailModalTitle"><i class="fas fa-info-circle" aria-hidden="true"></i> Detail Order</h3>
-        <div id="detailContent"></div>
-        <div class="modal-buttons">
-            <button type="button" class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt" aria-hidden="true"></i> Hapus Order</button>
-            <button type="button" class="btn-outline" onclick="document.getElementById('detailModal').style.display='none'"><i class="fas fa-times" aria-hidden="true"></i> Tutup</button>
-        </div>
-    </div>
-</div>
+<div id="detailModal" class="modal" onclick="if(event.target===this) this.style.display='none'"><div class="modal-content"><h3 id="detailModalTitle"><i class="fas fa-info-circle"></i> Detail Order</h3><div id="detailContent"></div><div class="modal-buttons"><button class="btn-danger" onclick="deleteOrderFromDetail()"><i class="fas fa-trash-alt"></i> Hapus Order</button><button class="btn-outline" onclick="document.getElementById('detailModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button></div></div></div>
+<div id="qrisDetailModal" class="modal" onclick="if(event.target===this) this.style.display='none'"><div class="modal-content"><h3 id="qrisDetailModalTitle"><i class="fas fa-qrcode"></i> Detail QRIS</h3><div id="qrisDetailContent"></div><div class="modal-buttons"><button class="btn-danger" onclick="cancelQRISFromDetail()"><i class="fas fa-ban"></i> Batal</button><button class="btn-outline" onclick="document.getElementById('qrisDetailModal').style.display='none'"><i class="fas fa-times"></i> Tutup</button></div></div></div>
+<div id="editModal" class="modal" onclick="if(event.target===this) this.style.display='none'"><div class="modal-content"><h3 id="editModalTitle"><i class="fas fa-edit"></i> Edit Produk</h3><input type="hidden" id="editProductId"><input type="text" id="editProductName" placeholder="Nama Produk"><textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea><input type="number" id="editProductPrice" placeholder="Harga"><input type="number" id="editProductStock" placeholder="Stok"><select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select><div id="editItemTextField"><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div><div id="editItemLinkField" class="hidden"><input type="url" id="editItemLink" placeholder="https://..."></div><div id="editItemHtmlField" class="hidden"><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div><select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select><div id="editBonusTextField" class="hidden"><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div><div id="editBonusLinkField" class="hidden"><input type="url" id="editBonusLink" placeholder="https://..."></div><div class="modal-buttons"><button onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save"></i> Simpan</button><button onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times"></i> Batal</button></div></div></div>
+<div id="previewModal" class="modal" onclick="if(event.target===this) this.style.display='none'"><div class="modal-content preview-content"><h3 id="previewModalTitle"><i class="fas fa-eye"></i> Preview: <span id="previewName"></span></h3><div id="previewBody"></div><button onclick="document.getElementById('previewModal').style.display='none'" style="background:#475569;width:100%;justify-content:center;margin-top:12px;"><i class="fas fa-times"></i> Tutup</button></div></div>
 
-<div id="qrisDetailModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target===this) this.style.display='none'">
-    <div class="modal-content">
-        <h3 id="qrisDetailModalTitle"><i class="fas fa-qrcode" aria-hidden="true"></i> Detail QRIS</h3>
-        <div id="qrisDetailContent"></div>
-        <div class="modal-buttons">
-            <button type="button" class="btn-danger" onclick="cancelQRISFromDetail()"><i class="fas fa-ban" aria-hidden="true"></i> Batal</button>
-            <button type="button" class="btn-outline" onclick="document.getElementById('qrisDetailModal').style.display='none'"><i class="fas fa-times" aria-hidden="true"></i> Tutup</button>
-        </div>
-    </div>
-</div>
-
-<div id="editModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target===this) this.style.display='none'">
-    <div class="modal-content">
-        <h3 id="editModalTitle"><i class="fas fa-edit" aria-hidden="true"></i> Edit Produk</h3>
-        <input type="hidden" id="editProductId">
-        <label for="editProductName" class="sr-only">Nama Produk</label>
-        <input type="text" id="editProductName" placeholder="Nama Produk">
-        <label for="editProductDesc" class="sr-only">Deskripsi Produk</label>
-        <textarea id="editProductDesc" rows="2" placeholder="Deskripsi Produk"></textarea>
-        <label for="editProductPrice" class="sr-only">Harga</label>
-        <input type="number" id="editProductPrice" placeholder="Harga">
-        <label for="editProductStock" class="sr-only">Stok</label>
-        <input type="number" id="editProductStock" placeholder="Stok">
-        <label for="editItemType" class="sr-only">Tipe Item</label>
-        <select id="editItemType"><option value="text">Teks</option><option value="link">Link</option><option value="html">HTML</option></select>
-        <div id="editItemTextField"><label for="editItemText" class="sr-only">Konten Teks</label><textarea id="editItemText" rows="5" placeholder="Konten teks"></textarea></div>
-        <div id="editItemLinkField" class="hidden"><label for="editItemLink" class="sr-only">Link</label><input type="url" id="editItemLink" placeholder="https://..."></div>
-        <div id="editItemHtmlField" class="hidden"><label for="editItemHtml" class="sr-only">HTML</label><textarea id="editItemHtml" rows="5" placeholder="<div>HTML...</div>"></textarea></div>
-        <label for="editBonusType" class="sr-only">Tipe Bonus</label>
-        <select id="editBonusType"><option value="none">Tidak ada bonus</option><option value="text">Bonus Teks</option><option value="link">Bonus Link</option></select>
-        <div id="editBonusTextField" class="hidden"><label for="editBonusText" class="sr-only">Bonus Teks</label><textarea id="editBonusText" rows="2" placeholder="Teks bonus"></textarea></div>
-        <div id="editBonusLinkField" class="hidden"><label for="editBonusLink" class="sr-only">Bonus Link</label><input type="url" id="editBonusLink" placeholder="https://..."></div>
-        <div class="modal-buttons">
-            <button type="button" onclick="saveEditProduct()" style="background:#10b981;"><i class="fas fa-save" aria-hidden="true"></i> Simpan</button>
-            <button type="button" onclick="closeEditModal()" style="background:#475569;"><i class="fas fa-times" aria-hidden="true"></i> Batal</button>
-        </div>
-    </div>
-</div>
-
-<div id="previewModal" class="modal" role="dialog" aria-modal="true" onclick="if(event.target===this) this.style.display='none'">
-    <div class="modal-content preview-content">
-        <h3 id="previewModalTitle"><i class="fas fa-eye" aria-hidden="true"></i> Preview: <span id="previewName"></span></h3>
-        <div id="previewBody"></div>
-        <button type="button" onclick="document.getElementById('previewModal').style.display='none'" style="background:#475569;width:100%;justify-content:center;margin-top:12px;"><i class="fas fa-times" aria-hidden="true"></i> Tutup</button>
-    </div>
-</div>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="toast" class="toast"></div>
 
 <script>
     const QRISPY_TOKEN = 'cki_IBpAYezwDHbfrMuENZMFvFw5mI94M11dAT146N0Ar4HrOWKi';
     const QRISPY_API_URL = 'https://api.qrispy.id';
-
     let adminPassword = '';
     let currentEditId = null;
     let currentDetailId = null;
@@ -330,110 +186,25 @@
     let currentIP = '';
     let allOrders = [], allProducts = [], allQrisPending = [], allWithdrawals = [], allPendingReferrals = [];
     let orderDisplay = 10, productDisplay = 10;
-    let lastOrderCount = 0;
     let maintenanceMode = false;
     let qrisCounter = 1;
 
-    function toast(msg, isError) {
-        var t = document.getElementById('toast');
-        t.innerHTML = '<i class="fas ' + (isError ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg;
-        t.style.background = isError ? '#b91c1c' : '#1e293b';
-        t.style.opacity = '1';
-        setTimeout(function() { t.style.opacity = '0'; }, 3000);
-    }
-
+    function toast(msg, isErr) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isErr ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isErr ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function() { t.style.opacity = '0'; }, 3000); }
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
     async function getMyIP() { try { var res = await fetch('https://api.ipify.org?format=json'); return (await res.json()).ip; } catch(e) { return null; } }
     function goToUnauthorized() { window.location.href = '/unauthorized'; }
 
-    function showLoginForm() { 
-        document.getElementById('loginCard').style.display='block'; 
-        document.getElementById('adminContent').style.display='none'; 
-        document.getElementById('mainContent').style.display='block';
-        document.getElementById('adminSplash').classList.add('hidden');
-    }
+    function showLoginForm() { document.getElementById('loginCard').style.display='block'; document.getElementById('adminContent').style.display='none'; document.getElementById('mainContent').style.display='block'; document.getElementById('adminSplash').classList.add('hidden'); }
+    function showAdminPanel() { document.getElementById('loginCard').style.display='none'; document.getElementById('adminContent').style.display='block'; document.getElementById('currentIP').textContent=currentIP||'-'; document.getElementById('ipStatus').textContent='Admin'; document.getElementById('ipStatus').style.color='#10b981'; loadAll(); var hash = window.location.hash.replace('#','') || 'orders'; switchFilter(hash, document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]') || document.querySelector('.filter-chip')); checkMaintenanceStatus(); startAutoRefresh(); }
 
-    function showAdminPanel() { 
-        document.getElementById('loginCard').style.display='none'; 
-        document.getElementById('adminContent').style.display='block'; 
-        document.getElementById('currentIP').textContent=currentIP||'-'; 
-        document.getElementById('ipStatus').textContent='Admin'; 
-        document.getElementById('ipStatus').style.color='#10b981'; 
-        loadAll(); 
-        var hash = window.location.hash.replace('#','') || 'orders';
-        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
-        switchFilter(hash, chip || document.querySelector('.filter-chip'));
-        checkMaintenanceStatus(); 
-        startAutoRefresh(); 
-    }
+    function switchFilter(filter, el) { window.location.hash = filter; document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); c.setAttribute('aria-pressed','false'); }); if (el) { el.classList.add('active'); el.setAttribute('aria-pressed','true'); } ['orders','products','refapproval','qris','withdrawals','menu'].forEach(function(p) { document.getElementById('panel-'+p).classList.add('hidden'); }); document.getElementById('panel-'+filter).classList.remove('hidden'); if (filter === 'refapproval') loadPendingReferrals(); updateResultsInfo(); }
+    window.addEventListener('hashchange', function() { var hash = window.location.hash.replace('#','') || 'orders'; var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]'); if (chip) switchFilter(hash, chip); });
 
-    function switchFilter(filter, el) {
-        window.location.hash = filter;
-        document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); c.setAttribute('aria-pressed','false'); });
-        if (el) { el.classList.add('active'); el.setAttribute('aria-pressed','true'); }
-        document.getElementById('panel-orders').classList.add('hidden');
-        document.getElementById('panel-products').classList.add('hidden');
-        document.getElementById('panel-refapproval').classList.add('hidden');
-        document.getElementById('panel-qris').classList.add('hidden');
-        document.getElementById('panel-withdrawals').classList.add('hidden');
-        document.getElementById('panel-menu').classList.add('hidden');
-        document.getElementById('panel-'+filter).classList.remove('hidden');
-        if (filter === 'refapproval') { loadPendingReferrals(); }
-        updateResultsInfo();
-    }
-
-    window.addEventListener('hashchange', function() {
-        var hash = window.location.hash.replace('#','') || 'orders';
-        var chip = document.querySelector('.filter-chip[onclick*="switchFilter(\''+hash+'\'"]');
-        if (chip) switchFilter(hash, chip);
-    });
-
-    function updateResultsInfo() {
-        var total=0, showing=0;
-        if (!document.getElementById('panel-orders').classList.contains('hidden')) { total=allOrders.length; showing=Math.min(orderDisplay,total); }
-        else if (!document.getElementById('panel-products').classList.contains('hidden')) { total=allProducts.length; showing=Math.min(productDisplay,total); }
-        else if (!document.getElementById('panel-qris').classList.contains('hidden')) { total=allQrisPending.length; showing=total; }
-        else if (!document.getElementById('panel-withdrawals').classList.contains('hidden')) { total=allWithdrawals.length; showing=total; }
-        else if (!document.getElementById('panel-refapproval').classList.contains('hidden')) { total=allPendingReferrals.length; showing=total; }
-        else { document.getElementById('resultsInfo').textContent=''; return; }
-        document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total;
-    }
+    function updateResultsInfo() { var total=0, showing=0; if (!document.getElementById('panel-orders').classList.contains('hidden')) { total=allOrders.length; showing=Math.min(orderDisplay,total); } else if (!document.getElementById('panel-products').classList.contains('hidden')) { total=allProducts.length; showing=Math.min(productDisplay,total); } else if (!document.getElementById('panel-qris').classList.contains('hidden')) { total=allQrisPending.length; showing=total; } else if (!document.getElementById('panel-withdrawals').classList.contains('hidden')) { total=allWithdrawals.length; showing=total; } else if (!document.getElementById('panel-refapproval').classList.contains('hidden')) { total=allPendingReferrals.length; showing=total; } else { document.getElementById('resultsInfo').textContent=''; return; } document.getElementById('resultsInfo').textContent='Menampilkan '+showing+' dari '+total; }
 
     window.addEventListener('load', function() { setTimeout(async function() { await checkAutoLogin(); }, 1500); });
-
-    async function checkAutoLogin() {
-        currentIP = await getMyIP();
-        if (!currentIP) { showLoginForm(); return; }
-        document.getElementById('currentIP').textContent = currentIP;
-        try {
-            var res = await fetch('/api/admin/check-ip');
-            var data = await res.json();
-            if (data.isAdmin) { 
-                adminPassword = 'nisaimut'; 
-                document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...';
-                document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data';
-                setTimeout(function() {
-                    document.getElementById('adminSplash').classList.add('hidden');
-                    document.getElementById('mainContent').style.display = 'block';
-                    showAdminPanel(); 
-                }, 2500);
-                return; 
-            }
-            if (!data.hasAdmin) { showLoginForm(); return; }
-            goToUnauthorized();
-        } catch(e) { showLoginForm(); }
-    }
-
-    async function doLogin() {
-        var pwd = document.getElementById('adminKeyInput').value;
-        if (!pwd) return;
-        try {
-            var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:pwd }) });
-            if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); }
-            else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; }
-        } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; }
-    }
-
+    async function checkAutoLogin() { currentIP = await getMyIP(); if (!currentIP) { showLoginForm(); return; } document.getElementById('currentIP').textContent = currentIP; try { var res = await fetch('/api/admin/check-ip'); var data = await res.json(); if (data.isAdmin) { adminPassword = 'nisaimut'; document.getElementById('adminSplash').querySelector('.splash-title').textContent = 'Memuat Panel...'; document.getElementById('adminSplash').querySelector('.splash-sub').textContent = 'Menyiapkan data'; setTimeout(function() { document.getElementById('adminSplash').classList.add('hidden'); document.getElementById('mainContent').style.display = 'block'; showAdminPanel(); }, 2500); return; } if (!data.hasAdmin) { showLoginForm(); return; } goToUnauthorized(); } catch(e) { showLoginForm(); } }
+    async function doLogin() { var pwd = document.getElementById('adminKeyInput').value; if (!pwd) return; try { var res = await fetch('/api/admin/set-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:pwd }) }); if (res.ok) { adminPassword = pwd; showAdminPanel(); toast('Login berhasil!'); } else { document.getElementById('loginError').innerText='Kunci salah!'; document.getElementById('loginError').style.display='block'; } } catch(e) { document.getElementById('loginError').innerText='Gagal terhubung'; document.getElementById('loginError').style.display='block'; } }
     function doLogout() { adminPassword=''; showLoginForm(); stopAutoRefresh(); window.location.hash = ''; }
     async function doResetIP() { if(!confirm('Reset IP Admin?')) return; await fetch('/api/admin/reset-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); doLogout(); }
 
@@ -443,198 +214,42 @@
     function loadAll() { loadStats(); loadOrders(); loadProducts(); loadQrisPending(); loadWithdrawals(); loadPendingReferrals(); autoPingAll(); }
 
     async function loadOrders() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allOrders = data.orders||[]; renderOrders(); } } catch(e) {} }
-    function renderOrders() {
-        var toShow = allOrders.slice(0, orderDisplay);
-        var c = document.getElementById('ordersList');
-        if (toShow.length) {
-            c.innerHTML = toShow.map(function(o) {
-                var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled';
-                var refInfo = o.referrerCode ? ' | Ref: '+o.referrerCode+' ('+(o.referralStatus||'none')+')' : '';
-                return '<div class="item" role="button" tabindex="0" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+refInfo+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; }
-        document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none';
-        updateResultsInfo();
-    }
+    function renderOrders() { var toShow = allOrders.slice(0, orderDisplay); var c = document.getElementById('ordersList'); if (toShow.length) { c.innerHTML = toShow.map(function(o) { var st = o.status==='paid'?'✅ Lunas':o.status==='pending'?'⏳ Pending':o.status==='expired'?'❌ Expired':'🗑️ Cancelled'; var refInfo = o.referrerCode ? ' | Ref: '+o.referrerCode+' ('+(o.referralStatus||'none')+')' : ''; return '<div class="item" onclick="openDetailModal('+o.id+')"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">'+escapeHtml(o.customerName)+' | '+st+refInfo+'</div><div class="item-detail" style="font-size:0.6rem;">'+new Date(o.createdAt).toLocaleString()+' | ID: '+o.id+'</div></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada order</div>'; } document.getElementById('ordersLoadMore').style.display = (orderDisplay<allOrders.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreOrders() { orderDisplay+=10; renderOrders(); }
-
-    function openDetailModal(id) {
-        var order = allOrders.find(function(o) { return o.id == id; });
-        if (!order) return;
-        currentDetailId = id;
-        var st = order.status==='paid'?'Lunas':order.status==='pending'?'Pending':order.status==='expired'?'Expired':'Cancelled';
-        document.getElementById('detailContent').innerHTML =
-            '<div class="detail-row"><span class="dl">Produk</span><span class="dv">'+escapeHtml(order.productName)+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div>'+
-            '<div class="detail-row"><span class="dl">Kode Order</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div>'+
-            (order.referrerCode ? '<div class="detail-row"><span class="dl">Referral</span><span class="dv">'+order.referrerCode+' ('+(order.referralStatus||'none')+')</span></div>' : '')+
-            '<div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>';
-        document.getElementById('detailModal').style.display = 'flex';
-    }
-
-    async function deleteOrderFromDetail() {
-        if (!currentDetailId || !confirm('Hapus order ini?')) return;
-        await fetch('/api/admin/order/'+currentDetailId, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminKey: adminPassword })
-        });
-        document.getElementById('detailModal').style.display = 'none';
-        orderDisplay = 10; loadOrders(); loadStats();
-        toast('🗑️ Order dihapus');
-    }
+    function openDetailModal(id) { var order = allOrders.find(function(o) { return o.id == id; }); if (!order) return; currentDetailId = id; var st = order.status==='paid'?'Lunas':order.status==='pending'?'Pending':order.status==='expired'?'Expired':'Cancelled'; document.getElementById('detailContent').innerHTML = '<div class="detail-row"><span class="dl">Produk</span><span class="dv">'+escapeHtml(order.productName)+'</span></div>'+'<div class="detail-row"><span class="dl">Customer</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div>'+'<div class="detail-row"><span class="dl">Status</span><span class="dv">'+st+'</span></div>'+'<div class="detail-row"><span class="dl">Total</span><span class="dv">Rp '+(order.totalAmount||order.price||0).toLocaleString()+'</span></div>'+'<div class="detail-row"><span class="dl">Kode Order</span><span class="dv" style="font-size:0.65rem;">'+(order.orderCode||'-')+'</span></div>'+(order.referrerCode ? '<div class="detail-row"><span class="dl">Referral</span><span class="dv">'+order.referrerCode+' ('+(order.referralStatus||'none')+')</span></div>' : '')+'<div class="detail-row"><span class="dl">Tanggal</span><span class="dv">'+new Date(order.createdAt).toLocaleString()+'</span></div>'; document.getElementById('detailModal').style.display = 'flex'; }
+    async function deleteOrderFromDetail() { if (!currentDetailId || !confirm('Hapus order ini?')) return; await fetch('/api/admin/order/'+currentDetailId, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); document.getElementById('detailModal').style.display = 'none'; orderDisplay=10; loadOrders(); loadStats(); toast('🗑️ Order dihapus'); }
 
     // ========== PRODUCTS ==========
     async function loadProducts() { try { var res = await fetch('/api/admin/products?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allProducts = data.products||[]; renderProducts(); } } catch(e) {} }
-    function renderProducts() { 
-        var toShow = allProducts.slice(0, productDisplay); 
-        var c = document.getElementById('productsList'); 
-        if (toShow.length) { 
-            c.innerHTML = toShow.map(function(p) { 
-                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button type="button" class="btn-sm green" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button type="button" class="btn-sm orange" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button type="button" class="btn-sm red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; 
-            }).join(''); 
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } 
-        document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; 
-        updateResultsInfo(); 
-    }
+    function renderProducts() { var toShow = allProducts.slice(0, productDisplay); var c = document.getElementById('productsList'); if (toShow.length) { c.innerHTML = toShow.map(function(p) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(p.name)+'</div><div class="item-detail">Rp '+p.price.toLocaleString()+' | Stok: '+p.stock+' | Tipe: '+p.itemType+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="previewProduct('+p.id+')"><i class="fas fa-eye"></i></button><button class="btn-sm orange" onclick="openEditModal('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn-sm red" onclick="deleteProduct('+p.id+')"><i class="fas fa-trash"></i></button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada produk</div>'; } document.getElementById('productsLoadMore').style.display = (productDisplay<allProducts.length)?'block':'none'; updateResultsInfo(); }
     function loadMoreProducts() { productDisplay+=10; renderProducts(); }
-
-    async function previewProduct(pid) { 
-        var product = allProducts.find(function(p){ return p.id==pid; }); 
-        if(!product) return; 
-        document.getElementById('previewModalTitle').innerHTML='<i class="fas fa-eye"></i> Preview: <span id="previewName">'+escapeHtml(product.name)+'</span>'; 
-        document.getElementById('previewBody').innerHTML='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'+(product.bonusContent?'<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>':'')+'<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>'; 
-        document.getElementById('previewModal').style.display='flex'; 
-    }
-
-    async function deleteProduct(id) { 
-        if(!confirm('Hapus produk ini?')) return; 
-        var res = await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); 
-        var data = await res.json();
-        if(data.success || res.ok) { productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Produk dihapus'); } 
-        else { toast('Gagal hapus: '+(data.error||'Unknown'), true); }
-    }
-
-    async function openEditModal(id) { 
-        var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); 
-        var data=await res.json(); 
-        if(data.success&&data.product) { 
-            var p=data.product; currentEditId=p.id; 
-            document.getElementById('editProductId').value=p.id; 
-            document.getElementById('editProductName').value=p.name; 
-            document.getElementById('editProductDesc').value=p.description||''; 
-            document.getElementById('editProductPrice').value=p.price; 
-            document.getElementById('editProductStock').value=p.stock; 
-            document.getElementById('editItemType').value=p.itemType||'text'; 
-            if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; 
-            else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; 
-            else document.getElementById('editItemText').value=p.itemContent; 
-            document.getElementById('editBonusType').value=p.bonusType||'none'; 
-            if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; 
-            else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; 
-            toggleEditItemFields(); toggleEditBonusFields(); 
-            document.getElementById('editModal').style.display='flex'; 
-        } else { toast('Produk tidak ditemukan', true); }
-    }
+    async function previewProduct(pid) { var product = allProducts.find(function(p){ return p.id==pid; }); if(!product) return; document.getElementById('previewModalTitle').innerHTML='<i class="fas fa-eye"></i> Preview: <span id="previewName">'+escapeHtml(product.name)+'</span>'; document.getElementById('previewBody').innerHTML='<div class="preview-section"><div class="preview-label">Konten</div><div class="preview-text">'+escapeHtml(product.itemContent)+'</div></div>'+(product.bonusContent?'<div class="preview-section"><div class="preview-label">Bonus</div><div class="preview-text">'+escapeHtml(product.bonusContent)+'</div></div>':'')+'<div style="text-align:center;color:#64748b;font-size:0.7rem;margin-top:8px;">Rp '+product.price.toLocaleString()+' | Stok: '+product.stock+'</div>'; document.getElementById('previewModal').style.display='flex'; }
+    async function deleteProduct(id) { if(!confirm('Hapus produk ini?')) return; var res = await fetch('/api/admin/product/'+id, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword }) }); var data = await res.json(); if(data.success || res.ok) { productDisplay=10; loadProducts(); loadStats(); toast('🗑️ Produk dihapus'); } else { toast('Gagal hapus: '+(data.error||'Unknown'), true); } }
+    async function openEditModal(id) { var res=await fetch('/api/admin/product/'+id+'?adminKey='+adminPassword); var data=await res.json(); if(data.success&&data.product) { var p=data.product; currentEditId=p.id; document.getElementById('editProductId').value=p.id; document.getElementById('editProductName').value=p.name; document.getElementById('editProductDesc').value=p.description||''; document.getElementById('editProductPrice').value=p.price; document.getElementById('editProductStock').value=p.stock; document.getElementById('editItemType').value=p.itemType||'text'; if(p.itemType==='link') document.getElementById('editItemLink').value=p.itemContent; else if(p.itemType==='html') document.getElementById('editItemHtml').value=p.itemContent; else document.getElementById('editItemText').value=p.itemContent; document.getElementById('editBonusType').value=p.bonusType||'none'; if(p.bonusType==='link') document.getElementById('editBonusLink').value=p.bonusContent||''; else if(p.bonusType==='text') document.getElementById('editBonusText').value=p.bonusContent||''; toggleEditItemFields(); toggleEditBonusFields(); document.getElementById('editModal').style.display='flex'; } }
     function closeEditModal() { document.getElementById('editModal').style.display='none'; currentEditId=null; }
+    async function saveEditProduct() { var it=document.getElementById('editItemType').value; var ic=''; if(it==='text') ic=document.getElementById('editItemText').value; else if(it==='link') ic=document.getElementById('editItemLink').value; else if(it==='html') ic=document.getElementById('editItemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('editBonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('editBonusText').value; else if(bt==='link') bc=document.getElementById('editBonusLink').value; var res=await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Diupdate'); closeEditModal(); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
+    async function addProduct() { var it=document.getElementById('itemType').value; var ic=''; if(it==='text') ic=document.getElementById('itemText').value; else if(it==='link') ic=document.getElementById('itemLink').value; else if(it==='html') ic=document.getElementById('itemHtml').value; if(!ic) { toast('Konten wajib diisi', true); return; } var bt=document.getElementById('bonusType').value; var bc=''; if(bt==='text') bc=document.getElementById('bonusText').value; else if(bt==='link') bc=document.getElementById('bonusLink').value; var res=await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); if(res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ var el = document.getElementById(id); if(el) el.value=''; }); productDisplay=10; loadProducts(); loadStats(); } else { toast('Gagal', true); } }
 
-    async function saveEditProduct() { 
-        var it=document.getElementById('editItemType').value; var ic=''; 
-        if(it==='text') ic=document.getElementById('editItemText').value; 
-        else if(it==='link') ic=document.getElementById('editItemLink').value; 
-        else if(it==='html') ic=document.getElementById('editItemHtml').value; 
-        if(!ic) { toast('Konten wajib diisi', true); return; } 
-        var bt=document.getElementById('editBonusType').value; var bc=''; 
-        if(bt==='text') bc=document.getElementById('editBonusText').value; 
-        else if(bt==='link') bc=document.getElementById('editBonusLink').value; 
-        var res=await fetch('/api/admin/product/'+currentEditId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('editProductName').value, description:document.getElementById('editProductDesc').value, price:parseInt(document.getElementById('editProductPrice').value), stock:parseInt(document.getElementById('editProductStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); 
-        if(res.ok) { toast('✅ Diupdate'); closeEditModal(); productDisplay=10; loadProducts(); loadStats(); } 
-        else { toast('Gagal', true); } 
-    }
+    // ========== REFERRAL APPROVAL ==========
+    async function loadPendingReferrals() { try { var res = await fetch('/api/admin/pending-referrals?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allPendingReferrals = data.pending||[]; renderPendingReferrals(); } } catch(e) {} }
+    function renderPendingReferrals() { var c = document.getElementById('pendingReferralsList'); if (allPendingReferrals.length) { c.innerHTML = allPendingReferrals.map(function(o) { return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">Buyer: '+escapeHtml(o.customerName)+'</div><div class="item-detail">Referrer: '+escapeHtml(o.referrerName||'-')+' ('+escapeHtml(o.referrerCode||'-')+')</div><div class="item-detail">Total: Rp '+(o.totalAmount||o.price||0).toLocaleString()+' | '+new Date(o.createdAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="approveReferral(\''+o.orderCode+'\')"><i class="fas fa-check"></i> ACC</button><button class="btn-sm red" onclick="rejectReferral(\''+o.orderCode+'\')"><i class="fas fa-times"></i> Tolak</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Tidak ada referral pending</div>'; } updateResultsInfo(); }
+    async function approveReferral(orderCode) { if (!confirm('ACC referral ini?')) return; var res = await fetch('/api/admin/approve-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) }); var data = await res.json(); if (data.success) { toast('✅ '+data.message); loadPendingReferrals(); loadStats(); } else toast(data.error, true); }
+    async function rejectReferral(orderCode) { if (!confirm('Tolak referral ini?')) return; var res = await fetch('/api/admin/reject-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) }); var data = await res.json(); if (data.success) { toast('❌ '+data.message); loadPendingReferrals(); loadStats(); } else toast(data.error, true); }
 
-    async function addProduct() { 
-        var it=document.getElementById('itemType').value; var ic=''; 
-        if(it==='text') ic=document.getElementById('itemText').value; 
-        else if(it==='link') ic=document.getElementById('itemLink').value; 
-        else if(it==='html') ic=document.getElementById('itemHtml').value; 
-        if(!ic) { toast('Konten wajib diisi', true); return; } 
-        var bt=document.getElementById('bonusType').value; var bc=''; 
-        if(bt==='text') bc=document.getElementById('bonusText').value; 
-        else if(bt==='link') bc=document.getElementById('bonusLink').value; 
-        var res=await fetch('/api/admin/product', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, name:document.getElementById('productName').value, description:document.getElementById('productDesc').value, price:parseInt(document.getElementById('productPrice').value), stock:parseInt(document.getElementById('productStock').value)||1, itemType:it, itemContent:ic, bonusType:bt, bonusContent:bc }) }); 
-        if(res.ok) { toast('✅ Ditambahkan'); ['productName','productDesc','productPrice','productStock','itemText','itemLink','itemHtml','bonusText','bonusLink'].forEach(function(id){ var el = document.getElementById(id); if(el) el.value=''; }); productDisplay=10; loadProducts(); loadStats(); } 
-        else { toast('Gagal', true); } 
-    }
+    // ========== ADD BALANCE ==========
+    async function addBalance() { var code = document.getElementById('addBalanceCode').value.trim(); var amount = parseInt(document.getElementById('addBalanceAmount').value) || 500; if (!code) { toast('Masukkan kode referral!', true); return; } if (!confirm('Tambah saldo Rp ' + amount.toLocaleString() + ' ke akun dengan kode ' + code + '?')) return; var res = await fetch('/api/admin/add-balance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, referralCode:code, amount:amount }) }); var data = await res.json(); if (data.success) { toast('✅ ' + data.message); document.getElementById('addBalanceCode').value=''; document.getElementById('addBalanceAmount').value='500'; loadStats(); } else toast(data.error, true); }
 
     // ========== STATS ==========
     async function loadStats() { try { var res = await fetch('/api/admin/stats?adminKey='+adminPassword); var data = await res.json(); if (data.success) { var s = data.stats; document.getElementById('statsGrid').innerHTML = '<div class="stat-card"><div class="stat-number">'+s.totalProducts+'</div><div class="stat-label">Produk</div></div><div class="stat-card"><div class="stat-number">'+s.totalOrders+'</div><div class="stat-label">Order</div></div><div class="stat-card"><div class="stat-number">Rp '+s.totalRevenue.toLocaleString()+'</div><div class="stat-label">Pendapatan</div></div><div class="stat-card"><div class="stat-number">'+s.totalUsers+'</div><div class="stat-label">User</div></div><div class="stat-card"><div class="stat-number">'+s.totalWithdrawals+'</div><div class="stat-label">WD</div></div><div class="stat-card"><div class="stat-number">'+s.totalDeposits+'</div><div class="stat-label">Deposit</div></div><div class="stat-card"><div class="stat-number">'+(s.pendingReferrals||0)+'</div><div class="stat-label">Ref Pending</div></div>'; } } catch(e) {} }
 
-    // ========== REFERRAL APPROVAL ==========
-    async function loadPendingReferrals() { try { var res = await fetch('/api/admin/pending-referrals?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allPendingReferrals = data.pending||[]; renderPendingReferrals(); } } catch(e) {} }
-    function renderPendingReferrals() {
-        var c = document.getElementById('pendingReferralsList');
-        if (allPendingReferrals.length) {
-            c.innerHTML = allPendingReferrals.map(function(o) {
-                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(o.productName)+'</div><div class="item-detail">Buyer: '+escapeHtml(o.customerName)+'</div><div class="item-detail">Referrer: '+escapeHtml(o.referrerName||'-')+' ('+escapeHtml(o.referrerCode||'-')+')</div><div class="item-detail">Total: Rp '+(o.totalAmount||o.price||0).toLocaleString()+' | '+new Date(o.createdAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm green" onclick="approveReferral(\''+o.orderCode+'\')"><i class="fas fa-check"></i> ACC</button><button class="btn-sm red" onclick="rejectReferral(\''+o.orderCode+'\')"><i class="fas fa-times"></i> Tolak</button></div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Tidak ada referral pending</div>'; }
-        updateResultsInfo();
-    }
-    async function approveReferral(orderCode) {
-        if (!confirm('ACC referral ini?')) return;
-        var res = await fetch('/api/admin/approve-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) });
-        var data = await res.json();
-        if (data.success) { toast('✅ '+data.message); loadPendingReferrals(); loadStats(); }
-        else toast(data.error, true);
-    }
-    async function rejectReferral(orderCode) {
-        if (!confirm('Tolak referral ini?')) return;
-        var res = await fetch('/api/admin/reject-referral', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, orderCode:orderCode }) });
-        var data = await res.json();
-        if (data.success) { toast('❌ '+data.message); loadPendingReferrals(); loadStats(); }
-        else toast(data.error, true);
-    }
-
-    // ========== ADD BALANCE ==========
-    async function addBalance() {
-        var code = document.getElementById('addBalanceCode').value.trim();
-        var amount = parseInt(document.getElementById('addBalanceAmount').value) || 500;
-        if (!code) { toast('Masukkan kode referral!', true); return; }
-        if (!confirm('Tambah saldo Rp ' + amount.toLocaleString() + ' ke akun dengan kode ' + code + '?')) return;
-        var res = await fetch('/api/admin/add-balance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, referralCode:code, amount:amount }) });
-        var data = await res.json();
-        if (data.success) { toast('✅ ' + data.message); document.getElementById('addBalanceCode').value=''; document.getElementById('addBalanceAmount').value='500'; loadStats(); }
-        else toast(data.error, true);
-    }
-
     // ========== WITHDRAWALS ==========
     async function loadWithdrawals() { try { var res = await fetch('/api/admin/withdrawals?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allWithdrawals = data.withdrawals||[]; renderWithdrawals(); } } catch(e) {} }
-    function renderWithdrawals() {
-        var c = document.getElementById('withdrawalsList');
-        if (allWithdrawals.length) {
-            c.innerHTML = allWithdrawals.map(function(w) {
-                var stClass = w.status==='success'?'success':w.status==='failed'?'failed':'pending';
-                var stText = w.status==='success'?'✅ Sukses':w.status==='failed'?'❌ Gagal':'⏳ Pending';
-                return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(w.userName)+'</div><div class="item-detail">Rp '+w.amount.toLocaleString()+' | '+escapeHtml(w.paymentMethod)+' | '+escapeHtml(w.paymentNumber)+'</div><div class="item-detail"><span class="wd-status '+stClass+'">'+stText+'</span> | '+new Date(w.createdAt).toLocaleString()+'</div></div><div class="item-actions">'+
-                    (w.status==='pending' ? '<button class="btn-sm green" onclick="updateWdStatus('+w.id+',\'success\')"><i class="fas fa-check"></i> Sukses</button><button class="btn-sm red" onclick="updateWdStatus('+w.id+',\'failed\')"><i class="fas fa-times"></i> Gagal</button>' : '')+
-                '</div></div>';
-            }).join('');
-        } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada WD</div>'; }
-        updateResultsInfo();
-    }
-    async function updateWdStatus(id, status) {
-        if (!confirm('Update WD jadi '+status+'?')) return;
-        await fetch('/api/admin/withdrawal/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, status:status }) });
-        loadWithdrawals(); loadStats(); toast('✅ WD diupdate');
-    }
+    function renderWithdrawals() { var c = document.getElementById('withdrawalsList'); if (allWithdrawals.length) { c.innerHTML = allWithdrawals.map(function(w) { var stClass = w.status==='success'?'success':w.status==='failed'?'failed':'pending'; var stText = w.status==='success'?'✅ Sukses':w.status==='failed'?'❌ Gagal':'⏳ Pending'; return '<div class="item"><div class="item-info"><div class="item-name">'+escapeHtml(w.userName)+'</div><div class="item-detail">Rp '+w.amount.toLocaleString()+' | '+escapeHtml(w.paymentMethod)+' | '+escapeHtml(w.paymentNumber)+'</div><div class="item-detail"><span class="wd-status '+stClass+'">'+stText+'</span> | '+new Date(w.createdAt).toLocaleString()+'</div></div><div class="item-actions">'+(w.status==='pending' ? '<button class="btn-sm green" onclick="updateWdStatus('+w.id+',\'success\')"><i class="fas fa-check"></i> Sukses</button><button class="btn-sm red" onclick="updateWdStatus('+w.id+',\'failed\')"><i class="fas fa-times"></i> Gagal</button>' : '')+'</div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Belum ada WD</div>'; } updateResultsInfo(); }
+    async function updateWdStatus(id, status) { if (!confirm('Update WD jadi '+status+'?')) return; await fetch('/api/admin/withdrawal/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, status:status }) }); loadWithdrawals(); loadStats(); toast('✅ WD diupdate'); }
 
     // ========== QRIS ==========
     async function loadQrisPending() { try { var res = await fetch('/api/admin/orders?adminKey='+adminPassword); var data = await res.json(); if (data.success) { allQrisPending = (data.orders||[]).filter(function(o) { return o.status==='pending' && o.productId===null; }); renderQrisPending(); } } catch(e) {} }
     function renderQrisPending() { var c = document.getElementById('qrisActiveList'); if (allQrisPending.length) { c.innerHTML = allQrisPending.map(function(o) { return '<div class="item"><div class="item-info"><div class="item-name"><i class="fas fa-qrcode"></i> '+escapeHtml(o.customerName)+'</div><div class="item-detail">Rp '+(o.totalAmount||0).toLocaleString()+' | Exp: '+new Date(o.expiredAt).toLocaleString()+'</div></div><div class="item-actions"><button class="btn-sm blue" onclick="copyToClipboard(\'https://stockyanto.vercel.app/order/'+o.orderCode+'\')"><i class="fas fa-copy"></i> Salin</button><button class="btn-sm red" onclick="cancelQRIS('+o.id+')"><i class="fas fa-ban"></i> Batal</button></div></div>'; }).join(''); } else { c.innerHTML = '<div style="text-align:center;color:#64748b;">Tidak ada QRIS aktif</div>'; } updateResultsInfo(); }
-    function openQrisDetail(id) { var order = allQrisPending.find(function(o) { return o.id==id; }); if (!order) return; currentQrisId = id; document.getElementById('qrisDetailContent').innerHTML = '<img src="'+order.qrisImage+'" class="qris-img" alt="QRIS"><div class="detail-row"><span class="dl">Nama</span><span class="dv">'+escapeHtml(order.customerName)+'</span></div><div class="detail-row"><span class="dl">Nominal</span><span class="dv">Rp '+(order.totalAmount||0).toLocaleString()+'</span></div><div class="detail-row"><span class="dl">Expired</span><span class="dv">'+new Date(order.expiredAt).toLocaleString()+'</span></div>'; document.getElementById('qrisDetailModal').style.display = 'flex'; }
-    async function cancelQRISFromDetail() { if (!currentQrisId || !confirm('Batalkan?')) return; await fetch('/api/cancel-order/'+currentQrisId, { method:'POST' }); document.getElementById('qrisDetailModal').style.display = 'none'; loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
     async function cancelQRIS(id) { if (!confirm('Batalkan?')) return; await fetch('/api/cancel-order/'+id, { method:'POST' }); loadQrisPending(); loadOrders(); loadStats(); toast('🚫 QRIS dibatalkan'); }
 
     // ========== PING ==========
@@ -644,32 +259,9 @@
     async function generateQRIS() { var amount = parseInt(document.getElementById('qrisAmount').value); if (!amount || amount <= 0) { toast('Masukkan jumlah!', true); return; } var name = 'Cust ' + qrisCounter; qrisCounter++; try { var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method:'POST', headers:{'X-API-Token':QRISPY_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({ amount }) }); var qrisData = await qrisRes.json(); if (qrisData.status !== 'success') { toast('Gagal generate QRIS', true); return; } var saveRes = await fetch('/api/admin/save-qris-order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, qrisId:qrisData.data.qris_id, qrisImage:qrisData.data.qris_image_url, totalAmount:amount, expiredAt:qrisData.data.expired_at, customerName:name }) }); var saveData = await saveRes.json(); if (saveData.success) { var orderUrl = 'https://stockyanto.vercel.app/order/' + saveData.orderCode; document.getElementById('qrisResult').innerHTML = '<img src="'+qrisData.data.qris_image_url+'" class="qris-img" alt="QRIS">'+'<p style="color:#10b981;margin:6px 0;">✅ QRIS Rp '+amount.toLocaleString()+' | '+name+'</p>'+'<div class="copy-link-wrap"><input value="'+orderUrl+'" readonly><button class="btn-sm blue" onclick="copyToClipboard(\''+orderUrl+'\')"><i class="fas fa-copy"></i></button></div>'+'<button class="btn-sm blue" onclick="window.open(\''+orderUrl+'\', \'_blank\')" style="width:100%;justify-content:center;margin-top:4px;"><i class="fas fa-external-link-alt"></i> Buka</button>'; loadQrisPending(); } else { toast('Gagal: '+(saveData.error||'Unknown'), true); } } catch(e) { toast('Error: '+e.message, true); } }
     function copyToClipboard(text) { navigator.clipboard.writeText(text).then(function(){ toast('📋 Tersalin!'); }).catch(function(){ toast('Gagal copy', true); }); }
 
-    async function checkMaintenanceStatus() {
-        try {
-            var res = await fetch('/api/public-stats');
-            var data = await res.json();
-            if (data.success && data.maintenance) {
-                maintenanceMode = true;
-                document.getElementById('maintBadge').classList.remove('hidden');
-                document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance';
-                document.getElementById('maintToggleBtn').classList.add('active');
-            } else {
-                maintenanceMode = false;
-                document.getElementById('maintBadge').classList.add('hidden');
-                document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance';
-                document.getElementById('maintToggleBtn').classList.remove('active');
-            }
-        } catch(e) {}
-    }
-
-    async function toggleMaintenance() {
-        maintenanceMode = !maintenanceMode;
-        var btn = document.getElementById('maintToggleBtn');
-        var badge = document.getElementById('maintBadge');
-        try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {}
-        if (maintenanceMode) { btn.innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; btn.classList.add('active'); badge.classList.remove('hidden'); toast('🔧 Maintenance AKTIF'); }
-        else { btn.innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance'; btn.classList.remove('active'); badge.classList.add('hidden'); toast('✅ Maintenance NONAKTIF'); }
-    }
+    // ========== MAINTENANCE ==========
+    async function checkMaintenanceStatus() { try { var res = await fetch('/api/public-stats'); var data = await res.json(); if (data.success && data.maintenance) { maintenanceMode = true; document.getElementById('maintBadge').classList.remove('hidden'); document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.add('active'); } else { maintenanceMode = false; document.getElementById('maintBadge').classList.add('hidden'); document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.remove('active'); } } catch(e) {} }
+    async function toggleMaintenance() { maintenanceMode = !maintenanceMode; try { await fetch('/api/admin/toggle-maintenance', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ adminKey:adminPassword, maintenance:maintenanceMode }) }); } catch(e) {} if (maintenanceMode) { document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Nonaktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.add('active'); document.getElementById('maintBadge').classList.remove('hidden'); toast('🔧 Maintenance AKTIF'); } else { document.getElementById('maintToggleBtn').innerHTML = '<i class="fas fa-power-off"></i> Aktifkan Maintenance'; document.getElementById('maintToggleBtn').classList.remove('active'); document.getElementById('maintBadge').classList.add('hidden'); toast('✅ Maintenance NONAKTIF'); } }
 
     function toggleItemFields() { var t=document.getElementById('itemType').value; document.getElementById('itemTextField').classList.add('hidden'); document.getElementById('itemLinkField').classList.add('hidden'); document.getElementById('itemHtmlField').classList.add('hidden'); if(t==='text') document.getElementById('itemTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('itemLinkField').classList.remove('hidden'); else if(t==='html') document.getElementById('itemHtmlField').classList.remove('hidden'); }
     function toggleBonusFields() { var t=document.getElementById('bonusType').value; document.getElementById('bonusTextField').classList.add('hidden'); document.getElementById('bonusLinkField').classList.add('hidden'); if(t==='text') document.getElementById('bonusTextField').classList.remove('hidden'); else if(t==='link') document.getElementById('bonusLinkField').classList.remove('hidden'); }
