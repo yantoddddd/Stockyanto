@@ -14,17 +14,34 @@ function parseCookies(cookieHeader) { const cookies = {}; if (!cookieHeader) ret
 function getRefFromCookie(cookieHeader) { var c = parseCookies(cookieHeader); return c['yanto_ref'] || null; }
 function getReferralFromDB(db, customerName) { if (!customerName) return null; var nameLower = customerName.toLowerCase(); var visitors = db.referralVisitors || []; for (var i = 0; i < visitors.length; i++) { if (visitors[i].visitorName.toLowerCase() === nameLower) return visitors[i].referralCode; } var users = db.users || []; for (var j = 0; j < users.length; j++) { if (users[j].name.toLowerCase() === nameLower && users[j].referredBy) return users[j].referredBy; } return null; }
 
-async function processReferralReward(db, order, cookieHeader) { if (!order || order.referralRewarded || order.referralStatus) return; var refCode = null; if (order.referralCode) refCode = order.referralCode; if (!refCode && cookieHeader) refCode = getRefFromCookie(cookieHeader); if (!refCode) refCode = getReferralFromDB(db, order.customerName); if (!refCode) return; var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; }); if (!referrer) return; order.referralStatus = 'pending'; order.referralRewarded = false; order.referrerName = referrer.name; order.referrerCode = refCode; }
+async function processReferralReward(db, item, cookieHeader) {
+    if (!item || item.referralRewarded || item.referralStatus) return;
+    var refCode = item.referralCode || null;
+    if (!refCode && cookieHeader) refCode = getRefFromCookie(cookieHeader);
+    if (!refCode) refCode = getReferralFromDB(db, item.customerName || item.userName);
+    if (!refCode) return;
+    var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
+    if (!referrer) return;
+    item.referralStatus = 'pending';
+    item.referralRewarded = false;
+    item.referrerName = referrer.name;
+    item.referrerCode = refCode;
+}
 
 async function getDB() { try { var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' } }); if (!res.ok) return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null }; var data = await res.json(); var content = Buffer.from(data.content, 'base64').toString('utf8'); var parsed; try { parsed = JSON.parse(content); } catch(e) { parsed = JSON.parse(decrypt(content)); } return { ...parsed, sha: data.sha }; } catch(err) { return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null }; } }
 async function setDB(products, orders, oldSha, retryCount) { if (!retryCount) retryCount = 0; if (retryCount > 5) throw new Error('Save failed'); var db = await getDB(); var content = { products: products || db.products || [], orders: orders || db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: db.adminIP || null, adminIPs: db.adminIPs || [], maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var encryptedContent = encrypt(JSON.stringify(content)); var updatedContent = Buffer.from(encryptedContent).toString('base64'); var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Update db via webhook', content: updatedContent, sha: oldSha }) }); if (!res.ok) { var e = await res.json().catch(function() { return {}; }); if (e.message && e.message.includes('SHA')) { await new Promise(function(r) { setTimeout(r, 800); }); var f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); } throw new Error('Save failed'); } var d = await res.json(); return d.content.sha; }
 
-async function sendTelegramNotification(order, bonusContent) {
+async function sendTelegramNotification(item, isDeposit) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     try {
-        var bonusText = bonusContent ? '\n\n🎁 BONUS:\n' + bonusContent : '';
-        var refInfo = order.referralCode ? '\n🔗 Kode Ref: ' + order.referralCode + '\n👑 Referrer: ' + (order.referrerName || '-') + '\n📌 Status: ' + (order.referralStatus || 'pending') : '';
-        var message = '✅ PEMBAYARAN BERHASIL! (via Webhook)\n\n📦 Produk: ' + order.productName + '\n👤 Pembeli: ' + order.customerName + '\n💰 Total: Rp ' + (order.totalAmount || order.price || 0).toLocaleString() + '\n🆔 Order: ' + order.orderCode + '\n📅 Waktu: ' + new Date().toLocaleString('id-ID') + refInfo + '\n\n🔑 Kode Item:\n' + (order.productCode || 'Tidak ada kode') + bonusText;
+        var refInfo = item.referralCode ? '\n🔗 Kode Ref: ' + item.referralCode + '\n👑 Referrer: ' + (item.referrerName || '-') + '\n📌 Status: ' + (item.referralStatus || 'pending') : '';
+        var message;
+        if (isDeposit) {
+            message = '✅ DEPOSIT BERHASIL! (via Webhook)\n\n👤 User: ' + item.userName + '\n💰 Jumlah: Rp ' + item.amount.toLocaleString() + '\n📅 Waktu: ' + new Date().toLocaleString('id-ID') + refInfo;
+        } else {
+            var bonusText = '';
+            message = '✅ PEMBAYARAN BERHASIL! (via Webhook)\n\n📦 Produk: ' + item.productName + '\n👤 Pembeli: ' + item.customerName + '\n💰 Total: Rp ' + (item.totalAmount || item.price || 0).toLocaleString() + '\n🆔 Order: ' + item.orderCode + '\n📅 Waktu: ' + new Date().toLocaleString('id-ID') + refInfo + '\n\n🔑 Kode Item:\n' + (item.productCode || 'Tidak ada kode') + bonusText;
+        }
         await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML' }) });
     } catch(err) {}
 }
@@ -47,19 +64,20 @@ module.exports = async function(req, res) {
                 order.status = 'paid'; order.paidAt = data.paid_at || new Date().toISOString();
                 await processReferralReward(db, order, req.headers.cookie);
                 await setDB(db.products, db.orders, db.sha);
-                var bonusContent = ''; var prod = (db.products || []).find(function(x) { return x.id == order.productId; }); if (prod && prod.bonusContent) bonusContent = prod.bonusContent;
-                await sendTelegramNotification(order, bonusContent);
+                await sendTelegramNotification(order, false);
             } else {
-                // Check deposit
                 var dep = (db.deposits || []).find(function(d) { return d.qrisId === qrisId; });
                 if (dep && dep.status === 'pending') {
                     dep.status = 'paid'; dep.paidAt = data.paid_at || new Date().toISOString();
+                    if (dep.referralCode && !dep.referralRewarded) {
+                        dep.referralStatus = 'pending'; dep.referralRewarded = false;
+                        var ref = (db.users || []).find(function(u) { return u.referralCode === dep.referralCode; });
+                        if (ref) { dep.referrerName = ref.name; dep.referrerCode = dep.referralCode; }
+                    }
                     var user = (db.users || []).find(function(u) { return u.id === dep.userId; });
                     if (user) { user.discountBalance = (user.discountBalance || 0) + dep.amount; }
                     await setDB(db.products, db.orders, db.sha);
-                    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && user) {
-                        await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: '✅ DEPOSIT VIA WEBHOOK\n\n👤 ' + user.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n📅 ' + new Date().toLocaleString('id-ID'), parse_mode: 'HTML' }) });
-                    }
+                    await sendTelegramNotification(dep, true);
                 }
             }
         }
