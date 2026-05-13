@@ -51,7 +51,41 @@ async function processReferralReward(db, order, cookieHeader) { if (!order || or
 
 setInterval(function() { fetch('https://stockyanto.vercel.app/api/health').catch(function() {}); }, 20000);
 setInterval(async function() { try { var db = await getDB(); var n = new Date(); var changed = false; (db.orders || []).forEach(function(o) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; changed = true; } }); if (changed) await setDB(null, db.orders, db.sha); } catch(e) {} }, 30000);
-setInterval(async function() { try { var db = await getDB(); if (!db.deposits) db.deposits = []; var changed = false; for (var i = 0; i < db.deposits.length; i++) { var dep = db.deposits[i]; if (dep.status === 'pending' && dep.qrisId && QRISPY_TOKEN) { try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + dep.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } }); var d = await r.json(); if (d.status === 'success' && d.data && d.data.status === 'paid') { dep.status = 'paid'; dep.paidAt = new Date().toISOString(); var user = (db.users || []).find(function(u) { return u.id === dep.userId; }); if (user) user.discountBalance = (user.discountBalance || 0) + dep.amount; changed = true; } } catch(e) {} } } if (changed) await setDB(null, db.orders, db.sha); } catch(e) {} }, 10000);
+
+// ✅ AUTO-CHECK DEPOSIT (EXPIRE + PAID + NOTIF TELEGRAM)
+setInterval(async function() {
+    try {
+        var db = await getDB();
+        if (!db.deposits) db.deposits = [];
+        var changed = false;
+        var now = new Date();
+        for (var i = 0; i < db.deposits.length; i++) {
+            var dep = db.deposits[i];
+            if (dep.status === 'pending' && dep.expiredAt && new Date(dep.expiredAt) < now) {
+                dep.status = 'expired';
+                changed = true;
+                continue;
+            }
+            if (dep.status === 'pending' && dep.qrisId && QRISPY_TOKEN) {
+                try {
+                    var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + dep.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } });
+                    var d = await r.json();
+                    if (d.status === 'success' && d.data && d.data.status === 'paid') {
+                        dep.status = 'paid';
+                        dep.paidAt = new Date().toISOString();
+                        var user = (db.users || []).find(function(u) { return u.id === dep.userId; });
+                        if (user) { user.discountBalance = (user.discountBalance || 0) + dep.amount; }
+                        if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && user) {
+                            await sendTelegramMessage('✅ DEPOSIT OTOMATIS\n\n👤 ' + user.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n📅 ' + new Date().toLocaleString('id-ID'));
+                        }
+                        changed = true;
+                    }
+                } catch(e) {}
+            }
+        }
+        if (changed) await setDB(null, db.orders, db.sha);
+    } catch(e) {}
+}, 10000);
 
 app.get('/api/health', function(req, res) { res.json({ status: 'ok', time: new Date().toISOString() }); });
 app.get('/api/public-stats', async function(req, res) { try { var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var today = new Date().toISOString().split('T')[0]; var soldMap = {}; paid.forEach(function(o) { soldMap[o.productId] = (soldMap[o.productId] || 0) + 1; }); res.json({ success: true, totalProducts: (db.products || []).filter(function(p) { return p.stock > 0; }).length, todayOrders: paid.filter(function(o) { return (o.paidAt || o.createdAt).startsWith(today); }).length, soldMap: soldMap, maintenance: db.maintenance || false }); } catch(e) { res.status(500).json({ success: false }); } });
@@ -66,25 +100,25 @@ app.get('/api/user/orders', async function(req, res) { var cookies = parseCookie
 
 app.post('/api/user/deposit-save', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var amount = parseInt(req.body.amount), qrisId = req.body.qrisId, qrisImage = req.body.qrisImage, expiredAt = req.body.expiredAt; if (!amount || !qrisId || !qrisImage || !expiredAt) return res.status(400).json({ error: 'Data tidak lengkap' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if (!db.deposits) db.deposits = []; var depId = Date.now(); db.deposits.unshift({ id: depId, userId: user.id, userName: user.name, amount: amount, qrisId: qrisId, qrisImage: qrisImage, expiredAt: expiredAt, status: 'pending', createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true, depId: depId }); });
 app.get('/api/user/deposits', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, deposits: (db.deposits || []).filter(function(d) { return d.userId === user.id; }) }); });
-app.post('/api/user/change-password', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword; if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' }); if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' }); user.password = hashPassword(newPassword); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
 
-// ✅ FIX: NOTIF WD PAKE await
-app.post('/api/user/withdraw', async function(req, res) {
+// ✅ CANCEL DEPOSIT (USER)
+app.post('/api/user/cancel-deposit/:depId', async function(req, res) {
     var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
     if (!token) return res.status(401).json({ error: 'Login dulu' });
-    var amount = parseInt(req.body.amount), paymentMethod = req.body.paymentMethod, paymentNumber = req.body.paymentNumber;
-    if (!amount || amount < 2000) return res.status(400).json({ error: 'Minimal WD Rp 2.000' });
     var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    if ((user.discountBalance || 0) < amount) return res.status(400).json({ error: 'Saldo gak cukup' });
-    if (!db.withdrawals) db.withdrawals = [];
-    db.withdrawals.unshift({ id: Date.now(), userId: user.id, userName: user.name, amount: amount, paymentMethod: paymentMethod || 'DANA', paymentNumber: paymentNumber || '-', status: 'pending', createdAt: new Date().toISOString() });
-    user.discountBalance -= amount;
+    var depId = parseInt(req.params.depId);
+    var dep = (db.deposits || []).find(function(d) { return d.id === depId && d.userId === user.id; });
+    if (!dep) return res.status(404).json({ error: 'Deposit tidak ditemukan' });
+    if (dep.status !== 'pending') return res.status(400).json({ error: 'Deposit sudah diproses' });
+    if (dep.qrisId && QRISPY_TOKEN) { await cancelQRISInQrispy(dep.qrisId); }
+    dep.status = 'cancelled'; dep.cancelledAt = new Date().toISOString();
     await setDB(null, db.orders, db.sha);
-    await sendTelegramMessage('💰 WITHDRAW\n\n👤 ' + user.name + '\n💵 Rp ' + amount.toLocaleString() + '\n🏦 ' + (paymentMethod || 'DANA') + '\n📱 ' + (paymentNumber || '-'));
-    res.json({ success: true });
+    res.json({ success: true, message: 'Deposit dibatalkan' });
 });
 
+app.post('/api/user/change-password', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword; if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' }); if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' }); user.password = hashPassword(newPassword); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
+app.post('/api/user/withdraw', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var amount = parseInt(req.body.amount), paymentMethod = req.body.paymentMethod, paymentNumber = req.body.paymentNumber; if (!amount || amount < 2000) return res.status(400).json({ error: 'Minimal WD Rp 2.000' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if ((user.discountBalance || 0) < amount) return res.status(400).json({ error: 'Saldo gak cukup' }); if (!db.withdrawals) db.withdrawals = []; db.withdrawals.unshift({ id: Date.now(), userId: user.id, userName: user.name, amount: amount, paymentMethod: paymentMethod || 'DANA', paymentNumber: paymentNumber || '-', status: 'pending', createdAt: new Date().toISOString() }); user.discountBalance -= amount; await setDB(null, db.orders, db.sha); await sendTelegramMessage('💰 WITHDRAW\n\n👤 ' + user.name + '\n💵 Rp ' + amount.toLocaleString() + '\n🏦 ' + (paymentMethod || 'DANA') + '\n📱 ' + (paymentNumber || '-')); res.json({ success: true }); });
 app.get('/api/user/withdrawals', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, withdrawals: (db.withdrawals || []).filter(function(w) { return w.userId === user.id; }) }); });
 
 app.get('/api/admin/pending-referrals', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var pending = (db.orders || []).filter(function(order) { return order.status === 'paid' && order.referralStatus === 'pending'; }); res.json({ success: true, pending: pending }); });
@@ -102,6 +136,39 @@ app.delete('/api/admin/order/:id', async function(req, res) { if (!isAdmin(req, 
 app.get('/api/admin/withdrawals', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, withdrawals: (await getDB()).withdrawals || [] }); });
 app.put('/api/admin/withdrawal/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var status = req.body.status; if (!status || ['pending','success','failed'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' }); var db = await getDB(); var wd = (db.withdrawals || []).find(function(w) { return w.id == req.params.id; }); if (!wd) return res.status(404).json({ error: 'Not found' }); wd.status = status; wd.processedAt = new Date().toISOString(); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
 
+// ✅ ADMIN: UPDATE STATUS DEPOSIT + NOTIF TELEGRAM
+app.put('/api/admin/deposit/:id', async function(req, res) {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var status = req.body.status;
+    if (!status || ['pending','success','failed','cancelled'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' });
+    var db = await getDB();
+    var depId = parseInt(req.params.id);
+    var dep = (db.deposits || []).find(function(d) { return d.id === depId; });
+    if (!dep) return res.status(404).json({ error: 'Not found' });
+    dep.status = status;
+    dep.processedAt = new Date().toISOString();
+    if (status === 'success') {
+        var user = (db.users || []).find(function(u) { return u.id === dep.userId; });
+        if (user) {
+            user.discountBalance = (user.discountBalance || 0) + dep.amount;
+            if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await sendTelegramMessage('✅ DEPOSIT BERHASIL\n\n👤 ' + user.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n📅 ' + new Date().toLocaleString('id-ID'));
+        }
+    }
+    if (status === 'failed' || status === 'cancelled') {
+        var u = (db.users || []).find(function(x) { return x.id === dep.userId; });
+        if (u && TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await sendTelegramMessage('❌ DEPOSIT ' + status.toUpperCase() + '\n\n👤 ' + u.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n📅 ' + new Date().toLocaleString('id-ID'));
+    }
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true });
+});
+
+// ✅ ADMIN: LIHAT SEMUA DEPOSIT
+app.get('/api/admin/deposits', async function(req, res) {
+    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var db = await getDB();
+    res.json({ success: true, deposits: db.deposits || [] });
+});
+
 app.post('/api/cancel-order/:orderId', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.id == req.params.orderId || o.orderCode == req.params.orderId; }); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
 app.get('/api/get-order/:orderCode', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; }); if (!order) return res.json({ success: false }); var product = (db.products || []).find(function(p) { return p.id == order.productId; }); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product ? product.itemType : 'text', createdAt: order.createdAt, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '' }); });
 
@@ -111,14 +178,27 @@ app.get('/api/products', async function(req, res) { var db = await getDB(); res.
 app.post('/api/create-order', async function(req, res) { var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId; if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); var db = await getDB(); var p = (db.products || []).find(function(x) { return x.id == productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: qrisId, productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, totalAmount: req.body.totalAmount || p.price, customerName: sanitize(customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true, orderCode: oc }); });
 app.post('/api/create-cart-order', async function(req, res) { var items = req.body.items; if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var cartTotal = 0; var oi = []; for (var i = 0; i < items.length; i++) { var item = items[i]; var p = (db.products || []).find(function(x) { return x.id == item.productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok ' + p.name + ' habis' }); cartTotal += p.price * (item.quantity || 1); oi.push({ productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, quantity: item.quantity || 1 }); } var totalItems = items.reduce(function(s, it) { return s + (it.quantity || 1); }, 0); var discount = calculateCartDiscount(totalItems); var finalAmount = Math.max(0, cartTotal - discount); oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, items: oi, productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '), productCode: oi.map(function(x) { return x.productCode; }).join('\n'), price: cartTotal, totalAmount: finalAmount, discountAmount: discount, customerName: sanitize(req.body.customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
 app.get('/api/gacha/info', async function(req, res) { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0; }); var tv = ap.reduce(function(s, p) { return s + p.price; }, 0); res.json({ success: true, gachaPrice: ap.length > 0 ? Math.floor(tv / ap.length * 0.7) : 0, totalProducts: ap.length, jackpotChance: '20%' }); });
-app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
+app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
 app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var pendingRef = (db.orders || []).filter(function(o) { return o.referralStatus === 'pending'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, pendingReferrals: pendingRef.length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
 app.get('/api/admin/products', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, products: (await getDB()).products || [] }); });
 app.get('/api/admin/orders', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, orders: (await getDB()).orders || [] }); });
 app.get('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var p = ((await getDB()).products || []).find(function(x) { return x.id == req.params.id; }); if (!p) return res.status(404).json({ error: 'Not found' }); res.json({ success: true, product: p }); });
 app.post('/api/admin/product', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, description = req.body.description, price = parseInt(req.body.price), stock = parseInt(req.body.stock) || 1, itemType = req.body.itemType || 'text', itemContent = req.body.itemContent, bonusType = req.body.bonusType || 'none', bonusContent = req.body.bonusContent || ''; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); db.products.push({ id: Date.now(), name: name, description: description || '', price: price, stock: stock, itemType: itemType, itemContent: itemContent, bonusType: bonusType, bonusContent: bonusContent, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
 app.put('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, description = req.body.description, price = parseInt(req.body.price), stock = parseInt(req.body.stock) || 1, itemType = req.body.itemType || 'text', itemContent = req.body.itemContent, bonusType = req.body.bonusType || 'none', bonusContent = req.body.bonusContent || ''; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); var idx = (db.products || []).findIndex(function(p) { return p.id == req.params.id; }); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.products[idx] = { ...db.products[idx], name: name, description: description || '', price: price, stock: stock, itemType: itemType, itemContent: itemContent, bonusType: bonusType, bonusContent: bonusContent, updatedAt: new Date().toISOString() }; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.delete('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var before = (db.products || []).length; db.products = (db.products || []).filter(function(p) { return p.id != req.params.id; }); var after = db.products.length; if (before === after) return res.status(404).json({ error: 'Produk tidak ditemukan' }); await setDB(null, db.orders, db.sha); res.json({ success: true, message: 'Produk berhasil dihapus' }); });
+
+// ✅ FIX: HAPUS PRODUK
+app.delete('/api/admin/product/:id', async function(req, res) {
+    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
+    var db = await getDB();
+    var productId = parseInt(req.params.id);
+    var before = (db.products || []).length;
+    db.products = (db.products || []).filter(function(p) { return p.id !== productId; });
+    var after = db.products.length;
+    if (before === after) return res.status(404).json({ error: 'Produk tidak ditemukan' });
+    await setDB(null, db.orders, db.sha);
+    res.json({ success: true, message: 'Produk berhasil dihapus' });
+});
+
 app.post('/api/admin/reset-orders', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); db.orders = paid; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
 app.post('/api/admin/backup', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify(db)], { type: 'application/json' }), 'backup.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
 app.post('/api/admin/broadcast', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.message) return res.status(400).json({ error: 'Pesan wajib diisi' }); await sendTelegramMessage('📢 BROADCAST\n\n' + req.body.message); res.json({ success: true }); });
