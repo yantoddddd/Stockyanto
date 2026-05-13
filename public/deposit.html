@@ -87,7 +87,6 @@
         <div style="width:40px;"></div>
     </div>
 
-    <!-- GUEST -->
     <div id="guestSection">
         <div class="card" style="text-align:center;">
             <i class="fas fa-user-circle" style="font-size:4rem;color:#334155;margin-bottom:16px;"></i>
@@ -97,7 +96,6 @@
         </div>
     </div>
 
-    <!-- LOGGED IN -->
     <div id="loggedInSection" style="display:none;">
         
         <div class="profile-card">
@@ -112,13 +110,11 @@
         </div>
 
         <div class="tab-content">
-            <!-- BERANDA -->
             <div class="tab-panel active" id="tab-home">
                 <div class="card"><h2><i class="fas fa-home"></i> Beranda</h2><div class="detail-row"><span class="dl">Nama</span><span class="dv" id="homeName">-</span></div><div class="detail-row"><span class="dl">Kode Referral</span><span class="dv" id="homeRefCode" style="font-family:monospace;">-</span></div><div class="detail-row"><span class="dl">Saldo</span><span class="dv" style="color:#f59e0b;font-weight:700;">Rp <span id="homeBalance">0</span></span></div></div>
                 <button class="btn-danger" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
 
-            <!-- DEPOSIT -->
             <div class="tab-panel" id="tab-deposit">
                 <div class="card">
                     <h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2>
@@ -132,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- REFERRAL -->
             <div class="tab-panel" id="tab-referral">
                 <div class="card"><h2><i class="fas fa-chart-bar"></i> Statistik Referral</h2><div class="detail-row"><span class="dl">Total Klik</span><span class="dv" id="chartClicks" style="color:var(--accent2);font-weight:700;">0</span></div><div class="detail-row"><span class="dl">Total Konversi</span><span class="dv" id="chartConversions" style="color:var(--success);font-weight:700;">0</span></div><div class="detail-row" style="margin-bottom:12px;"><span class="dl">Tingkat Konversi</span><span class="dv" id="chartRate" style="color:var(--warning);font-weight:700;">0%</span></div><div class="chart-bar-wrap"><div class="chart-bar-fill" id="chartBar"></div></div></div>
                 <div class="card"><h2><i class="fas fa-link"></i> Link Referral</h2><div class="detail-row" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:8px 12px;"><span class="dv" id="profRefLink" style="font-size:0.65rem;color:var(--accent2);">-</span></div><button onclick="copyRef()"><i class="fas fa-copy"></i> Salin Link</button></div>
@@ -140,12 +135,10 @@
                 <div class="card"><h2><i class="fas fa-list"></i> Riwayat Penarikan</h2><div id="wdHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
 
-            <!-- RIWAYAT ORDER -->
             <div class="tab-panel" id="tab-history">
                 <div class="card"><h2><i class="fas fa-clock"></i> Riwayat Order</h2><div id="orderHistoryList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div></div></div>
             </div>
 
-            <!-- PENGATURAN -->
             <div class="tab-panel" id="tab-settings">
                 <div class="card"><h2><i class="fas fa-cog"></i> Ganti Password</h2><input type="password" id="oldPw" placeholder="Password lama..."><input type="password" id="newPw" placeholder="Password baru..."><button onclick="changePassword()"><i class="fas fa-key"></i> Ganti Password</button></div>
                 <div class="card"><h2><i class="fas fa-question-circle"></i> Bantuan</h2><a href="https://t.me/Yantoidiotbruh" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);"><i class="fab fa-telegram-plane"></i> Telegram</a><a href="https://wa.me/6289676041776" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 0;color:var(--text2);text-decoration:none;"><i class="fab fa-whatsapp"></i> WhatsApp</a></div>
@@ -154,7 +147,6 @@
     </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav" id="bottomNav" style="display:none;">
     <button class="nav-item active" onclick="switchTab('home',this)"><i class="fas fa-home nav-icon"></i>Beranda</button>
     <button class="nav-item" onclick="switchTab('deposit',this)"><i class="fas fa-money-bill-wave nav-icon"></i>Deposit</button>
@@ -163,12 +155,10 @@
     <button class="nav-item" onclick="switchTab('settings',this)"><i class="fas fa-cog nav-icon"></i>Atur</button>
 </div>
 
-<!-- LOGIN MODAL -->
 <div id="loginMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;"><i class="fas fa-sign-in-alt"></i> Login</h3><input type="text" id="loginNm" placeholder="Nama..."><input type="password" id="loginPw" placeholder="Password..."><button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Masuk</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Belum punya akun? <a href="#" onclick="event.preventDefault();showReg();" style="color:#60a5fa;">Daftar</a></p><button onclick="document.getElementById('loginMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button></div>
 </div>
 
-<!-- REGISTER MODAL -->
 <div id="regMod" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:100;justify-content:center;align-items:center;">
     <div style="background:#111827;border-radius:28px;padding:28px;max-width:380px;width:90%;border:1px solid #334155;animation:fadeScale 0.3s ease;"><h3 style="color:white;margin-bottom:16px;"><i class="fas fa-user-plus"></i> Daftar</h3><input type="text" id="regNm" placeholder="Nama..."><label style="color:#94a3b8;font-size:0.8rem;display:block;margin-top:8px;">Tanggal Lahir (min 12 thn)</label><input type="date" id="regBday" onchange="checkAge()"><p id="ageErr" style="color:#ef4444;font-size:0.7rem;display:none;">Min 12 tahun!</p><input type="password" id="regPw" placeholder="Password..."><button onclick="doReg()"><i class="fas fa-user-plus"></i> Daftar</button><p style="text-align:center;color:#94a3b8;margin-top:12px;font-size:0.8rem;">Sudah punya akun? <a href="#" onclick="event.preventDefault();showLoginMod();" style="color:#60a5fa;">Masuk</a></p><button onclick="document.getElementById('regMod').style.display='none'" style="background:#334155;margin-top:8px;"><i class="fas fa-times"></i> Tutup</button></div>
 </div>
@@ -183,51 +173,51 @@
     function toast(msg, isErr) { var t = document.getElementById('toast'); t.innerHTML = '<i class="fas ' + (isErr ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + msg; t.style.background = isErr ? '#b91c1c' : '#1e293b'; t.style.opacity = '1'; setTimeout(function(){ t.style.opacity = '0'; }, 3000); }
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'; }); }
 
-    function switchTab(tab, el) { document.querySelectorAll('.nav-item').forEach(function(c) { c.classList.remove('active'); }); document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); }); if (el) el.classList.add('active'); document.getElementById('tab-' + tab).classList.add('active'); if (tab === 'history') loadOrders(); if (tab === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); loadWdHistory(); updateReferralChart(); } if (tab === 'deposit') loadDepHistory(); }
-
-    async function checkAuth() { try { var res = await fetch('/api/user/profile', { credentials: 'include' }); var data = await res.json(); if (data.success) { currentUser = data.user; document.getElementById('guestSection').style.display = 'none'; document.getElementById('loggedInSection').style.display = 'block'; document.getElementById('bottomNav').style.display = 'flex'; loadProfile(); loadOrders(); } else { document.getElementById('guestSection').style.display = 'block'; document.getElementById('loggedInSection').style.display = 'none'; document.getElementById('bottomNav').style.display = 'none'; } } catch(e) {} }
-
-    function loadProfile() { if (!currentUser) return; document.getElementById('profName').textContent = currentUser.name; document.getElementById('profRefCode').textContent = currentUser.referralCode; document.getElementById('profBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); document.getElementById('profRefCount').textContent = currentUser.referralCount || 0; document.getElementById('profClicks').textContent = currentUser.referralClicks || 0; document.getElementById('homeName').textContent = currentUser.name; document.getElementById('homeRefCode').textContent = currentUser.referralCode; document.getElementById('homeBalance').textContent = (currentUser.discountBalance || 0).toLocaleString(); document.getElementById('profRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode; document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); updateReferralChart(); }
-
-    function updateReferralChart() { if (!currentUser) return; var c = currentUser.referralClicks || 0; var v = currentUser.referralCount || 0; var r = c > 0 ? Math.round((v / c) * 100) : 0; document.getElementById('chartClicks').textContent = c; document.getElementById('chartConversions').textContent = v; document.getElementById('chartRate').textContent = r + '%'; document.getElementById('chartBar').style.width = Math.min(r, 100) + '%'; }
-
-    async function loadOrders() { try { var res = await fetch('/api/user/orders', { credentials: 'include' }); var data = await res.json(); var el = document.getElementById('orderHistoryList'); if (data.success && data.orders.length > 0) { el.innerHTML = data.orders.map(function(o) { var sc = o.status === 'paid' ? 'paid' : o.status === 'pending' ? 'pending' : 'other'; var st = o.status === 'paid' ? 'Lunas' : o.status === 'pending' ? 'Pending' : o.status; return '<div class="order-item" onclick="window.location.href=\'/order/' + o.orderCode + '\'"><div class="oname">' + escapeHtml(o.productName) + '</div><div class="odetail">Rp ' + (o.totalAmount || 0).toLocaleString() + ' | ' + new Date(o.createdAt).toLocaleString() + '</div><span class="ostatus ' + sc + '">' + st + '</span></div>'; }).join(''); } else el.innerHTML = '<div class="empty-state"><i class="fas fa-clock"></i><p>Belum ada order</p></div>'; } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; } }
-
-    async function loadWdHistory() { try { var res = await fetch('/api/user/withdrawals', { credentials: 'include' }); var data = await res.json(); var el = document.getElementById('wdHistoryList'); if (data.success && data.withdrawals.length > 0) { el.innerHTML = data.withdrawals.map(function(w) { var sc = w.status === 'success' ? 'paid' : w.status === 'pending' ? 'pending' : 'other'; var st = w.status === 'success' ? 'Sukses' : w.status === 'pending' ? 'Pending' : w.status; return '<div class="order-item"><div class="oname"><span class="ostatus ' + sc + '">' + st + '</span> Rp ' + (w.amount || 0).toLocaleString() + '</div><div class="odetail">Ke ' + (w.paymentMethod || '-') + ' (' + (w.paymentNumber || '-') + ')</div></div>'; }).join(''); } else el.innerHTML = '<div class="empty-state"><i class="fas fa-list"></i><p>Belum ada penarikan</p></div>'; } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; } }
-
-    // ✅ DEPOSIT — QRIS dari frontend, backend cuma simpan
-    async function doDeposit() { if (!currentUser) { toast('Login dulu!', true); return; } var amt = parseInt(document.getElementById('depAmount').value); if (!amt || amt < 1000) { toast('Minimal Rp 1.000!', true); return; } try { var qrisRes = await fetch(QRISPY_API_URL + '/api/payment/qris/generate', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amt }) }); var qrisData = await qrisRes.json(); if (qrisData.status !== 'success') throw new Error(qrisData.message || 'Gagal generate QRIS'); var saveRes = await fetch('/api/user/deposit-save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ amount: amt, qrisId: qrisData.data.qris_id, qrisImage: qrisData.data.qris_image_url, expiredAt: qrisData.data.expired_at }) }); var saveData = await saveRes.json(); if (saveData.success) { window.location.href = '/deposit?id=' + saveData.depId; } else toast(saveData.error, true); } catch(e) { toast('Gagal: ' + e.message, true); } }
-
-    // ✅ FIX: LOAD DEPOSIT HISTORY DENGAN STATUS UPDATE
-    async function loadDepHistory() {
-        try {
-            var res = await fetch('/api/user/deposits', { credentials: 'include' });
-            var data = await res.json();
-            var el = document.getElementById('depHistoryList');
-            if (data.success && data.deposits && data.deposits.length > 0) {
-                el.innerHTML = data.deposits.map(function(d) {
-                    var st = d.status === 'paid' ? 'paid' : d.status === 'pending' ? 'pending' : 'other';
-                    var stText = d.status === 'paid' ? 'Lunas' : d.status === 'pending' ? 'Pending' : d.status === 'expired' ? 'Expired' : d.status === 'cancelled' ? 'Dibatalkan' : d.status;
-                    return '<div class="deposit-item" onclick="window.location.href=\'/deposit?id=' + d.id + '\'"><div class="dep-amount">Rp ' + d.amount.toLocaleString() + ' <span class="ostatus ' + st + '">' + stText + '</span></div><div class="dep-date">' + new Date(d.createdAt).toLocaleString() + '</div></div>';
-                }).join('');
-            } else el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada deposit</p></div>';
-        } catch(e) { el.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat</p></div>'; }
+    function switchTab(tab, el) {
+        document.querySelectorAll('.nav-item').forEach(function(c) { c.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+        if (el) el.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+        if (tab === 'history') loadOrders();
+        if (tab === 'referral') { document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString(); loadWdHistory(); updateReferralChart(); }
+        if (tab === 'deposit') loadDepHistory();
+        if (tab === 'home') loadProfile();
     }
 
-    function openLogin() { document.getElementById('loginMod').style.display = 'flex'; }
-    function showReg() { document.getElementById('loginMod').style.display = 'none'; document.getElementById('regMod').style.display = 'flex'; setMaxDate(); }
-    function showLoginMod() { document.getElementById('regMod').style.display = 'none'; document.getElementById('loginMod').style.display = 'flex'; }
-    function setMaxDate() { var d = new Date(); d.setFullYear(d.getFullYear() - 12); document.getElementById('regBday').max = d.toISOString().split('T')[0]; }
-    function checkAge() { var b = document.getElementById('regBday').value; if (!b) return; var bd = new Date(b), t = new Date(), a = t.getFullYear() - bd.getFullYear(); if (t.getMonth() < bd.getMonth() || (t.getMonth() === bd.getMonth() && t.getDate() < bd.getDate())) a--; document.getElementById('ageErr').style.display = a < 12 ? 'block' : 'none'; }
+    async function checkAuth() {
+        try {
+            var res = await fetch('/api/user/profile', { credentials: 'include' });
+            var data = await res.json();
+            if (data.success) {
+                currentUser = data.user;
+                document.getElementById('guestSection').style.display = 'none';
+                document.getElementById('loggedInSection').style.display = 'block';
+                document.getElementById('bottomNav').style.display = 'flex';
+                loadProfile();
+                loadOrders();
+                loadDepHistory();
+                loadWdHistory();
+            } else {
+                document.getElementById('guestSection').style.display = 'block';
+                document.getElementById('loggedInSection').style.display = 'none';
+                document.getElementById('bottomNav').style.display = 'none';
+            }
+        } catch(e) {}
+    }
 
-    async function doLogin() { var n = document.getElementById('loginNm').value.trim(), p = document.getElementById('loginPw').value; if (!n || !p) { toast('Isi semua!', true); return; } try { var res = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:n,password:p}) }); var data = await res.json(); if (data.success) { currentUser = data.user; document.getElementById('loginMod').style.display = 'none'; checkAuth(); toast('Selamat datang, ' + data.user.name + '!'); } else toast(data.error, true); } catch(e) { toast('Gagal login', true); } }
-    async function doReg() { var n = document.getElementById('regNm').value.trim(), b = document.getElementById('regBday').value, p = document.getElementById('regPw').value; if (!n || !b || !p) { toast('Isi semua!', true); return; } try { var res = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({name:n,birthDate:b,password:p}) }); var data = await res.json(); if (data.success) { document.getElementById('regMod').style.display = 'none'; toast('Daftar berhasil! Silakan login.'); } else toast(data.error, true); } catch(e) { toast('Gagal daftar', true); } }
-    async function changePassword() { var o = document.getElementById('oldPw').value, n = document.getElementById('newPw').value; if (!o || !n) { toast('Isi semua!', true); return; } try { var res = await fetch('/api/user/change-password', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({oldPassword:o,newPassword:n}) }); var data = await res.json(); if (data.success) { toast('Password diganti!'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; } else toast(data.error, true); } catch(e) { toast('Gagal', true); } }
-    function copyRef() { if (!currentUser) return; navigator.clipboard.writeText(window.location.origin + '/?ref=' + currentUser.referralCode).then(function(){ toast('Link referral tersalin!'); }); }
-    async function doWd() { if (!currentUser) { toast('Login dulu!', true); return; } var a = parseInt(document.getElementById('wdAmt').value), n = document.getElementById('wdNum').value.trim(); if (!a || a < 2000) { toast('Min Rp 2.000!', true); return; } if (!n || !n.startsWith('08')) { toast('Nomor DANA harus 08!', true); return; } if (n.length < 10) { toast('Nomor DANA tidak valid!', true); return; } try { var res = await fetch('/api/user/withdraw', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({amount:a, paymentMethod:'DANA', paymentNumber:n}) }); var data = await res.json(); if (data.success) { currentUser.discountBalance -= a; loadProfile(); document.getElementById('wdAmt').value=''; document.getElementById('wdNum').value=''; loadWdHistory(); toast('WD Rp ' + a.toLocaleString() + ' ke DANA diproses!'); } else toast(data.error, true); } catch(e) { toast('Gagal WD', true); } }
-    async function doLogout() { await fetch('/api/logout', { method:'POST', credentials:'include' }); window.location.href = '/'; }
+    function loadProfile() {
+        if (!currentUser) return;
+        document.getElementById('profName').textContent = currentUser.name;
+        document.getElementById('profRefCode').textContent = currentUser.referralCode;
+        document.getElementById('profBalance').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+        document.getElementById('profRefCount').textContent = currentUser.referralCount || 0;
+        document.getElementById('profClicks').textContent = currentUser.referralClicks || 0;
+        document.getElementById('homeName').textContent = currentUser.name;
+        document.getElementById('homeRefCode').textContent = currentUser.referralCode;
+        document.getElementById('homeBalance').textContent = (currentUser.discountBalance || 0).toLocaleString();
+        document.getElementById('profRefLink').textContent = window.location.origin + '/?ref=' + currentUser.referralCode;
+        document.getElementById('wdBal').textContent = 'Rp ' + ((currentUser.discountBalance || 0)).toLocaleString();
+        updateReferralChart();
+    }
 
-    checkAuth();
-</script>
-</body>
-</html>
+    function updateReferralChart() { if (!currentUser) return; var c = curren
