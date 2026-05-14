@@ -1,226 +1,263 @@
-const express = require('express');
-const cors = require('cors');
-const crypto = require('crypto');
-const path = require('path');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Yanto Store | Deposit Saldo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes urgentPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .card { background: rgba(255,255,255,0.06); backdrop-filter: blur(12px); border-radius: 32px; padding: 32px; max-width: 500px; width: 100%; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 25px 45px rgba(0,0,0,0.3); }
+        .logo { text-align: center; margin-bottom: 4px; }
+        .logo h2 { font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #ffffff, #94a3f8); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .logo .sub { font-size: 0.65rem; color: #64748b; margin-bottom: 16px; }
 
-const app = express();
-app.use(cors({ credentials: true, origin: true }));
-app.use(express.json());
-app.use(express.static('public'));
+        .countdown-wrap { text-align: center; margin-bottom: 8px; }
+        .countdown-label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .countdown-timer { font-size: 2rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .countdown-timer.urgent { color: #ef4444; animation: urgentPulse 1s infinite; }
+        .countdown-timer .cd-unit { background: rgba(59,130,246,0.1); padding: 8px 12px; border-radius: 12px; min-width: 50px; text-align: center; }
+        .countdown-timer.urgent .cd-unit { background: rgba(239,68,68,0.1); }
+        .countdown-timer .cd-sep { font-size: 1.5rem; color: #475569; }
+        .countdown-timer .cd-label { font-size: 0.55rem; color: #64748b; display: block; margin-top: 2px; }
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
-const QRISPY_TOKEN = process.env.QRISPY_TOKEN;
-const QRISPY_API_URL = 'https://api.qrispy.id';
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO || 'yantoddddd/stockyanto';
-const GITHUB_PATH = 'database.json';
-const ENCRYPT_KEY = process.env.ENCRYPT_KEY;
+        .progress-wrap { margin-bottom: 20px; }
+        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3b82f6; transition: width 1s linear; border-radius: 4px; }
+        .progress-fill.urgent { background: #ef4444; }
 
-function encrypt(text) { if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset'); const iv = crypto.randomBytes(16); const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv); let encrypted = cipher.update(text, 'utf8', 'hex'); encrypted += cipher.final('hex'); return iv.toString('hex') + ':' + encrypted; }
-function decrypt(encryptedText) { if (!ENCRYPT_KEY) throw new Error('ENCRYPT_KEY belum diset'); const parts = encryptedText.split(':'); const iv = Buffer.from(parts[0], 'hex'); const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPT_KEY, 'hex'), iv); let decrypted = decipher.update(parts[1], 'hex', 'utf8'); decrypted += decipher.final('utf8'); return decrypted; }
-function parseCookies(cookieHeader) { const cookies = {}; if (!cookieHeader) return cookies; cookieHeader.split(';').forEach(function(cookie) { var parts = cookie.trim().split('='); var name = parts[0]; var value = parts.slice(1).join('='); if (name) cookies[name] = value; }); return cookies; }
+        .expiry-text { text-align: center; color: #64748b; font-size: 0.7rem; margin-bottom: 16px; }
 
-let dbCache = null;
-let dbCacheTime = 0;
-const CACHE_TTL = 5000;
+        .qr-container { text-align: center; }
+        .qr-container .qr-icon { font-size: 2.2rem; color: #60a5fa; margin-bottom: 4px; }
+        .qr-container h3 { color: white; font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+        .qris-img { width: 100%; max-width: 220px; margin: 16px auto; display: block; background: white; padding: 14px; border-radius: 20px; }
+        .total-amount { font-size: 1.8rem; font-weight: 700; color: #60a5fa; text-align: center; margin: 12px 0; }
+        .status-text { text-align: center; color: #94a3b8; margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; }
 
-const rateLimitMap = new Map();
-app.use(function(req, res, next) { var ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown').split(',')[0].trim(); if (dbCache && (dbCache.adminIP === ip || (dbCache.adminIPs && dbCache.adminIPs.includes(ip)))) return next(); var now = Date.now(); if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []); var requests = rateLimitMap.get(ip).filter(function(t) { return now - t < 60000; }); if (requests.length >= 60) return res.status(429).json({ error: 'Rate limit' }); requests.push(now); rateLimitMap.set(ip, requests); next(); });
+        .cancel-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 12px 24px; border-radius: 40px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.85rem; }
+        .cancel-btn:hover { background: rgba(239,68,68,0.2); }
 
-function getClientIP(req) { return (req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown').split(',')[0].trim(); }
-function isAdmin(req, adminKey) { if (adminKey === ADMIN_KEY) return true; var ip = getClientIP(req); if (dbCache && dbCache.adminIP === ip) return true; if (dbCache && dbCache.adminIPs && dbCache.adminIPs.includes(ip)) return true; return false; }
+        .btn-back { background: #334155; border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; text-decoration: none; margin-top: 10px; font-size: 0.85rem; }
+        .btn-back:hover { background: #475569; transform: translateY(-2px); }
 
-async function getDB() { var now = Date.now(); if (dbCache && (now - dbCacheTime) < CACHE_TTL) return { ...dbCache, sha: dbCache.sha }; try { var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Accept': 'application/vnd.github.v3+json' } }); if (!res.ok) return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; var data = await res.json(); var content = Buffer.from(data.content, 'base64').toString('utf8'); var parsed; try { parsed = JSON.parse(content); } catch(e) { parsed = JSON.parse(decrypt(content)); } dbCache = { ...parsed, sha: data.sha }; dbCacheTime = now; return { ...dbCache, sha: data.sha }; } catch (err) { return { products: [], orders: [], users: [], withdrawals: [], deposits: [], referralVisitors: [], sha: null, adminIP: null, adminIPs: [], maintenance: false }; } }
-async function setDB(products, orders, oldSha, retryCount) { if (!retryCount) retryCount = 0; if (retryCount > 5) throw new Error('Save failed after 5 retries'); var db = await getDB(); var content = { products: products || db.products || [], orders: orders || db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: db.adminIP || null, adminIPs: db.adminIPs || [], maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var encryptedContent = encrypt(JSON.stringify(content)); var updatedContent = Buffer.from(encryptedContent).toString('base64'); var res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Update', content: updatedContent, sha: oldSha }) }); if (!res.ok) { var e = await res.json().catch(function() { return {}; }); if (e.message && e.message.includes('SHA')) { await new Promise(function(r) { setTimeout(r, 800); }); var f = await getDB(); return setDB(products, orders, f.sha, retryCount + 1); } throw new Error('Save failed: ' + (e.message || res.status)); } var d = await res.json(); dbCache = { ...content, sha: d.content.sha }; dbCacheTime = Date.now(); return d.content.sha; }
-async function sendTelegramMessage(text) { try { if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) }); } catch (e) {} }
+        h1 { text-align: center; color: #10b981; font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; }
+        .success-icon { font-size: 4rem; text-align: center; color: #10b981; margin-bottom: 12px; animation: pulse 0.5s ease; }
+    </style>
+</head>
+<body>
 
-function sanitize(str) { if (!str) return ''; return String(str).replace(/[<>"'&]/g, function(m) { return ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' })[m]; }); }
-function generateReferralCode(name) { return name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4) + crypto.randomBytes(3).toString('hex').toUpperCase(); }
-function validateAge(birthDate) { var today = new Date(); var birth = new Date(birthDate); var age = today.getFullYear() - birth.getFullYear(); var m = today.getMonth() - birth.getMonth(); if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--; return age >= 12; }
-function hashPassword(password) { return crypto.createHash('sha256').update(password + 'YANTO_SALT').digest('hex'); }
-function verifyPassword(password, hash) { return hashPassword(password) === hash; }
-function calculateCartDiscount(itemCount) { return Math.max(0, (itemCount - 1) * 500); }
-function getRefFromCookie(cookieHeader) { var c = parseCookies(cookieHeader); return c['yanto_ref'] || null; }
-async function cancelQRISInQrispy(qrisId) { if (!QRISPY_TOKEN) return false; try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + qrisId + '/cancel', { method: 'POST', headers: { 'X-API-Token': QRISPY_TOKEN } }); return (await r.json()).status === 'success'; } catch (e) { return false; } }
+<!-- PENDING CONTENT -->
+<div id="pendingContent">
+    <div class="card">
+        <div class="logo">
+            <h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2>
+            <div class="sub">Isi Saldo via QRIS</div>
+        </div>
 
-function getReferralFromDB(db, customerName) { if (!customerName) return null; var nameLower = customerName.toLowerCase(); var visitors = db.referralVisitors || []; for (var i = 0; i < visitors.length; i++) { if (visitors[i].visitorName.toLowerCase() === nameLower) return visitors[i].referralCode; } var users = db.users || []; for (var j = 0; j < users.length; j++) { if (users[j].name.toLowerCase() === nameLower && users[j].referredBy) return users[j].referredBy; } return null; }
+        <div class="countdown-wrap">
+            <div class="countdown-label">Sisa Waktu Pembayaran</div>
+            <div class="countdown-timer" id="countdownTimer">
+                <span class="cd-unit"><span id="cdMin">--</span><span class="cd-label">menit</span></span>
+                <span class="cd-sep">:</span>
+                <span class="cd-unit"><span id="cdSec">--</span><span class="cd-label">detik</span></span>
+            </div>
+        </div>
+        <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:100%;"></div></div>
+        </div>
+        <div class="expiry-text"><i class="far fa-clock"></i> Kadaluarsa: <span id="expiryTime">--</span></div>
 
-async function processReferralReward(db, order, cookieHeader) {
-    if (!order || order.referralRewarded || order.referralStatus) return;
-    var refCode = null;
-    if (order.referralCode) refCode = order.referralCode;
-    if (!refCode && cookieHeader) refCode = getRefFromCookie(cookieHeader);
-    if (!refCode) refCode = getReferralFromDB(db, order.customerName);
-    if (!refCode) return;
-    var referrer = (db.users || []).find(function(u) { return u.referralCode === refCode; });
-    if (!referrer) return;
-    order.referralStatus = 'pending';
-    order.referralRewarded = false;
-    order.referrerName = referrer.name;
-    order.referrerCode = refCode;
-    await sendTelegramMessage('🔔 REFERRAL PENDING\n\n📦 Order: ' + order.orderCode + '\n👤 Buyer: ' + order.customerName + '\n💰 Total: Rp ' + (order.totalAmount || order.price || 0).toLocaleString() + '\n🔗 Kode Ref: ' + refCode + '\n👑 Referrer: ' + referrer.name + '\n📅 ' + new Date().toLocaleString('id-ID') + '\n\n⚠️ Buka Admin Panel untuk ACC/Tolak');
-}
+        <div class="qr-container">
+            <div class="qr-icon"><i class="fas fa-qrcode"></i></div>
+            <h3>Scan QRIS untuk Deposit</h3>
+            <img id="qrisImage" class="qris-img" alt="QRIS">
+            <div class="total-amount">Rp <span id="totalAmount">0</span></div>
+            <div class="status-text" id="statusText"><i class="fas fa-hourglass-half fa-spin"></i> Menunggu pembayaran...</div>
+        </div>
 
-setInterval(function() { fetch('https://stockyanto.vercel.app/api/health').catch(function() {}); }, 20000);
-setInterval(async function() { try { var db = await getDB(); var n = new Date(); var changed = false; (db.orders || []).forEach(function(o) { if (o.status === 'pending' && o.expiredAt && new Date(o.expiredAt) < n) { o.status = 'expired'; changed = true; } }); if (changed) await setDB(null, db.orders, db.sha); } catch(e) {} }, 30000);
+        <button class="cancel-btn" id="cancelBtn" onclick="cancelDeposit()"><i class="fas fa-times-circle"></i> Batalkan Deposit</button>
+    </div>
+</div>
 
-// ✅ AUTO-CHECK DEPOSIT + AUTO-DELETE OLD + REFERRAL
-setInterval(async function() {
-    try {
-        var db = await getDB();
-        if (!db.deposits) db.deposits = [];
-        var changed = false;
-        var now = new Date();
-        for (var i = db.deposits.length - 1; i >= 0; i--) {
-            var dep = db.deposits[i];
-            if ((dep.status === 'expired' || dep.status === 'cancelled') && new Date(dep.createdAt).getTime() < now.getTime() - 3600000) {
-                db.deposits.splice(i, 1);
-                changed = true;
-                continue;
+<!-- SUCCESS CONTENT -->
+<div id="successContent" style="display:none;">
+    <div class="card">
+        <div class="logo"><h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2></div>
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <h1>Deposit Berhasil!</h1>
+        <p style="text-align:center;color:#94a3b8;margin-bottom:8px;">Saldo kamu udah nambah.</p>
+        <div class="total-amount" style="color:#10b981;">Rp <span id="successAmount">0</span></div>
+        <div style="text-align:center;margin-top:16px;">
+            <a href="/profile" class="btn-back"><i class="fas fa-user"></i> Buka Profile</a>
+            <a href="/" class="btn-back" style="margin-top:8px;"><i class="fas fa-home"></i> Kembali ke Beranda</a>
+        </div>
+    </div>
+</div>
+
+<!-- EXPIRED/CANCELLED CONTENT -->
+<div id="expiredContent" style="display:none;">
+    <div class="card">
+        <div class="logo"><h2><i class="fas fa-money-bill-wave"></i> Deposit Saldo</h2></div>
+        <div class="success-icon" style="color:#ef4444;"><i class="fas fa-times-circle"></i></div>
+        <h1 style="color:#ef4444;" id="expiredTitle">Kadaluarsa</h1>
+        <p style="text-align:center;color:#94a3b8;" id="expiredMsg">Waktu pembayaran sudah habis.</p>
+        <div style="text-align:center;margin-top:16px;">
+            <a href="/profile" class="btn-back"><i class="fas fa-redo"></i> Buat Deposit Baru</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var params = new URLSearchParams(window.location.search);
+    var depId = params.get('id');
+    var countdownInterval = null;
+    var pollingInterval = null;
+    var expiredAt = null;
+
+    function toast(msg) { var t = document.createElement('div'); t.textContent = msg; t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;padding:8px 16px;border-radius:40px;font-size:0.8rem;z-index:2000;color:white;'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2000); }
+
+    function showExpired(title, msg) {
+        clearInterval(countdownInterval);
+        clearInterval(pollingInterval);
+        document.getElementById('pendingContent').style.display = 'none';
+        document.getElementById('successContent').style.display = 'none';
+        document.getElementById('expiredContent').style.display = 'block';
+        document.getElementById('expiredTitle').textContent = title;
+        document.getElementById('expiredMsg').textContent = msg;
+    }
+
+    function startCountdown(expiryStr) {
+        expiredAt = new Date(expiryStr).getTime();
+        function update() {
+            var diff = expiredAt - Date.now();
+            if (diff <= 0) {
+                clearInterval(countdownInterval);
+                document.getElementById('cdMin').textContent = '00';
+                document.getElementById('cdSec').textContent = '00';
+                document.getElementById('progressFill').style.width = '0%';
+                showExpired('Kadaluarsa', 'Waktu pembayaran sudah habis. Silakan buat deposit baru di Profile.');
+                return;
             }
-            if (dep.status === 'pending' && dep.expiredAt && new Date(dep.expiredAt) < now) {
-                dep.status = 'expired';
-                changed = true;
-                continue;
-            }
-            if (dep.status === 'pending' && dep.qrisId && QRISPY_TOKEN) {
-                try {
-                    var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + dep.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } });
-                    var d = await r.json();
-                    if (d.status === 'success' && d.data && d.data.status === 'paid') {
-                        dep.status = 'paid';
-                        dep.paidAt = new Date().toISOString();
-                        if (dep.referralCode && !dep.referralRewarded) {
-                            dep.referralStatus = 'pending';
-                            dep.referralRewarded = false;
-                            var ref = (db.users || []).find(function(u) { return u.referralCode === dep.referralCode; });
-                            if (ref) { dep.referrerName = ref.name; dep.referrerCode = dep.referralCode; }
-                        }
-                        var user = (db.users || []).find(function(u) { return u.id === dep.userId; });
-                        if (user) { user.discountBalance = (user.discountBalance || 0) + dep.amount; }
-                        if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && user) {
-                            await sendTelegramMessage('✅ DEPOSIT OTOMATIS\n\n👤 ' + user.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n🔗 Kode Ref: ' + (dep.referralCode || '-') + '\n📅 ' + new Date().toLocaleString('id-ID'));
-                        }
-                        changed = true;
-                    }
-                } catch(e) {}
+            var minutes = Math.floor(diff / 60000);
+            var seconds = Math.floor((diff % 60000) / 1000);
+            document.getElementById('cdMin').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('cdSec').textContent = String(seconds).padStart(2, '0');
+
+            var totalDuration = 15 * 60 * 1000;
+            var progressPercent = (diff / totalDuration) * 100;
+            document.getElementById('progressFill').style.width = Math.min(Math.max(progressPercent, 0), 100) + '%';
+
+            if (diff < 120000) {
+                document.getElementById('countdownTimer').classList.add('urgent');
+                document.getElementById('progressFill').classList.add('urgent');
+            } else {
+                document.getElementById('countdownTimer').classList.remove('urgent');
+                document.getElementById('progressFill').classList.remove('urgent');
             }
         }
-        if (changed) await setDB(null, db.orders, db.sha);
-    } catch(e) {}
-}, 10000);
+        update();
+        countdownInterval = setInterval(update, 1000);
+    }
 
-app.get('/api/health', function(req, res) { res.json({ status: 'ok', time: new Date().toISOString() }); });
-app.get('/api/public-stats', async function(req, res) { try { var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var today = new Date().toISOString().split('T')[0]; var soldMap = {}; paid.forEach(function(o) { soldMap[o.productId] = (soldMap[o.productId] || 0) + 1; }); res.json({ success: true, totalProducts: (db.products || []).filter(function(p) { return p.stock > 0; }).length, todayOrders: paid.filter(function(o) { return (o.paidAt || o.createdAt).startsWith(today); }).length, soldMap: soldMap, maintenance: db.maintenance || false }); } catch(e) { res.status(500).json({ success: false }); } });
+    function startPolling() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(async function() {
+            try {
+                var res = await fetch('/api/user/deposits', { credentials: 'include' });
+                var data = await res.json();
+                if (data.success && data.deposits) {
+                    var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
+                    if (!dep) return;
+                    
+                    if (dep.status === 'paid') {
+                        clearInterval(pollingInterval);
+                        clearInterval(countdownInterval);
+                        document.getElementById('pendingContent').style.display = 'none';
+                        document.getElementById('successContent').style.display = 'block';
+                        document.getElementById('successAmount').textContent = (dep.amount || 0).toLocaleString();
+                    } else if (dep.status === 'expired') {
+                        clearInterval(pollingInterval);
+                        showExpired('Kadaluarsa', 'Waktu pembayaran sudah habis.');
+                    } else if (dep.status === 'cancelled') {
+                        clearInterval(pollingInterval);
+                        showExpired('Dibatalkan', 'Deposit ini sudah dibatalkan.');
+                    }
+                }
+            } catch(e) {}
+        }, 5000);
+    }
 
-app.get('/api/referral/apply', async function(req, res) { var ref = req.query.ref; if (!ref) return res.json({ success: false }); try { var db = await getDB(); var referrer = (db.users || []).find(function(u) { return u.referralCode === ref; }); if (!referrer) return res.json({ success: false }); referrer.referralClicks = (referrer.referralClicks || 0) + 1; var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; var visitorName = 'Guest'; var visitorId = null; if (token) { var v = (db.users || []).find(function(u) { return u.token === token; }); if (v) { visitorName = v.name; visitorId = v.id; } } if (!db.referralVisitors) db.referralVisitors = []; db.referralVisitors.unshift({ id: Date.now(), referralCode: ref, visitorName: visitorName, visitorId: visitorId, ip: getClientIP(req), createdAt: new Date().toISOString() }); res.setHeader('Set-Cookie', 'yanto_ref=' + ref + '; Path=/; SameSite=Lax; Max-Age=' + (7 * 24 * 60 * 60)); await setDB(null, db.orders, db.sha); res.json({ success: true }); } catch(e) { res.json({ success: false }); } });
+    async function cancelDeposit() {
+        if (!confirm('Yakin mau batalkan deposit ini?')) return;
+        try {
+            var res = await fetch('/api/user/cancel-deposit/' + depId, { method: 'POST', credentials: 'include' });
+            var data = await res.json();
+            if (data.success) {
+                showExpired('Dibatalkan', 'Deposit berhasil dibatalkan.');
+            } else {
+                toast(data.error || 'Gagal membatalkan');
+            }
+        } catch(e) { toast('Error, coba lagi'); }
+    }
 
-app.post('/api/register', async function(req, res) { var name = req.body.name, birthDate = req.body.birthDate, password = req.body.password; if (!name || !birthDate || !password) return res.status(400).json({ error: 'Data tidak lengkap' }); if (!validateAge(birthDate)) return res.status(400).json({ error: 'Minimal umur 12 tahun' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); if (!db.users) db.users = []; if (db.users.find(function(u) { return u.name.toLowerCase() === name.toLowerCase(); })) return res.status(400).json({ error: 'Nama sudah terdaftar' }); var refCode = getRefFromCookie(req.headers.cookie); var user = { id: Date.now(), name: sanitize(name), birthDate: birthDate, password: hashPassword(password), referralCode: generateReferralCode(name), referredBy: refCode || null, referralCount: 0, referralClicks: 0, discountBalance: 0, createdAt: new Date().toISOString() }; db.users.push(user); await setDB(null, db.orders, db.sha); return res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: 0, referralClicks: 0, discountBalance: 0 } }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
-app.post('/api/login', async function(req, res) { var name = req.body.name, password = req.body.password; var db = await getDB(); var user = (db.users || []).find(function(u) { return u.name.toLowerCase() === name.toLowerCase(); }); if (!user || !verifyPassword(password, user.password)) return res.status(401).json({ error: 'Nama atau password salah' }); var token = crypto.randomBytes(32).toString('hex'); user.token = token; if (!user.referredBy) { var refCode = getRefFromCookie(req.headers.cookie); if (refCode) user.referredBy = refCode; } await setDB(null, db.orders, db.sha); res.setHeader('Set-Cookie', 'yanto_token=' + token + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (7 * 24 * 60 * 60)); res.json({ success: true, user: { id: user.id, name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } }); });
-app.post('/api/logout', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (token) { var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (user) { user.token = null; await setDB(null, db.orders, db.sha); } } res.setHeader('Set-Cookie', 'yanto_token=; Path=/; Max-Age=0'); res.json({ success: true }); });
-app.get('/api/user/profile', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, user: { name: user.name, referralCode: user.referralCode, referralCount: user.referralCount || 0, referralClicks: user.referralClicks || 0, discountBalance: user.discountBalance || 0 } }); });
-app.get('/api/user/orders', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); var orders = (db.orders || []).filter(function(o) { return o.customerName.toLowerCase() === user.name.toLowerCase(); }); res.json({ success: true, orders: orders.slice(0, 50).map(function(o) { return { id: o.id, orderCode: o.orderCode, productName: o.productName, totalAmount: o.totalAmount || o.price, status: o.status, createdAt: o.createdAt }; }) }); });
+    async function loadDeposit() {
+        if (!depId) {
+            document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">ID Deposit Tidak Ditemukan</h1><a href="/profile" class="btn-back" style="display:inline-flex;margin-top:16px;"><i class="fas fa-arrow-left"></i> Kembali ke Profile</a></div>';
+            return;
+        }
 
-// ✅ DEPOSIT SAVE — SIMPAN REFERRAL CODE
-app.post('/api/user/deposit-save', async function(req, res) {
-    var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token'];
-    if (!token) return res.status(401).json({ error: 'Login dulu' });
-    var amount = parseInt(req.body.amount), qrisId = req.body.qrisId, qrisImage = req.body.qrisImage, expiredAt = req.body.expiredAt;
-    if (!amount || !qrisId || !qrisImage || !expiredAt) return res.status(400).json({ error: 'Data tidak lengkap' });
-    var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    if (!db.deposits) db.deposits = [];
-    var depId = Date.now();
-    db.deposits.unshift({
-        id: depId, userId: user.id, userName: user.name,
-        amount: amount, qrisId: qrisId, qrisImage: qrisImage, expiredAt: expiredAt,
-        status: 'pending',
-        referralCode: getRefFromCookie(req.headers.cookie) || null,
-        createdAt: new Date().toISOString()
-    });
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true, depId: depId });
-});
+        try {
+            var res = await fetch('/api/user/deposits', { credentials: 'include' });
+            var data = await res.json();
+            
+            if (!data.success || !data.deposits) {
+                document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Gagal Memuat Data</h1><a href="/profile" class="btn-back" style="display:inline-flex;margin-top:16px;"><i class="fas fa-redo"></i> Coba Lagi</a></div>';
+                return;
+            }
 
-app.get('/api/user/deposits', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, deposits: (db.deposits || []).filter(function(d) { return d.userId === user.id; }) }); });
-app.post('/api/user/cancel-deposit/:depId', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); var depId = parseInt(req.params.depId); var dep = (db.deposits || []).find(function(d) { return d.id === depId && d.userId === user.id; }); if (!dep) return res.status(404).json({ error: 'Deposit tidak ditemukan' }); if (dep.status !== 'pending') return res.status(400).json({ error: 'Deposit sudah diproses' }); if (dep.qrisId && QRISPY_TOKEN) { await cancelQRISInQrispy(dep.qrisId); } dep.status = 'cancelled'; dep.cancelledAt = new Date().toISOString(); await setDB(null, db.orders, db.sha); res.json({ success: true, message: 'Deposit dibatalkan' }); });
-app.post('/api/user/change-password', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var oldPassword = req.body.oldPassword, newPassword = req.body.newPassword; if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Data tidak lengkap' }); if (newPassword.length < 4) return res.status(400).json({ error: 'Password minimal 4 karakter' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if (!verifyPassword(oldPassword, user.password)) return res.status(400).json({ error: 'Password lama salah' }); user.password = hashPassword(newPassword); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.post('/api/user/withdraw', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var amount = parseInt(req.body.amount), paymentMethod = req.body.paymentMethod, paymentNumber = req.body.paymentNumber; if (!amount || amount < 2000) return res.status(400).json({ error: 'Minimal WD Rp 2.000' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); if ((user.discountBalance || 0) < amount) return res.status(400).json({ error: 'Saldo gak cukup' }); if (!db.withdrawals) db.withdrawals = []; db.withdrawals.unshift({ id: Date.now(), userId: user.id, userName: user.name, amount: amount, paymentMethod: paymentMethod || 'DANA', paymentNumber: paymentNumber || '-', status: 'pending', createdAt: new Date().toISOString() }); user.discountBalance -= amount; await setDB(null, db.orders, db.sha); await sendTelegramMessage('💰 WITHDRAW\n\n👤 ' + user.name + '\n💵 Rp ' + amount.toLocaleString() + '\n🏦 ' + (paymentMethod || 'DANA') + '\n📱 ' + (paymentNumber || '-')); res.json({ success: true }); });
-app.get('/api/user/withdrawals', async function(req, res) { var cookies = parseCookies(req.headers.cookie); var token = cookies['yanto_token']; if (!token) return res.status(401).json({ error: 'Login dulu' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.token === token; }); if (!user) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, withdrawals: (db.withdrawals || []).filter(function(w) { return w.userId === user.id; }) }); });
+            var dep = data.deposits.find(function(d) { return String(d.id) === depId; });
+            
+            if (!dep) {
+                document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Deposit Tidak Ditemukan</h1><p style="text-align:center;color:#94a3b8;">ID: ' + depId + '</p><a href="/profile" class="btn-back" style="display:inline-flex;margin-top:16px;"><i class="fas fa-arrow-left"></i> Kembali ke Profile</a></div>';
+                return;
+            }
 
-// ✅ PENDING REFERRALS (ORDER + DEPOSIT)
-app.get('/api/admin/pending-referrals', async function(req, res) {
-    if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    var db = await getDB();
-    var pendingOrders = (db.orders || []).filter(function(o) { return o.status === 'paid' && o.referralStatus === 'pending'; });
-    var pendingDeposits = (db.deposits || []).filter(function(d) { return d.status === 'paid' && d.referralStatus === 'pending'; });
-    res.json({ success: true, pending: pendingOrders.concat(pendingDeposits) });
-});
+            if (dep.status === 'paid') {
+                document.getElementById('pendingContent').style.display = 'none';
+                document.getElementById('successContent').style.display = 'block';
+                document.getElementById('successAmount').textContent = (dep.amount || 0).toLocaleString();
+                return;
+            }
 
-// ✅ APPROVE REFERRAL (ORDER + DEPOSIT)
-app.post('/api/admin/approve-referral', async function(req, res) {
-    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    var orderCode = req.body.orderCode;
-    var db = await getDB();
-    var item = (db.orders || []).find(function(o) { return o.orderCode === orderCode; }) || (db.deposits || []).find(function(d) { return String(d.id) === orderCode; });
-    if (!item) return res.status(404).json({ error: 'Item tidak ditemukan' });
-    if (item.referralStatus !== 'pending') return res.status(400).json({ error: 'Referral sudah diproses' });
-    var referrer = (db.users || []).find(function(u) { return u.referralCode === item.referrerCode; });
-    if (referrer) { referrer.referralCount = (referrer.referralCount || 0) + 1; referrer.discountBalance = (referrer.discountBalance || 0) + 500; }
-    item.referralStatus = 'approved'; item.referralRewarded = true;
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true, message: 'Referral approved! ' + (referrer ? referrer.name : '') + ' +Rp500' });
-});
+            if (dep.status === 'expired') {
+                showExpired('Kadaluarsa', 'Waktu pembayaran sudah habis.');
+                return;
+            }
 
-app.post('/api/admin/reject-referral', async function(req, res) {
-    if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' });
-    var orderCode = req.body.orderCode;
-    var db = await getDB();
-    var item = (db.orders || []).find(function(o) { return o.orderCode === orderCode; }) || (db.deposits || []).find(function(d) { return String(d.id) === orderCode; });
-    if (!item) return res.status(404).json({ error: 'Item tidak ditemukan' });
-    if (item.referralStatus !== 'pending') return res.status(400).json({ error: 'Referral sudah diproses' });
-    item.referralStatus = 'rejected'; item.referralRewarded = false;
-    await setDB(null, db.orders, db.sha);
-    res.json({ success: true, message: 'Referral ditolak!' });
-});
+            if (dep.status === 'cancelled') {
+                showExpired('Dibatalkan', 'Deposit ini sudah dibatalkan.');
+                return;
+            }
 
-app.post('/api/admin/add-balance', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var referralCode = req.body.referralCode; var amount = parseInt(req.body.amount) || 500; if (!referralCode) return res.status(400).json({ error: 'Masukkan kode referral' }); var db = await getDB(); var user = (db.users || []).find(function(u) { return u.referralCode === referralCode; }); if (!user) return res.status(404).json({ error: 'User dengan kode ' + referralCode + ' tidak ditemukan' }); user.discountBalance = (user.discountBalance || 0) + amount; user.referralCount = (user.referralCount || 0) + 1; await setDB(null, db.orders, db.sha); res.json({ success: true, message: 'Saldo ' + user.name + ' bertambah Rp ' + amount.toLocaleString() + '. Total: Rp ' + user.discountBalance.toLocaleString() }); });
-app.get('/api/reset-ip-now', async function(req, res) { var db = await getDB(); db.adminIP = null; db.adminIPs = []; var content = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(content)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true, message: 'IP Admin berhasil di-reset! Silakan login ulang di /admin' }); });
+            // Pending — tampilkan QR + timer
+            document.getElementById('qrisImage').src = dep.qrisImage || '';
+            document.getElementById('totalAmount').textContent = (dep.amount || 0).toLocaleString();
+            document.getElementById('expiryTime').textContent = new Date(dep.expiredAt).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            startCountdown(dep.expiredAt);
+            startPolling();
 
-app.get('/api/admin/check-ip', async function(req, res) { try { var db = await getDB(); var ip = getClientIP(req); res.json({ isAdmin: db.adminIP === ip || (db.adminIPs || []).includes(ip), hasAdmin: !!db.adminIP, yourIP: ip }); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/set-ip', async function(req, res) { if (req.body.adminKey !== ADMIN_KEY) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var ip = getClientIP(req); var ips = db.adminIPs || []; if (db.adminIP && !ips.includes(db.adminIP)) ips.push(db.adminIP); if (!ips.includes(ip)) ips.push(ip); var c = { products: db.products || [], orders: db.orders || [], users: db.users || [], withdrawals: db.withdrawals || [], deposits: db.deposits || [], referralVisitors: db.referralVisitors || [], adminIP: ip, adminIPs: ips, maintenance: db.maintenance || false, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); var r = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Set IP', content: b, sha: db.sha }) }); if (r.ok) { var d = await r.json(); dbCache = { ...c, sha: d.content.sha }; dbCacheTime = Date.now(); } res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/reset-ip', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); var c = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: null, adminIPs: [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Reset IP', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/toggle-maintenance', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); try { var db = await getDB(); db.maintenance = req.body.maintenance === true; var c = { products: db.products, orders: db.orders, users: db.users, withdrawals: db.withdrawals, deposits: db.deposits, referralVisitors: db.referralVisitors, adminIP: db.adminIP, adminIPs: db.adminIPs || [], maintenance: db.maintenance, encrypted: true, updatedAt: new Date().toISOString() }; var enc = encrypt(JSON.stringify(c)); var b = Buffer.from(enc).toString('base64'); await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + GITHUB_PATH, { method: 'PUT', headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Maintenance', content: b, sha: db.sha }) }); dbCache = null; res.json({ success: true }); } catch(e) { res.status(500).json({ error: e.message }); } });
-app.post('/api/admin/save-qris-order', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var qrisId = req.body.qrisId, totalAmount = req.body.totalAmount; if (!qrisId || !totalAmount) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now() + attempt, orderCode: oc, qrisId: qrisId, productId: null, productName: 'QRIS Manual', productCode: 'QRIS Manual', price: totalAmount, totalAmount: totalAmount, customerName: sanitize(req.body.customerName || 'Customer'), status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
-app.delete('/api/admin/order/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var idx = (db.orders || []).findIndex(function(o) { return o.id == req.params.id; }); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.orders.splice(idx, 1); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.get('/api/admin/withdrawals', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, withdrawals: (await getDB()).withdrawals || [] }); });
-app.put('/api/admin/withdrawal/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var status = req.body.status; if (!status || ['pending','success','failed'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' }); var db = await getDB(); var wd = (db.withdrawals || []).find(function(w) { return w.id == req.params.id; }); if (!wd) return res.status(404).json({ error: 'Not found' }); wd.status = status; wd.processedAt = new Date().toISOString(); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.put('/api/admin/deposit/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var status = req.body.status; if (!status || ['pending','success','failed','cancelled'].indexOf(status) === -1) return res.status(400).json({ error: 'Invalid status' }); var db = await getDB(); var depId = parseInt(req.params.id); var dep = (db.deposits || []).find(function(d) { return d.id === depId; }); if (!dep) return res.status(404).json({ error: 'Not found' }); dep.status = status; dep.processedAt = new Date().toISOString(); if (status === 'success') { var user = (db.users || []).find(function(u) { return u.id === dep.userId; }); if (user) { user.discountBalance = (user.discountBalance || 0) + dep.amount; if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await sendTelegramMessage('✅ DEPOSIT BERHASIL\n\n👤 ' + user.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n🔗 Kode Ref: ' + (dep.referralCode || '-') + '\n📅 ' + new Date().toLocaleString('id-ID')); } } if (status === 'failed' || status === 'cancelled') { var u = (db.users || []).find(function(x) { return x.id === dep.userId; }); if (u && TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) await sendTelegramMessage('❌ DEPOSIT ' + status.toUpperCase() + '\n\n👤 ' + u.name + '\n💰 Rp ' + dep.amount.toLocaleString() + '\n🔗 Kode Ref: ' + (dep.referralCode || '-') + '\n📅 ' + new Date().toLocaleString('id-ID')); } await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.get('/api/admin/deposits', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); res.json({ success: true, deposits: db.deposits || [] }); });
+        } catch(e) {
+            document.body.innerHTML = '<div class="card"><h1 style="color:#ef4444;">Terjadi Kesalahan</h1><p style="text-align:center;color:#94a3b8;">' + e.message + '</p><a href="/profile" class="btn-back" style="display:inline-flex;margin-top:16px;"><i class="fas fa-redo"></i> Coba Lagi</a></div>';
+        }
+    }
 
-app.post('/api/cancel-order/:orderId', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.id == req.params.orderId || o.orderCode == req.params.orderId; }); if (!order) return res.status(404).json({ error: 'Not found' }); if (order.status !== 'pending') return res.status(400).json({ error: 'Already processed' }); if (order.qrisId && order.qrisId !== 'test-') await cancelQRISInQrispy(order.qrisId); order.status = 'cancelled'; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.get('/api/get-order/:orderCode', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; }); if (!order) return res.json({ success: false }); var product = (db.products || []).find(function(p) { return p.id == order.productId; }); res.json({ success: true, status: order.status, productName: order.productName, productCode: order.productCode || '', qrisImage: order.qrisImage, totalAmount: order.totalAmount, expiredAt: order.expiredAt, itemType: product ? product.itemType : 'text', createdAt: order.createdAt, isGacha: order.isGacha || false, gachaResult: order.gachaResult || '' }); });
-
-app.get('/api/check-payment/:orderCode', async function(req, res) { var db = await getDB(); var order = (db.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; }); if (!order) return res.json({ status: 'not_found' }); if (order.status === 'paid') return res.json({ status: 'paid', productCode: order.productCode }); if (new Date(order.expiredAt) < new Date()) { order.status = 'expired'; await setDB(null, db.orders, db.sha); return res.json({ status: 'expired' }); } if (!QRISPY_TOKEN) return res.json({ status: 'pending' }); try { var r = await fetch(QRISPY_API_URL + '/api/payment/qris/' + order.qrisId + '/status', { headers: { 'X-API-Token': QRISPY_TOKEN } }); var d = await r.json(); if (d.status === 'success' && d.data && d.data.status === 'paid') { dbCacheTime = 0; var freshDB = await getDB(); var freshOrder = (freshDB.orders || []).find(function(o) { return o.orderCode === req.params.orderCode; }); if (freshOrder && freshOrder.status === 'paid') return res.json({ status: 'paid', productCode: freshOrder.productCode }); if (order.items) { order.items.forEach(function(item) { var p = (freshDB.products || []).find(function(x) { return x.id == item.productId; }); if (p && p.stock > 0) p.stock -= item.quantity || 1; }); } else { var p = (freshDB.products || []).find(function(x) { return x.id == order.productId; }); if (p && p.stock > 0) p.stock -= 1; } freshOrder.status = 'paid'; freshOrder.paidAt = new Date().toISOString(); await processReferralReward(freshDB, freshOrder, req.headers.cookie); var refInfo = freshOrder.referralCode ? '\n🔗 Kode Ref: ' + freshOrder.referralCode : ''; await sendTelegramMessage('✅ PEMBAYARAN BERHASIL!\n\n📦 Produk: ' + freshOrder.productName + '\n👤 Pembeli: ' + freshOrder.customerName + '\n💰 Total: Rp ' + (freshOrder.totalAmount || freshOrder.price).toLocaleString() + '\n🆔 Order: ' + freshOrder.orderCode + refInfo + '\n\n🔑 Kode:\n' + (freshOrder.productCode || '')); for (var attempt = 1; attempt <= 3; attempt++) { try { await setDB(null, freshDB.orders, freshDB.sha); break; } catch(e) { if (attempt < 3) { await new Promise(function(r) { setTimeout(r, 800); }); freshDB.sha = (await getDB()).sha; } } } return res.json({ status: 'paid', productCode: freshOrder.productCode }); } res.json({ status: 'pending' }); } catch(e) { res.json({ status: 'pending' }); } });
-
-app.get('/api/products', async function(req, res) { var db = await getDB(); res.json({ success: true, products: db.products || [] }); });
-app.post('/api/create-order', async function(req, res) { var productId = req.body.productId, customerName = req.body.customerName, qrisId = req.body.qrisId; if (!productId || !qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); var db = await getDB(); var p = (db.products || []).find(function(x) { return x.id == productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok habis' }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: qrisId, productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, totalAmount: req.body.totalAmount || p.price, customerName: sanitize(customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true, orderCode: oc }); });
-app.post('/api/create-cart-order', async function(req, res) { var items = req.body.items; if (!items || !items.length || !req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var cartTotal = 0; var oi = []; for (var i = 0; i < items.length; i++) { var item = items[i]; var p = (db.products || []).find(function(x) { return x.id == item.productId; }); if (!p) return res.status(404).json({ error: 'Produk tidak ditemukan' }); if (p.stock <= 0) return res.status(400).json({ error: 'Stok ' + p.name + ' habis' }); cartTotal += p.price * (item.quantity || 1); oi.push({ productId: p.id, productName: p.name, productCode: p.itemContent, price: p.price, quantity: item.quantity || 1 }); } var totalItems = items.reduce(function(s, it) { return s + (it.quantity || 1); }, 0); var discount = calculateCartDiscount(totalItems); var finalAmount = Math.max(0, cartTotal - discount); oi.forEach(function(it) { var x = (db.products || []).find(function(y) { return y.id == it.productId; }); if (x) x.stock -= it.quantity; }); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, items: oi, productName: oi.map(function(x) { return x.productName + ' x' + x.quantity; }).join(', '), productCode: oi.map(function(x) { return x.productCode; }).join('\n'), price: cartTotal, totalAmount: finalAmount, discountAmount: discount, customerName: sanitize(req.body.customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
-app.get('/api/gacha/info', async function(req, res) { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0; }); var tv = ap.reduce(function(s, p) { return s + p.price; }, 0); res.json({ success: true, gachaPrice: ap.length > 0 ? Math.floor(tv / ap.length * 0.7) : 0, totalProducts: ap.length, jackpotChance: '20%' }); });
-app.post('/api/gacha', async function(req, res) { if (!req.body.qrisId) return res.status(400).json({ error: 'Data tidak lengkap' }); for (var attempt = 1; attempt <= 3; attempt++) { try { var db = await getDB(); var ap = (db.products || []).filter(function(p) { return p.stock > 0 && p.price > 0; }); if (!ap.length) return res.status(400).json({ error: 'Stok habis' }); var w = ap[Math.floor(Math.random() * ap.length)]; w.stock -= 1; var maxPrice = Math.max.apply(null, ap.map(function(p) { return p.price; })); var oc = crypto.randomBytes(16).toString('hex'); db.orders.unshift({ id: Date.now(), orderCode: oc, qrisId: req.body.qrisId, productId: w.id, productName: '🎰 GACHA: ' + w.name, productCode: w.itemContent, price: req.body.totalAmount, totalAmount: req.body.totalAmount, customerName: sanitize(req.body.customerName || 'Guest'), referralCode: getRefFromCookie(req.headers.cookie) || null, status: 'pending', qrisImage: req.body.qrisImage, expiredAt: req.body.expiredAt, isGacha: true, gachaResult: w.name, referralRewarded: false, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); return res.json({ success: true, orderCode: oc, gachaResult: w.name, originalPrice: w.price, isJackpot: w.price === maxPrice }); } catch(e) { if (attempt < 3) await new Promise(function(r) { setTimeout(r, 500); }); } } res.status(500).json({ error: 'Save failed' }); });
-app.get('/api/admin/stats', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); var pendingRef = (db.orders || []).concat(db.deposits || []).filter(function(x) { return x.referralStatus === 'pending'; }); res.json({ success: true, stats: { totalProducts: (db.products || []).length, totalOrders: (db.orders || []).length, totalUsers: (db.users || []).length, totalWithdrawals: (db.withdrawals || []).length, totalDeposits: (db.deposits || []).length, pendingReferrals: pendingRef.length, totalRevenue: paid.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0) } }); });
-app.get('/api/admin/products', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, products: (await getDB()).products || [] }); });
-app.get('/api/admin/orders', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); res.json({ success: true, orders: (await getDB()).orders || [] }); });
-app.get('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.query.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var p = ((await getDB()).products || []).find(function(x) { return x.id == req.params.id; }); if (!p) return res.status(404).json({ error: 'Not found' }); res.json({ success: true, product: p }); });
-app.post('/api/admin/product', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, description = req.body.description, price = parseInt(req.body.price), stock = parseInt(req.body.stock) || 1, itemType = req.body.itemType || 'text', itemContent = req.body.itemContent, bonusType = req.body.bonusType || 'none', bonusContent = req.body.bonusContent || ''; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); db.products.push({ id: Date.now(), name: name, description: description || '', price: price, stock: stock, itemType: itemType, itemContent: itemContent, bonusType: bonusType, bonusContent: bonusContent, createdAt: new Date().toISOString() }); await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.put('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var name = req.body.name, description = req.body.description, price = parseInt(req.body.price), stock = parseInt(req.body.stock) || 1, itemType = req.body.itemType || 'text', itemContent = req.body.itemContent, bonusType = req.body.bonusType || 'none', bonusContent = req.body.bonusContent || ''; if (!name || !itemContent || price <= 0) return res.status(400).json({ error: 'Invalid' }); var db = await getDB(); var idx = (db.products || []).findIndex(function(p) { return p.id == req.params.id; }); if (idx === -1) return res.status(404).json({ error: 'Not found' }); db.products[idx] = { ...db.products[idx], name: name, description: description || '', price: price, stock: stock, itemType: itemType, itemContent: itemContent, bonusType: bonusType, bonusContent: bonusContent, updatedAt: new Date().toISOString() }; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.delete('/api/admin/product/:id', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var productId = parseInt(req.params.id); var before = (db.products || []).length; db.products = (db.products || []).filter(function(p) { return p.id !== productId; }); var after = db.products.length; if (before === after) return res.status(404).json({ error: 'Produk tidak ditemukan' }); await setDB(null, db.orders, db.sha); res.json({ success: true, message: 'Produk berhasil dihapus' }); });
-app.post('/api/admin/reset-orders', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var paid = (db.orders || []).filter(function(o) { return o.status === 'paid'; }); db.orders = paid; await setDB(null, db.orders, db.sha); res.json({ success: true }); });
-app.post('/api/admin/backup', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); var db = await getDB(); var fd = new FormData(); fd.append('chat_id', TELEGRAM_CHAT_ID); fd.append('document', new Blob([JSON.stringify(db)], { type: 'application/json' }), 'backup.json'); await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendDocument', { method: 'POST', body: fd }); res.json({ success: true }); });
-app.post('/api/admin/broadcast', async function(req, res) { if (!isAdmin(req, req.body.adminKey)) return res.status(401).json({ error: 'Unauthorized' }); if (!req.body.message) return res.status(400).json({ error: 'Pesan wajib diisi' }); await sendTelegramMessage('📢 BROADCAST\n\n' + req.body.message); res.json({ success: true }); });
-
-app.get('/order/:code', function(req, res) { res.sendFile(path.join(__dirname, '../public/order.html')); });
-
-module.exports = app;
+    loadDeposit();
+</script>
+</body>
+</html>
